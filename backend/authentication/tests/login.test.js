@@ -10,11 +10,13 @@ const { createLoginRouter } = require('../router');
 const { createSessionService, COOKIE } = require('../session');
 const { createLicenseAdminRouter } = require('../../licenses/admin-router');
 const pool = createTestPool();
+const { applyTestSecuritySchema } = require('./setup-security');
 const origin = 'https://mercasport.example';
 const secret = randomBytes(32).toString('hex');
 const password = 'Une vraie phrase de connexion !';
 let server, base, playerId, adminId, cookie, sessions;
 before(async () => {
+  await applyTestSecuritySchema(pool);
   const hash = await hashPassword(password);
   for (const role of ['PLAYER', 'ADMIN']) {
     const { rows } = await pool.query(`INSERT INTO users(name,username,email,password_hash,role)
@@ -86,6 +88,7 @@ test('unconfigured login and unknown origins are denied', async () => {
   assert.equal((await fetch(base + '/auth/login', { method: 'POST' })).status, 403);
 });
 test('rate limit refuses further attempts', async () => {
+  await pool.query('DELETE FROM auth_rate_limits');
   const b = { identifier: 'limited@example.invalid', password };
   assert.equal((await post(b, '/limited/login')).status, 401);
   assert.equal((await post(b, '/limited/login')).status, 401);

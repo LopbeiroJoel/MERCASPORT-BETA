@@ -1,0 +1,9 @@
+Élément	Protection ajoutée	Utilité	État
+Sessions	Registre auth_sessions et cookie JWT signé, HttpOnly, Secure, SameSite Strict, 30 minutes.	Le serveur refuse une session expirée ou révoquée, y compris un cookie copié avant la déconnexion.	Local testé, migration à appliquer avant activation.
+Déconnexion	Révocation de la session courante et suppression du cookie.	Déconnecte ce navigateur sans annuler les autres sessions du compte.	Local testé, livré sur api/registration.
+Permissions	requirePermission : vérifie rôle actuel PLAYER/CLUB/ADMIN et éventuellement statut APPROVED.	Une route réservée est refusée aux comptes non autorisés. Le propriétaire de chaque ressource reste à contrôler dans la route.	Middleware prêt ; routes existantes non modifiées.
+Tentatives	Compteurs SQL atomiques partagés entre instances, clés HMAC au lieu d’IP/e-mail en clair.	Limite les requêtes par IP et identifiant : 10 sur 15 minutes. Une panne du limiteur refuse le traitement.	Local testé, table auth_rate_limits à créer.
+Origines	Liste d’origines HTTPS exactes et vérification sur les POST sensibles.	Refuse une requête provenant d’un site non autorisé avec un cookie de connexion.	Configuration APP_ORIGIN nécessaire.
+Mot de passe oublié	Jeton aléatoire, empreinte seule en base, validité 15 minutes, usage unique.	Un lien périmé ou déjà utilisé ne peut plus changer le mot de passe.	Local testé, aucun envoi réel.
+Réinitialisation	Nouveau hash Argon2id, consommation des liens et révocation de toutes les sessions dans une transaction.	Une erreur SQL annule toutes les modifications ; un ancien cookie ne permet plus de se connecter après réussite.	Local testé, table password_reset_tokens à créer.
+Secrets	AUTH_SECRET privé, jamais dans Git ou le frontend.	Permet de signer les sessions et calculer les empreintes de limitation.	Aucun secret réel créé/configuré ici.

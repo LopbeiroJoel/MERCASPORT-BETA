@@ -1,0 +1,7 @@
+Tâche	Route / élément	Fonctionnement	État
+AUTH-02	POST /auth/login	Reçoit identifier et password. Cherche l’e-mail ou le pseudo, vérifie le hash et crée un cookie sécurisé de 30 minutes. Session enregistrée en SQL dans la nouvelle version.	Initialement livré ; évolution locale testée, à brancher.
+Déconnexion	POST /auth/logout	Révoque la session courante en base et efface le cookie. Les autres sessions restent valables.	Ajout local testé, livré sur api/registration.
+AUTH-03	POST /auth/forgot-password	Reçoit email. Prévoit un lien aléatoire de 15 minutes ; seule l’empreinte du jeton est stockée. Même réponse publique pour compte connu/inconnu. Sans adaptateur d’envoi, retourne 503.	Mécanisme local testé, envoi réel désactivé.
+AUTH-03	POST /auth/reset-password	Reçoit token, password et password_confirmation. Vérifie le lien puis change le hash Argon2id, consomme les liens et révoque toutes les sessions dans une transaction. Le visiteur doit se reconnecter.	Ajout local testé, page frontend à créer.
+AUTH-01	Confirmation d’e-mail	Aucun e-mail ni confirmation ajouté. is_verified reste inchangé.	Reporté à la demande de Joel.
+TEST-01	Parcours API	Inscription → connexion → licence → validation ADMIN → permissions → déconnexion → lien fictif → nouveau mot de passe → nouvelle connexion. Série complète : 49 tests réussis.	Tests locaux, pas de test navigateur/Neon/Vercel.

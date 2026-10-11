@@ -1,5 +1,6 @@
 const express = require('express');
-const { randomBytes, createHash } = require('node:crypto');
+const { randomBytes } = require('node:crypto');
+const { createSqlRateLimiter } = require('./rate-limit');
 const bcrypt = require('bcryptjs');
 const { hashPassword, verifyPassword } = require('../registration/password');
 
@@ -8,22 +9,16 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
     throw new Error('Invalid login rate configuration');
   }
   const router = express.Router();
-  const attempts = new Map();
+  const limiter = sessions ? createSqlRateLimiter(pool, sessions.rateKey, { maxAttempts, windowMs }) : null;
   let active = 0, dummy;
-  function allow(key) {
-    const now = Date.now();
-    for (const [k, entry] of attempts) if (entry.until <= now) attempts.delete(k);
-    if (!attempts.has(key)) {
-      if (attempts.size >= 10000) return false;
-      attempts.set(key, { n: 0, until: now + windowMs });
-    }
-    return ++attempts.get(key).n <= maxAttempts;
-  }
-  router.post('/login', (req, res, next) => {
+  router.post('/login', async (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     if (!sessions) return res.status(503).json({ code: 'AUTH_NOT_CONFIGURED' });
     if (!sessions.allowsOrigin(req)) return res.status(403).json({ code: 'ORIGIN_DENIED' });
-    if (!allow(`ip:${req.ip}`)) {
+    let allowed;
+    try { allowed = await limiter.allow(`login:ip:${req.ip}`); }
+    catch { return res.status(503).json({ code: 'AUTH_UNAVAILABLE' }); }
+    if (!allowed) {
       res.set('Retry-After', String(Math.ceil(windowMs / 1000)));
       return res.status(429).json({ code: 'TOO_MANY_ATTEMPTS' });
     }
@@ -42,8 +37,10 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
         return res.status(400).json({ code: 'INVALID_LOGIN_FIELDS' });
       }
       const identifier = b.identifier.trim().normalize('NFC').toLowerCase();
-      const accountKey = createHash('sha256').update(identifier).digest('hex');
-      if (!allow(`account:${accountKey}`)) return res.status(429).json({ code: 'TOO_MANY_ATTEMPTS' });
+      if (!await limiter.allow(`login:account:${identifier}`)) {
+        res.set('Retry-After', String(limiter.retryAfter));
+        return res.status(429).json({ code: 'TOO_MANY_ATTEMPTS' });
+      }
       if (active >= 2) return res.status(503).json({ code: 'AUTH_BUSY' });
       active++; admitted = true;
       if (!dummy) dummy = hashPassword(randomBytes(32).toString('hex')).catch(error => { dummy = null; throw error; });

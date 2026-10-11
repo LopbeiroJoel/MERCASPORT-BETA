@@ -1,0 +1,13 @@
+Fichier	Type de changement	Utilité
+backend/authentication/security.sql	Ajout	Migration additive pour auth_sessions, auth_rate_limits et password_reset_tokens. Pas exécutée sur Neon.
+backend/authentication/rate-limit.js	Ajout	Limitation SQL partagée des tentatives, avec compteurs atomiques et empreintes HMAC.
+backend/authentication/permissions.js	Ajout	Middleware de connexion, rôles et statut APPROVED.
+backend/authentication/logout-router.js	Ajout	Route POST /auth/logout avec révocation et suppression du cookie.
+backend/authentication/reset-router.js	Ajout	Routes forgot-password et reset-password ; lien unique et transaction. Adaptateur d’envoi non configuré.
+backend/authentication/session.js	Modification du module de Joel	Enregistrement/révocation SQL des sessions ; lecture du rôle/statut actuel et contrôle du hash.
+backend/authentication/router.js	Modification du module de Joel	Login utilise les compteurs SQL au lieu du compteur en mémoire.
+backend/authentication/tests/setup-security.js	Ajout	Applique le schéma uniquement dans les tests jetables.
+backend/authentication/tests/security-flow.test.js	Ajout	8 tests du parcours et des protections SEC-02 / AUTH-03.
+backend/authentication/tests/login.test.js	Adaptation des tests	Applique le nouveau schéma de test et adapte le contrôle des tentatives.
+backend/authentication/README.md et guides	Documentation	Authentification, sécurité, ajouts au backend et tableaux pour Excel.
+Serveur actuel / frontend / Neon / Vercel	Aucun changement	Tout reste à brancher et configurer. Aucun e-mail envoyé. Nouveaux ajouts livrés sur api/registration.
