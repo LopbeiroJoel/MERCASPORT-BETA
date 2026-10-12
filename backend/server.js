@@ -1,7 +1,6 @@
-const express = require('express');
-const pool = require('./db');
-const { configureApp, startServer } = require('./app');
+const app = require('../server');
+const { startServer } = require('./app');
 
-const app = configureApp(express(), pool);
+// Reutiliser la meme application pour les deux commandes de lancement.
 module.exports = app;
 if (require.main === module) startServer(app);
