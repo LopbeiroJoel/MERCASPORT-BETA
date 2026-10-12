@@ -5,7 +5,7 @@ function createTestPool({ migrations = [] } = {}) {
   const path = require('node:path');
   const db = new PGlite();
   const ready = (async () => {
-    for (const name of ['schema.sql', 'seed.sql', 'registration.sql', 'registration.sql', ...migrations]) {
+    for (const name of ['schema.sql', 'seed.sql', 'registration.sql', 'registration.sql', 'player-positions.sql', ...migrations]) {
       await db.exec(await fs.readFile(path.join(__dirname, '../../../database', name), 'utf8'));
     }
   })();
@@ -17,6 +17,11 @@ function createTestPool({ migrations = [] } = {}) {
     return previous.then(() => release);
   }
   return {
+    exec: async sql => {
+      await ready;
+      const release = await acquire();
+      try { return await db.exec(sql); } finally { release(); }
+    },
     query: async (sql, values) => {
       await ready;
       const release = await acquire();

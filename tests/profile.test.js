@@ -253,12 +253,13 @@ test('valeurs invalides refusees sans ecriture', async () => {
   assert.deepEqual((await pool.query('SELECT biography,phone,location FROM users WHERE id=$1', [player.id])).rows[0], before);
 });
 
-test('formulaire inscription servi sans CSS avec les deux types de compte', async () => {
+test('formulaire Thomas servi au bon endroit avec les deux roles et les 15 postes', async () => {
   const response = await fetch(base + '/register.html');
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /value="PLAYER"/);
   assert.match(html, /value="CLUB"/);
-  assert.match(html, /js\/register\.mjs/);
-  assert.ok(!html.includes('rel="stylesheet"'));
+  assert.match(html, /js\/register\.js/);
+  assert.equal((html.match(/name="positions"/g) || []).length, 15);
+  assert.ok(!html.includes('value="STRIKER"'));
 });

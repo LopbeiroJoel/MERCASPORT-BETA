@@ -39,7 +39,7 @@ function createProfileRouter(pool, sessions) {
 
       if (identity.role === 'PLAYER') {
         const result = await pool.query(
-          `SELECT first_name, last_name, birth_date, position,
+          `SELECT first_name, last_name, birth_date, positions,
                   preferred_foot, height_cm, current_club,
                   past_clubs, experience, level
            FROM public.player_profiles

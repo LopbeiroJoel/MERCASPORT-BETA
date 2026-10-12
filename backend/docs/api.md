@@ -77,3 +77,66 @@ prévue dans le schéma SQL. Les autres propriétés ne sont pas enregistrées.
 
 Les erreurs ont la forme `{ "error": "Message lisible" }`.
 La liste des candidatures et leurs coordonnées n’est pas exposée par une route publique.
+
+## Postes multiples du joueur : POST /auth/register
+
+Le formulaire de Thomas envoie `profile.positions` a la place de l'ancien champ `profile.position`.
+Ce changement concerne le profil joueur uniquement ; `ads.position` reste inchange.
+
+```json
+{
+  "email": "joueur@example.com",
+  "username": "LionelTest",
+  "password": "Une longue phrase pour mon compte !",
+  "role": "PLAYER",
+  "profile": {
+    "first_name": "Lionel",
+    "last_name": "Dupont",
+    "positions": ["GOALKEEPER", "CENTRE_BACK"]
+  }
+}
+```
+
+- Facultatif : cle absente, `null` ou `[]` sont enregistres comme `[]`.
+- Sinon : tableau de textes, maximum 15 elements, aucun doublon.
+- Chaque code doit etre exact, en majuscules ; aucune conversion silencieuse des nouvelles inscriptions.
+- Un texte seul, une valeur inconnue, un element null ou un tableau imbrique est refuse.
+- L'ancien champ `profile.position` et les postes sur un profil CLUB sont refuses.
+- Succes : `201`, avec `profile.positions` dans la reponse.
+- Erreur : `400`, `code: VALIDATION_ERROR` et `fields["profile.positions"]` avec un message en francais.
+- Les autres regles d'inscription restent inchangees (email, pseudo, mot de passe, role, transaction).
+
+Codes autorises :
+```text
+GOALKEEPER
+CENTRE_BACK
+RIGHT_BACK
+LEFT_BACK
+RIGHT_WING_BACK
+LEFT_WING_BACK
+DEFENSIVE_MIDFIELDER
+CENTRAL_MIDFIELDER
+ATTACKING_MIDFIELDER
+RIGHT_MIDFIELDER
+LEFT_MIDFIELDER
+RIGHT_WINGER
+LEFT_WINGER
+SECOND_STRIKER
+CENTRE_FORWARD
+```
+
+### GET /profile/me
+
+Le compte connecte recoit sa fiche joueur avec `profile.positions`, toujours un tableau.
+L'identifiant vient de la session. La route ne retourne aucun mot de passe.
+L'affichage en francais des codes est gere par Thomas.
+La route PATCH existante conserve ses six champs communs : cette modification n'ajoute pas l'edition des postes.
+
+### Migration Neon
+
+1. Executer `database/player-positions.sql` : ajout de `positions TEXT[] NOT NULL DEFAULT '{}'`,
+   conversion des anciens textes francais/codes et controle SQL des valeurs.
+2. Deployer le backend qui utilise `positions`.
+3. Relancer la premiere migration, puis `database/player-positions-cleanup.sql`.
+   Seule l'ancienne colonne du profil joueur est retiree, sans CASCADE.
+   Une correspondance inconnue arrete la conversion ; completer la table de correspondance avant suppression.

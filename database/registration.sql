@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.player_profiles (
   first_name VARCHAR(100) NOT NULL CHECK (btrim(first_name) <> ''),
   last_name VARCHAR(100) NOT NULL CHECK (btrim(last_name) <> ''),
   birth_date DATE,
-  position VARCHAR(50),
+  positions TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   preferred_foot VARCHAR(20) CHECK (preferred_foot IN ('RIGHT', 'LEFT', 'BOTH')),
   height_cm INTEGER CHECK (height_cm BETWEEN 100 AND 250),
   current_club VARCHAR(150),

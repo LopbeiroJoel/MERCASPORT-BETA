@@ -1,5 +1,11 @@
 const count = value => [...value].length;
 const plainObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const playerPositions = [
+  'GOALKEEPER', 'CENTRE_BACK', 'RIGHT_BACK', 'LEFT_BACK',
+  'RIGHT_WING_BACK', 'LEFT_WING_BACK', 'DEFENSIVE_MIDFIELDER',
+  'CENTRAL_MIDFIELDER', 'ATTACKING_MIDFIELDER', 'RIGHT_MIDFIELDER',
+  'LEFT_MIDFIELDER', 'RIGHT_WINGER', 'LEFT_WINGER', 'SECOND_STRIKER', 'CENTRE_FORWARD'
+];
 
 function validateRegistration(body) {
   const errors = {};
@@ -44,7 +50,7 @@ function validateRegistration(body) {
   const profile = body.profile;
   const output = {};
   const fields = body.role === 'CLUB' ? ['name', 'city', 'divisions']
-    : ['first_name', 'last_name', 'birth_date', 'position', 'preferred_foot', 'height_cm', 'current_club'];
+    : ['first_name', 'last_name', 'birth_date', 'positions', 'preferred_foot', 'height_cm', 'current_club'];
   if (Object.keys(profile).some(key => !fields.includes(key))) {
     errors.profile = 'Un champ du profil est inconnu ou incompatible avec le rôle.';
   }
@@ -63,7 +69,16 @@ function validateRegistration(body) {
   } else if (body.role === 'PLAYER') {
     text('first_name', 100, true);
     text('last_name', 100, true);
-    text('position', 50);
+    const positions = profile.positions;
+    if (positions == null) {
+      output.positions = [];
+    } else if (!Array.isArray(positions) || positions.length > 15
+      || Array.from(positions).some(value => typeof value !== 'string' || !playerPositions.includes(value))
+      || new Set(positions).size !== positions.length) {
+      errors['profile.positions'] = 'Envoyer un tableau de 15 postes maximum, sans doublon, avec les codes autorisés en majuscules.';
+    } else {
+      output.positions = [...positions];
+    }
     text('current_club', 150);
     const foot = profile.preferred_foot;
     if (foot != null && !['RIGHT', 'LEFT', 'BOTH'].includes(foot)) {

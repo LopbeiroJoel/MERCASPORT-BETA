@@ -50,10 +50,10 @@ function createRegistrationRouter(pool) {
       let profile;
       if (data.role === 'PLAYER') {
         profile = await client.query(`INSERT INTO public.player_profiles
-          (user_id, first_name, last_name, birth_date, position, preferred_foot, height_cm, current_club)
+          (user_id, first_name, last_name, birth_date, positions, preferred_foot, height_cm, current_club)
           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-          RETURNING user_id, first_name, last_name, birth_date::text AS birth_date, position, preferred_foot, height_cm, current_club, created_at`,
-        [user.id, p.first_name, p.last_name, p.birth_date, p.position, p.preferred_foot, p.height_cm, p.current_club]);
+          RETURNING user_id, first_name, last_name, birth_date::text AS birth_date, positions, preferred_foot, height_cm, current_club, created_at`,
+        [user.id, p.first_name, p.last_name, p.birth_date, p.positions, p.preferred_foot, p.height_cm, p.current_club]);
         // Compatible avec les bases qui ont deja un declencheur de synchronisation.
         await client.query(`INSERT INTO public.players (user_id, first_name, last_name)
           VALUES ($1,$2,$3) ON CONFLICT (user_id) DO NOTHING`, [user.id, p.first_name, p.last_name]);

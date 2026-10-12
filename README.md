@@ -132,12 +132,16 @@ Références officielles : [Express sur Vercel](https://vercel.com/docs/framewor
 
 ## Inscription, connexion et profil : pages de test
 
-Les pages de compte sont volontairement simples, sans CSS. Le design existant des annonces est conserve.
+L'inscription utilise le formulaire de Thomas dans `frontend/register.html`, relie a `frontend/js/register.js`.
+La connexion et le profil restent des pages simples. Le design existant des annonces est conserve.
 Ouvrir `register.html` pour creer un joueur ou un club, `login.html` pour se connecter et `profile.html` pour consulter son profil.
 Le profil permet d'enregistrer biographie, telephone, localisation et leurs choix de visibilite.
 Le pseudo, l'e-mail, la photo et les fiches joueur/club restent en lecture seule dans cette version.
 
-Apres `registration.sql`, appliquer `database/profile.sql` et `database/profile-fields.sql`.
+Apres `registration.sql`, appliquer `database/profile.sql`, `database/profile-fields.sql` et `database/player-positions.sql`.
+Les postes joueur utilisent `positions TEXT[]` : les 15 codes sont documentes dans `backend/docs/api.md`.
+La migration convertit les anciens postes reconnus et annule tout si un ancien texte est inconnu.
+Apres deploiement du nouveau backend, relancer `player-positions.sql` puis `player-positions-cleanup.sql` pour retirer l'ancienne colonne sans interrompre l'ancienne version pendant la mise a jour.
 Configurer en prive `DATABASE_URL`, `AUTH_SECRET` (64 caracteres hexadecimaux) et `APP_ORIGIN` :
 `http://localhost:3000` en local, l'origine HTTPS exacte du site sur Vercel.
 Puis lancer `npm ci` et `npm start`. Aucun mot de passe de test n'est stocke dans Git.

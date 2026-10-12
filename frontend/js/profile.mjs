@@ -19,7 +19,7 @@ function fillAccount(user) {
 function fillSheet(profile, isPlayer) {
   const labels = isPlayer
     ? { first_name: 'Prénom', last_name: 'Nom', birth_date: 'Date de naissance',
-        position: 'Poste', preferred_foot: 'Pied fort', height_cm: 'Taille (cm)',
+        positions: 'Postes', preferred_foot: 'Pied fort', height_cm: 'Taille (cm)',
         current_club: 'Club actuel', past_clubs: 'Anciens clubs', experience: 'Expérience', level: 'Niveau' }
     : { name: 'Nom du club', city: 'Ville', divisions: 'Divisions',
         description: 'Description', general_info: 'Informations générales' };
@@ -35,6 +35,7 @@ function fillSheet(profile, isPlayer) {
     const value = document.createElement('dd');
     title.textContent = label;
     value.textContent = profile[field] == null || profile[field] === '' ? 'Non renseigné' : String(profile[field]);
+    if (field === 'positions') value.textContent = profile.positions?.length ? profile.positions.join(', ') : 'Non renseigné';
     if (field === 'preferred_foot') value.textContent = { RIGHT: 'Droit', LEFT: 'Gauche', BOTH: 'Les deux' }[profile[field]] || 'Non renseigné';
     if (field === 'birth_date' && profile[field]) value.textContent = String(profile[field]).slice(0, 10);
     sheet.append(title, value);
