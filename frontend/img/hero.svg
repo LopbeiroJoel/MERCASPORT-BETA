@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="grass" x2="0" y2="1">
+      <stop stop-color="#377952"/>
+      <stop offset="1" stop-color="#174a32"/>
+    </linearGradient>
+    <pattern id="stripes" width="240" height="900" patternUnits="userSpaceOnUse">
+      <rect width="120" height="900" fill="#fff" opacity=".05"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="url(#grass)"/>
+  <rect width="1600" height="900" fill="url(#stripes)"/>
+  <g fill="none" stroke="#dce9de" stroke-width="4" opacity=".55">
+    <rect x="100" y="80" width="1400" height="740"/>
+    <path d="M800 80V820"/>
+    <circle cx="800" cy="450" r="115"/>
+    <path d="M100 250H330V650H100 M1500 250H1270V650H1500"/>
+    <path d="M100 350H190V550H100 M1500 350H1410V550H1500"/>
+  </g>
+  <circle cx="800" cy="450" r="6" fill="#dce9de" opacity=".55"/>
+</svg>

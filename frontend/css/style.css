@@ -1,10 +1,611 @@
-#ads-detail {
-  padding: 0;
-}
-.ads-inner {
-  padding: 20px;
+/* Polices de la DA ; sans-serif reste le repli si le chargement externe échoue. */
+@import url("https://fonts.googleapis.com/css2?family=Lobster&family=Poppins:wght@400;500;600;700&display=swap");
+
+/* Base globale */
+:root {
+
+  /* =========================================================
+       TYPOGRAPHIES
+       ========================================================= */
+
+  /* Police secondaire / accent : titres, hero et branding. Lobster existe en graisse 400. */
+  --font-display: "Lobster", cursive;
+  --font-weight-display: 400;
+
+  /* Texte courant, boutons, formulaires, navigation, tableaux */
+  --font-body: "Poppins", sans-serif;
+
+
+  /* =========================================================
+       PRIMARY — VERT MERCASPORT
+       
+       Couleur principale de l'application.
+       À utiliser pour :
+       - CTA principaux
+       - liens actifs
+       - icônes actives
+       - focus
+       - éléments sélectionnés
+       - succès liés à une action
+       ========================================================= */
+
+  --primary-50: #F0FFF5;
+  --primary-100: #D9FFE7;
+  --primary-200: #B5F7CC;
+  --primary-300: #7DECA9;
+  --primary-400: #45DC83;
+  --primary-500: #1FC76A;
+  --primary-600: #13A756;
+  --primary-700: #108445;
+  --primary-800: #0F6938;
+  --primary-900: #0D562F;
+  --primary-950: #052F1A;
+
+
+  /* =========================================================
+       ACCENT — LIME
+
+       Couleur volontairement plus énergique.
+       
+       À utiliser avec parcimonie :
+       - petits badges
+       - statistiques
+       - éléments décoratifs
+       - accents graphiques
+       - micro-interactions
+       
+       Ne pas l'utiliser comme couleur principale de l'interface.
+       ========================================================= */
+
+  --accent-300: #E2FFA3;
+  --accent-400: #D2FF7D;
+  --accent-500: #C2FF5C;
+  --accent-600: #A8E43D;
+  --accent-700: #82B724;
+
+
+  /* =========================================================
+       NEUTRAL — NOIRS / GRIS AVEC SOUS-TON VERT
+
+       Utilisés pour construire les différents niveaux
+       de profondeur de l'interface.
+       ========================================================= */
+
+  --neutral-950: #07110D;
+  /* Fond principal de l'application */
+  --neutral-900: #0C1712;
+  /* Header / surfaces principales */
+  --neutral-800: #12231A;
+  /* Cartes */
+  --neutral-700: #1A3024;
+  /* Cartes hover / borders fortes */
+  --neutral-600: #294236;
+  /* Séparateurs / éléments désactivés */
+  --neutral-500: #466052;
+  --neutral-400: #738579;
+  --neutral-300: #A6B2AA;
+  /* Texte secondaire */
+  --neutral-200: #CDD5D0;
+  --neutral-100: #E9EEEB;
+  --neutral-50: #F7F9F8;
+  /* Texte principal clair */
+
+
+  /* =========================================================
+       COULEURS SÉMANTIQUES
+
+       Ces couleurs décrivent un état fonctionnel.
+       Elles ne doivent pas être remplacées par le vert principal.
+       ========================================================= */
+
+  --success: #1FC76A;
+
+  --warning: #F5C451;
+  --warning-bg: rgba(245, 196, 81, 0.12);
+
+  --danger: #FF6B6B;
+  --danger-bg: rgba(255, 107, 107, 0.12);
+
+  --info: #63B3ED;
+  --info-bg: rgba(99, 179, 237, 0.12);
+
+
+  /* =========================================================
+       STATUTS DES ANNONCES
+
+       Utilisés notamment dans les espaces Club et Admin.
+       ========================================================= */
+
+  /* Annonce publiée */
+  --status-approved: var(--primary-400);
+  --status-approved-bg: rgba(69, 220, 131, 0.12);
+
+  /* Annonce en attente de validation */
+  --status-pending: var(--warning);
+  --status-pending-bg: var(--warning-bg);
+
+  /* Annonce refusée */
+  --status-rejected: var(--danger);
+  --status-rejected-bg: var(--danger-bg);
+
+
+  /* =========================================================
+       COULEURS SÉMANTIQUES DE L'INTERFACE
+       
+       À privilégier dans les composants au lieu d'utiliser
+       directement neutral-XXX ou primary-XXX.
+       ========================================================= */
+
+  /* Fond général du site */
+  --color-background: var(--neutral-950);
+
+  /* Header / sidebar */
+  --color-surface-1: var(--neutral-900);
+
+  /* Cartes / formulaires */
+  --color-surface-2: var(--neutral-800);
+
+  /* Surface utilisée au hover */
+  --color-surface-hover: var(--neutral-700);
+
+  /* Bordure standard */
+  --color-border: var(--neutral-700);
+
+  /* Bordure discrète */
+  --color-border-subtle: rgba(205, 213, 208, 0.10);
+
+  /* Texte principal */
+  --color-text-primary: var(--neutral-50);
+
+  /* Texte secondaire */
+  --color-text-secondary: var(--neutral-300);
+
+  /* Placeholder / informations faibles */
+  --color-text-muted: var(--neutral-400);
+
+  /* Action principale */
+  --color-action: var(--primary-500);
+
+  /* Hover action principale */
+  --color-action-hover: var(--primary-400);
+
+  /* Boutons principaux : fond doux et texte vert foncé */
+  --color-button-background: var(--primary-50);
+  --color-button-hover: var(--primary-200);
+  --color-on-action: var(--primary-700);
+
+
+  /* =========================================================
+       TYPOGRAPHIE — TAILLES
+       ========================================================= */
+
+  --font-size-xs: 0.75rem;
+  /* 12px */
+  --font-size-sm: 0.875rem;
+  /* 14px */
+  --font-size-md: 1rem;
+  /* 16px */
+  --font-size-lg: 1.125rem;
+  /* 18px */
+  --font-size-xl: 1.25rem;
+  /* 20px */
+  --font-size-2xl: 1.5rem;
+  /* 24px */
+  --font-size-3xl: 2rem;
+  /* 32px */
+  --font-size-4xl: 2.75rem;
+  /* 44px */
+
+  /* Hero responsive */
+  --font-size-hero: clamp(2.75rem, 6vw, 5.5rem);
+
+
+  /* =========================================================
+       FONT WEIGHTS
+       ========================================================= */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+
+  /* =========================================================
+       LINE HEIGHTS
+       ========================================================= */
+
+  --line-height-tight: 1.05;
+  --line-height-heading: 1.15;
+  --line-height-body: 1.6;
+
+
+  /* =========================================================
+       ESPACEMENTS
+
+       Système basé principalement sur des multiples de 4.
+       ========================================================= */
+
+  --space-1: 0.25rem;
+  /* 4px */
+  --space-2: 0.5rem;
+  /* 8px */
+  --space-3: 0.75rem;
+  /* 12px */
+  --space-4: 1rem;
+  /* 16px */
+  --space-5: 1.5rem;
+  /* 24px */
+  --space-6: 2rem;
+  /* 32px */
+  --space-7: 3rem;
+  /* 48px */
+  --space-8: 4rem;
+  /* 64px */
+  --space-9: 6rem;
+  /* 96px */
+
+
+  /* =========================================================
+       BORDER RADIUS
+
+       On évite les cartes ultra-arrondies façon SaaS générique.
+       ========================================================= */
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Pour badges / pills uniquement */
+  --radius-full: 999px;
+
+
+  /* =========================================================
+       BORDURES
+       ========================================================= */
+
+  --border-default: 1px solid var(--color-border-subtle);
+
+  --border-active: 1px solid rgba(31, 199, 106, 0.55);
+
+
+  /* =========================================================
+       SHADOWS
+
+       Très discrètes car l'interface est sombre.
+       ========================================================= */
+
+  --shadow-sm:
+    0 4px 12px rgba(0, 0, 0, 0.18);
+
+  --shadow-md:
+    0 12px 32px rgba(0, 0, 0, 0.24);
+
+  --shadow-lg:
+    0 24px 60px rgba(0, 0, 0, 0.32);
+
+
+  /* =========================================================
+       FOCUS
+
+       Important pour l'accessibilité clavier.
+       ========================================================= */
+
+  --focus-ring:
+    0 0 0 3px rgba(31, 199, 106, 0.28);
+
+
+  /* =========================================================
+       TRANSITIONS
+       ========================================================= */
+
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 320ms ease;
+
+
+  /* =========================================================
+       LAYOUT
+       ========================================================= */
+
+  --container-width: 1200px;
+  --container-padding: 24px;
+
+  --header-height: 72px;
+
+
+  /* =========================================================
+       Z-INDEX
+
+       Évite d'utiliser arbitrairement 999999 partout.
+       ========================================================= */
+
+  --z-base: 1;
+  --z-header: 10;
+  --z-dropdown: 20;
+  --z-overlay: 30;
 }
 
-.background {
-  background-color: rgba(13, 184, 93, 0.5);
+
+/* Base commune : les variables sémantiques suivent la palette du :root. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  font-size: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--color-action);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-action-hover);
+  text-decoration: underline;
+}
+
+/* Focus visible sur les liens et tous les contrôles utilisés au clavier. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+  box-shadow: var(--focus-ring);
+}
+
+button {
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--color-button-background);
+  color: var(--color-on-action);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+button:hover:not(:disabled) {
+  background: var(--color-button-hover);
+}
+
+button:disabled {
+  background: var(--neutral-600);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border: var(--border-active);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Un champ n'est coloré en erreur que si cet état est explicitement signalé. */
+[aria-invalid="true"] {
+  border-color: var(--danger);
+  background-color: var(--danger-bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-display);
+  line-height: var(--line-height-heading);
+}
+
+h1 {
+  font-size: var(--font-size-4xl);
+}
+
+h2 {
+  font-size: var(--font-size-3xl);
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+}
+
+h5 {
+  font-size: var(--font-size-lg);
+}
+
+h6 {
+  font-size: var(--font-size-md);
+}
+
+p,
+ul,
+ol {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+ul,
+ol {
+  padding-left: var(--space-5);
+}
+
+small {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+hr {
+  margin-block: var(--space-6);
+  border: 0;
+  border-top: var(--border-default);
+}
+
+::selection {
+  background: var(--color-button-background);
+  color: var(--color-on-action);
+}
+
+/* Surfaces partagées, sans changer la mise en page des sections. */
+header,
+footer,
+.site-header,
+.site-footer {
+  width: 100%;
+  background: var(--color-surface-1);
+  color: var(--color-text-primary);
+}
+
+header,
+.site-header {
+  border-bottom: var(--border-default);
+}
+
+footer,
+.site-footer {
+  border-top: var(--border-default);
+  color: var(--color-text-secondary);
+}
+
+.card,
+dialog {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* Structure générale existante */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-footer {
+  margin-top: auto;
+}
+
+.container {
+  width: min(calc(100% - 2 * var(--container-padding)), var(--container-width));
+  margin-inline: auto;
+}
+
+.main-content {
+  flex: 1;
+  padding-block: var(--space-6);
+}
+
+.section {
+  padding-block: var(--space-6);
+}
+
+.section+.section {
+  padding-top: 0;
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.flex {
+  display: flex;
+}
+
+@media (min-width: 768px) {
+
+  .main-content,
+  .section {
+    padding-block: var(--space-7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

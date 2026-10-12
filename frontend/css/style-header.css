@@ -1,0 +1,151 @@
+/* Barre fixe hors du flux : le hero commence derrière la navigation. */
+header {
+    position: fixed;
+    top: var(--space-4);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-header);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    width: 80%;
+    min-height: var(--header-height);
+    margin: 0;
+    padding: var(--space-3) var(--space-5);
+    background: var(--color-surface-1);
+    border: var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    box-sizing: border-box;
+}
+
+header .logo,
+header .header-logo {
+    flex: 0 0 auto;
+    margin-right: auto;
+}
+
+header nav,
+header .navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1 1 auto;
+}
+
+header nav ul,
+header .navigation ul {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+header .header-actions,
+header .actions,
+header .auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: var(--space-3);
+        gap: var(--space-3);
+        flex-wrap: wrap;
+    }
+
+    header nav,
+    header .navigation {
+        order: 3;
+        flex-basis: 100%;
+    }
+}
+
+/* Navigation : zones cliquables sans fond, y compris au survol. */
+header nav a {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+}
+
+header nav a:hover,
+header nav a[aria-current="page"] {
+    background: transparent;
+    color: var(--primary-100);
+}
+
+/* Les liens de connexion restent des liens, avec l'apparence des boutons principaux. */
+header>[role="group"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+header>[role="group"]>a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: var(--color-button-background);
+    color: var(--color-on-action);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+header>[role="group"]>a:hover {
+    background: var(--color-button-hover);
+}
+
+/* Se connecter : bouton secondaire sans fond, même au survol. */
+header>[role="group"]>a.button-secondary,
+header>[role="group"]>a.button-secondary:hover {
+    background: transparent;
+    border: 1px solid var(--primary-100);
+    color: var(--primary-100);
+}
+
+/* S'inscrire : bouton principal au fond primary-50 défini dans le :root. */
+header>[role="group"]>a.primary-button {
+    background: var(--color-button-background);
+    color: var(--color-on-action);
+}
+
+header>[role="group"]>a.primary-button:hover {
+    background: var(--color-button-hover);
+}
+
+/* Logo : même typographie et même couleur d'accent que le nom dans le hero. */
+header>a[aria-label="Mercasport — Accueil"] {
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-display);
+    font-size: var(--font-size-2xl);
+    color: var(--accent-500);
+    text-decoration: none;
+}
+
+/* Le lien « Offres » laisse de la place à la barre fixe lors du saut vers la liste. */
+#ads-list {
+    scroll-margin-top: calc(var(--header-height) + var(--space-7));
+}
+
+@media (max-width: 768px) {
+    #ads-list {
+        scroll-margin-top: calc(2 * var(--header-height) + var(--space-7));
+    }
+}
