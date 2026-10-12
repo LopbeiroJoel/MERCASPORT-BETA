@@ -16,7 +16,7 @@
   <nav>
     <ul>
       <li><a href="index.html">Accueil</a></li>
-      <li><a href="offres.html">Offres</a></li>
+      <li><a href="index.html#ads-list">Offres</a></li>
       <li><a href="login.html">Se connecter</a></li>
       <li><a href="register.html">S'inscrire</a></li>
     </ul>
@@ -67,55 +67,58 @@
         <input type="date" id="birth_date" name="birth_date" />
 
         <!-- Un groupe de cases à cocher : un id différent par case, le même name pour tout le groupe.
-             Le name passera à "positions" quand le contrat avec le back sera validé. -->
+             Le name "positions" correspond au tableau attendu par le backend. -->
         <fieldset>
           <legend>Postes (facultatif)</legend>
 
           <!-- Gardien -->
-          <input type="checkbox" id="position-goalkeeper" name="position" value="GOALKEEPER" />
+          <input type="checkbox" id="position-goalkeeper" name="positions" value="GOALKEEPER" />
           <label for="position-goalkeeper">Gardien</label><br />
 
           <!-- Défense -->
-          <input type="checkbox" id="position-centre-back" name="position" value="CENTRE_BACK" />
+          <input type="checkbox" id="position-centre-back" name="positions" value="CENTRE_BACK" />
           <label for="position-centre-back">Défenseur central</label><br />
 
-          <input type="checkbox" id="position-right-back" name="position" value="RIGHT_BACK" />
+          <input type="checkbox" id="position-right-back" name="positions" value="RIGHT_BACK" />
           <label for="position-right-back">Latéral droit</label><br />
 
-          <input type="checkbox" id="position-left-back" name="position" value="LEFT_BACK" />
+          <input type="checkbox" id="position-left-back" name="positions" value="LEFT_BACK" />
           <label for="position-left-back">Latéral gauche</label><br />
 
-          <input type="checkbox" id="position-right-wing-back" name="position" value="RIGHT_WING_BACK" />
+          <input type="checkbox" id="position-right-wing-back" name="positions" value="RIGHT_WING_BACK" />
           <label for="position-right-wing-back">Piston droit</label><br />
 
-          <input type="checkbox" id="position-left-wing-back" name="position" value="LEFT_WING_BACK" />
+          <input type="checkbox" id="position-left-wing-back" name="positions" value="LEFT_WING_BACK" />
           <label for="position-left-wing-back">Piston gauche</label><br />
 
           <!-- Milieu -->
-          <input type="checkbox" id="position-defensive-midfielder" name="position" value="DEFENSIVE_MIDFIELDER" />
+          <input type="checkbox" id="position-defensive-midfielder" name="positions" value="DEFENSIVE_MIDFIELDER" />
           <label for="position-defensive-midfielder">Milieu défensif</label><br />
 
-          <input type="checkbox" id="position-central-midfielder" name="position" value="CENTRAL_MIDFIELDER" />
+          <input type="checkbox" id="position-central-midfielder" name="positions" value="CENTRAL_MIDFIELDER" />
           <label for="position-central-midfielder">Milieu central</label><br />
 
-          <input type="checkbox" id="position-attacking-midfielder" name="position" value="ATTACKING_MIDFIELDER" />
+          <input type="checkbox" id="position-attacking-midfielder" name="positions" value="ATTACKING_MIDFIELDER" />
           <label for="position-attacking-midfielder">Milieu offensif</label><br />
 
-          <input type="checkbox" id="position-right-midfielder" name="position" value="RIGHT_MIDFIELDER" />
+          <input type="checkbox" id="position-right-midfielder" name="positions" value="RIGHT_MIDFIELDER" />
           <label for="position-right-midfielder">Milieu droit</label><br />
 
-          <input type="checkbox" id="position-left-midfielder" name="position" value="LEFT_MIDFIELDER" />
+          <input type="checkbox" id="position-left-midfielder" name="positions" value="LEFT_MIDFIELDER" />
           <label for="position-left-midfielder">Milieu gauche</label><br />
 
           <!-- Attaque -->
-          <input type="checkbox" id="position-right-winger" name="position" value="RIGHT_WINGER" />
+          <input type="checkbox" id="position-right-winger" name="positions" value="RIGHT_WINGER" />
           <label for="position-right-winger">Ailier droit</label><br />
 
-          <input type="checkbox" id="position-left-winger" name="position" value="LEFT_WINGER" />
+          <input type="checkbox" id="position-left-winger" name="positions" value="LEFT_WINGER" />
           <label for="position-left-winger">Ailier gauche</label><br />
 
-          <input type="checkbox" id="position-striker" name="position" value="STRIKER" />
-          <label for="position-striker">Buteur</label><br />
+          <input type="checkbox" id="position-second-striker" name="positions" value="SECOND_STRIKER" />
+          <label for="position-second-striker">Second attaquant</label><br />
+
+          <input type="checkbox" id="position-centre-forward" name="positions" value="CENTRE_FORWARD" />
+          <label for="position-centre-forward">Avant-centre</label><br />
 
         </fieldset>
 
@@ -161,7 +164,7 @@
   </footer>
 
   <!-- Le script se charge EN DERNIER : les éléments ci-dessus existent déjà.
-       Le fichier js/register.js reste à créer. -->
+       Le fichier js/register.js envoie les informations au backend. -->
   <script src="js/register.js"></script>
 </body>
 </html>
