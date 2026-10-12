@@ -9,7 +9,7 @@ const { createProfileRouter } = require('./profile');
 const adColumns = `id, club_id, club_name AS club, team_id, team_name AS team,
   division, title, short_description, position, preferred_foot, requirements,
   contract, work_time, salary, coalesce(location, city) AS location,
-  description, missions, created_at`;
+  description, missions, created_at, author_id, author_name, author_role`;
 
 function validId(value) {
   return ['number', 'string'].includes(typeof value) && /^(?:[1-9]\d*)$/.test(String(value))
@@ -37,23 +37,85 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
     res.set('Cache-Control', 'no-store').json({ status: 'OK', timestamp: new Date() });
   });
 
-  app.get('/ads', async (req, res) => {
-    const result = await pool.query(`SELECT ${adColumns} FROM public.ads_details
-      ORDER BY created_at DESC, id DESC`);
-    res.set('Cache-Control', 'no-store').json(result.rows);
-  });
+  // Identifier le compte et choisir les annonces qu'il peut consulter.
+async function filterAdsForAccount(req, res, next) {
+  res.set('Cache-Control', 'no-store');
 
-  app.get('/ads/:id', async (req, res) => {
-    if (!validId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’annonce invalide.' });
+  if (!sessions) {
+    return res.status(503).json({
+      error: 'La connexion utilisateur n’est pas configurée.'
+    });
+  }
+
+  try {
+    const account = await sessions.authenticate(req);
+
+    if (!account) {
+      return res.status(401).json({
+        error: 'Connecte-toi pour consulter les annonces.'
+      });
     }
+
+    if (!['PLAYER', 'CLUB'].includes(account.role)) {
+      return res.status(403).json({
+        error: 'Ce type de compte ne peut pas consulter les annonces.'
+      });
+    }
+
+    // Joueur → annonces club. Club → annonces joueur.
+    req.visibleAuthorRole =
+      account.role === 'PLAYER' ? 'CLUB' : 'PLAYER';
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Liste des annonces du rôle opposé.
+app.get('/ads', filterAdsForAccount, async (req, res, next) => {
+  try {
     const result = await pool.query(
-      `SELECT ${adColumns} FROM public.ads_details WHERE id = $1`, [Number(req.params.id)]);
+      `SELECT ${adColumns}
+       FROM public.ads_details
+       WHERE author_role = $1
+       ORDER BY created_at DESC, id DESC`,
+      [req.visibleAuthorRole]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Même filtre lorsqu'on ouvre une annonce avec son identifiant.
+app.get('/ads/:id', filterAdsForAccount, async (req, res, next) => {
+  if (!validId(req.params.id)) {
+    return res.status(400).json({
+      error: 'Identifiant d’annonce invalide.'
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT ${adColumns}
+       FROM public.ads_details
+       WHERE id = $1 AND author_role = $2`,
+      [Number(req.params.id), req.visibleAuthorRole]
+    );
+
     if (!result.rows.length) {
-      return res.status(404).json({ error: 'Annonce introuvable.' });
+      return res.status(404).json({
+        error: 'Annonce introuvable.'
+      });
     }
-    res.set('Cache-Control', 'no-store').json(result.rows[0]);
-  });
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
 
   app.post('/applications', async (req, res) => {
     if (!req.is('application/json')) {
