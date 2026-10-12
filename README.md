@@ -1,5 +1,29 @@
 # MercaSport
 
+## Pages de test simples : inscription, connexion et profil
+
+Sur la branche `profile/setup-identity`, les trois pages de compte utilisent du HTML sans CSS :
+
+- `register.html` : choisir joueur ou club, remplir les champs puis créer le compte via `POST /auth/register`.
+- `login.html` : se connecter avec son e-mail ou pseudo et son mot de passe via `POST /auth/login`.
+- `profile.html` : lire son compte et sa fiche, enregistrer biographie, téléphone, localisation et visibilité via `PATCH /profile/me`, puis se déconnecter.
+
+Le pseudo, l'e-mail, la photo et les fiches spécifiques sont en lecture seule dans cette version.
+La photo affichée est l'image par défaut. Aucun envoi d'e-mail ni téléversement n'est ajouté.
+Les boutons de visibilité enregistrent les préférences ; aucune route de profil public n'est créée.
+
+Configuration privée dans `.env` : `DATABASE_URL`, `AUTH_SECRET` (64 caractères hexadécimaux) et `APP_ORIGIN=http://localhost:3000` en local.
+En production, `APP_ORIGIN` doit correspondre exactement à l'origine HTTPS du site.
+Ne jamais publier `.env`, les mots de passe ou une clé de session sur Git.
+
+Pour une nouvelle base : `schema.sql`, éventuellement `seed.sql`, puis `registration.sql`, `profile.sql`, `profile-fields.sql` et `ads-authors.sql`.
+Les deux derniers fichiers conservent les changements de profil et d'annonces réalisés dans Neon.
+Ne pas relancer le schéma et le seed pour réinitialiser une base existante : appliquer les migrations nécessaires.
+
+Lancer : `npm ci`, puis `npm start`. Ouvrir `http://localhost:3000/login.html`.
+Tests jetables : `npm run test:registration` et `npm run test:profile`.
+Une modification des pages sur cette branche ne remplace pas automatiquement la production Vercel basée sur `main`.
+
 Le mercato du football amateur : HTML/CSS/JavaScript de Thomas,
 API Node.js/Express de Matteo et PostgreSQL de Joel.
 

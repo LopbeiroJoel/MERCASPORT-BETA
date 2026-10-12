@@ -169,18 +169,15 @@ test('anti-abus : compteurs partages, limite de 10 tentatives et en-tetes locaux
   assert.equal(counters.rows[0].attempts, 10);
 });
 
-test('integration : annonces, details et candidature fonctionnent avec l’inscription montee', async () => {
+test('integration : sans sessions configurees les annonces sont bloquees, candidature existante conservee', async () => {
   assert.equal((await fetch(`${base}/health`)).status, 200);
   const response = await fetch(`${base}/ads`);
-  assert.equal(response.status, 200);
-  const ads = await response.json();
-  assert.equal(ads.length, 28);
-  const detail = await fetch(`${base}/ads/${ads[0].id}`);
-  assert.equal(detail.status, 200);
-  assert.equal((await detail.json()).id, ads[0].id);
+  assert.equal(response.status, 503);
+  const detail = await fetch(`${base}/ads/1`);
+  assert.equal(detail.status, 503);
   const application = await fetch(`${base}/applications`, { method: 'POST',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-      ad_id: ads[0].id, name: 'Test inscription', email: 'integration@example.invalid' }) });
+      ad_id: 1, name: 'Test inscription', email: 'integration@example.invalid' }) });
   assert.equal(application.status, 201);
   const created = await application.json();
   const row = await pool.query('SELECT email FROM applications WHERE id=$1', [created.id]);

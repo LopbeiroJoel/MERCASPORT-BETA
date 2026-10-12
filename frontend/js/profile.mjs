@@ -1,6 +1,45 @@
 const message = document.getElementById('profile-message');
 const content = document.getElementById('profile-content');
+const form = document.getElementById('profile-form');
+const saveButton = document.getElementById('save-button');
 const logoutButton = document.getElementById('logout-button');
+
+function fillAccount(user) {
+  document.getElementById('profile-name').textContent = user.username;
+  document.getElementById('profile-id').textContent = user.id;
+  document.getElementById('profile-email').textContent = user.email;
+  for (const field of ['biography', 'phone', 'location']) {
+    document.getElementById(field).value = user[field] || '';
+  }
+  for (const field of ['email', 'phone', 'location']) {
+    document.getElementById(field + '-visible').checked = user[field + '_visible'] === true;
+  }
+}
+
+function fillSheet(profile, isPlayer) {
+  const labels = isPlayer
+    ? { first_name: 'Prénom', last_name: 'Nom', birth_date: 'Date de naissance',
+        position: 'Poste', preferred_foot: 'Pied fort', height_cm: 'Taille (cm)',
+        current_club: 'Club actuel', past_clubs: 'Anciens clubs', experience: 'Expérience', level: 'Niveau' }
+    : { name: 'Nom du club', city: 'Ville', divisions: 'Divisions',
+        description: 'Description', general_info: 'Informations générales' };
+  const sheet = document.getElementById('profile-sheet');
+  sheet.replaceChildren();
+  if (!profile) {
+    sheet.textContent = 'Aucune fiche enregistrée pour ce compte.';
+    return;
+  }
+  // Afficher le texte sans l'interpreter comme du HTML.
+  for (const [field, label] of Object.entries(labels)) {
+    const title = document.createElement('dt');
+    const value = document.createElement('dd');
+    title.textContent = label;
+    value.textContent = profile[field] == null || profile[field] === '' ? 'Non renseigné' : String(profile[field]);
+    if (field === 'preferred_foot') value.textContent = { RIGHT: 'Droit', LEFT: 'Gauche', BOTH: 'Les deux' }[profile[field]] || 'Non renseigné';
+    if (field === 'birth_date' && profile[field]) value.textContent = String(profile[field]).slice(0, 10);
+    sheet.append(title, value);
+  }
+}
 
 async function loadProfile() {
   try {
@@ -9,22 +48,49 @@ async function loadProfile() {
       window.location.replace('login.html');
       return;
     }
-    if (!response.ok) throw new Error('Profil indisponible. Réessayez plus tard.');
-    const { user } = await response.json();
-    if (!user || !['PLAYER', 'CLUB'].includes(user.role)) throw new Error('Ce compte ne peut pas accéder à ce profil.');
-
-    // Une seule page : le serveur fournit le role du compte connecte.
+    if (!response.ok) throw new Error('Profil indisponible. Vérifie la configuration du backend et de la base.');
+    const { user, profile } = await response.json();
+    if (!user || !['PLAYER', 'CLUB'].includes(user.role)) throw new Error('Type de compte non autorisé.');
     const isPlayer = user.role === 'PLAYER';
     document.getElementById('profile-title').textContent = isPlayer ? 'Mon profil joueur' : 'Mon profil club';
-    document.getElementById('profile-name').textContent = user.username;
     document.getElementById('profile-role').textContent = isPlayer ? 'Joueur' : 'Club';
-    document.getElementById('profile-id').textContent = user.id;
-    document.getElementById('profile-email').textContent = user.email;
+    document.getElementById('sheet-title').textContent = isPlayer ? 'Ma fiche joueur' : 'Ma fiche club';
+    fillAccount(user);
+    fillSheet(profile, isPlayer);
     content.hidden = false;
     logoutButton.hidden = false;
     message.textContent = '';
-  } catch (error) { message.textContent = error.message || 'Impossible de charger le profil.'; }
+  } catch (error) {
+    message.textContent = error.message;
+  }
 }
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  saveButton.disabled = true;
+  message.textContent = 'Enregistrement…';
+  const body = {};
+  for (const field of ['biography', 'phone', 'location']) body[field] = document.getElementById(field).value;
+  for (const field of ['email', 'phone', 'location']) body[field + '_visible'] = document.getElementById(field + '-visible').checked;
+  try {
+    const response = await fetch('/profile/me', {
+      method: 'PATCH', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    if (response.status === 401) {
+      window.location.replace('login.html');
+      return;
+    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.field ? 'Champ invalide : ' + data.field : 'Enregistrement refusé ou indisponible.');
+    fillAccount(data.user);
+    message.textContent = 'Profil enregistré dans la base. Recharge la page pour vérifier.';
+  } catch (error) {
+    message.textContent = error.message || 'Impossible de joindre le serveur.';
+  } finally {
+    saveButton.disabled = false;
+  }
+});
 
 logoutButton.addEventListener('click', async () => {
   logoutButton.disabled = true;
@@ -33,7 +99,7 @@ logoutButton.addEventListener('click', async () => {
     if (!response.ok) throw new Error('Déconnexion impossible. Réessayez.');
     window.location.replace('login.html');
   } catch (error) {
-    message.textContent = error.message || 'Déconnexion impossible.';
+    message.textContent = error.message;
     logoutButton.disabled = false;
   }
 });
