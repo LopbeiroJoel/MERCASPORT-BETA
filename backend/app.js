@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('node:path');
+const { createRegistrationRouter } = require('./registration/router');
 
 const adColumns = `id, club_id, club_name AS club, team_id, team_name AS team,
   division, title, short_description, position, preferred_foot, requirements,
@@ -13,6 +14,8 @@ function validId(value) {
 
 function configureApp(app, pool) {
   app.disable('x-powered-by');
+  // L'inscription utilise son propre parseur JSON et sa limite de 8 Ko.
+  app.use('/auth', createRegistrationRouter(pool));
   app.use(express.json({ limit: '16kb' }));
 
   app.get('/health', async (req, res) => {

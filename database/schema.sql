@@ -240,7 +240,7 @@ BEGIN
     IF NEW.player_id IS NOT NULL THEN
         SELECT u.name, u.email INTO player_name, player_email
         FROM public.players p JOIN public.users u ON u.id = p.user_id
-        WHERE p.id = NEW.player_id AND u.role = 'player' FOR SHARE OF p, u;
+        WHERE p.id = NEW.player_id AND upper(u.role) = 'PLAYER' FOR SHARE OF p, u;
         IF NOT FOUND THEN
             RAISE EXCEPTION 'Le profil doit appartenir a un joueur.' USING ERRCODE = '23514';
         END IF;

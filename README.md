@@ -9,15 +9,16 @@ API Node.js/Express de Matteo et PostgreSQL de Joel.
 - « Voir les détails » appelle `GET /ads/:id` et ouvre la fenêtre existante.
 - `POST /applications` enregistre une candidature selon le contrat API déjà prévu.
 - `GET /health` vérifie la connexion à PostgreSQL.
+- `POST /auth/register` crée un compte joueur ou club et son profil.
 
 Le front est repris de la branche `front-end`, commit `a47f680`, dans `frontend/`.
 La liste n’utilise plus `ads.json` ni d’annonces fictives codées dans le serveur.
 Les annonces SQL de démonstration restent fictives, mais elles sont réellement lues dans la base.
 Elles sont toutes consultables, sans statut approuvé/attente/refus.
 
-Le périmètre de cette intégration conserve l’interface existante : pas de nouvelle
-authentification, de formulaire de candidature ni de modération.
-Connexion/inscription/admin restent des pages à réaliser ; recherche et les liens
+L'API d'inscription est intégrée ; son formulaire reste à raccorder par le front.
+Guide court et contrat JSON : [backend/registration/README.md](backend/registration/README.md).
+Connexion/admin restent des pages à réaliser ; recherche et les liens
 Actualités/Contact restent à compléter par le front.
 
 ## Lancer dans Ubuntu/WSL
@@ -35,6 +36,7 @@ Si elle n’existe pas encore, la créer puis importer les fichiers :
 sudo -u postgres createdb mercasport
 sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d mercasport < database/schema.sql
 sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d mercasport < database/seed.sql
+sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d mercasport < database/registration.sql
 ```
 
 Sur la base existante de Joel, ne pas refaire `createdb` ; les procédures de migration
@@ -80,7 +82,9 @@ npm ci
 ```
 
 Contrat complet : [backend/docs/api.md](backend/docs/api.md).
-Le schéma contient six tables : `users`, `players`, `clubs`, `teams`, `ads`, `applications`.
+Le schéma principal contient six tables : `users`, `players`, `clubs`, `teams`, `ads`, `applications`.
+`registration.sql` ajoute les profils joueur/club, les pseudos uniques et les compteurs anti-abus.
+Sur une base existante, appliquer ce fichier avant d'utiliser l'API d'inscription.
 Le seed fournit 13 clubs, 28 équipes, 28 annonces et trois candidatures.
 
 ## Vérification
@@ -88,10 +92,13 @@ Le seed fournit 13 clubs, 28 équipes, 28 annonces et trois candidatures.
 ```bash
 npm test
 npm run test:sql
+npm run test:registration
 npm run build
 ```
 
-Les tests nécessitent Ubuntu, Python 3 et les binaires serveur PostgreSQL (`pg_config`).
+Les tests historiques nécessitent Ubuntu, Python 3 et les binaires serveur PostgreSQL (`pg_config`).
+La suite `test:registration` utilise PostgreSQL embarqué et fonctionne avec Node.js 22,
+sans Ubuntu ni connexion à Neon.
 Ils créent des clusters temporaires privés et ne se connectent pas à `mercasport`.
 Le test HTTP vérifie les annonces réelles, les détails, l’écriture d’une candidature,
 les doublons/erreurs de saisie et une panne de connexion.
@@ -106,13 +113,13 @@ Cette configuration prépare l’hébergement ; elle ne crée aucun déploiement
 
 Lors de l’étape d’hébergement :
 
-1. Préparer une base **PostgreSQL hébergée**, puis y importer `schema.sql` et les données souhaitées.
+1. Préparer une base **PostgreSQL hébergée**, puis y importer `schema.sql`, les données souhaitées et `registration.sql`.
 2. Importer ce dépôt dans Vercel depuis sa racine, avec Node.js 22.
 3. Ajouter `DATABASE_URL` aux variables privées du projet Vercel, avec l’URL/TLS du fournisseur PostgreSQL.
 4. Vérifier `/health`, les annonces et un détail sur le déploiement de prévisualisation.
 
 Le PostgreSQL de WSL (`127.0.0.1`) reste sur le PC de Joel ; Vercel doit utiliser une base hébergée.
-La base distante et le déploiement ne sont pas encore créés.
+L'état du déploiement et sa connexion distante se vérifient dans Vercel et avec `/health`.
 Le pool est partagé entre les requêtes et associé au cycle de vie Vercel avec `attachDatabasePool`.
 La validation des certificats TLS n’est pas désactivée par le code.
 
