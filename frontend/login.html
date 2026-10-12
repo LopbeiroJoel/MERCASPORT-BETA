@@ -7,10 +7,18 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main>
-    <h1>Connexion</h1>
-    <p>Page à réaliser par Thomas selon le plan essentiel.</p>
+  <main class="account-page">
     <a href="index.html">Retour aux annonces</a>
+    <h1>Connexion</h1>
+    <form id="login-form" class="account-form">
+      <label for="identifier">E-mail ou pseudo</label>
+      <input id="identifier" name="identifier" autocomplete="username" maxlength="254" required>
+      <label for="password">Mot de passe</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+      <button id="login-button" type="submit">Se connecter</button>
+    </form>
+    <p id="login-message" role="status" aria-live="polite"></p>
   </main>
+  <script type="module" src="js/login.mjs"></script>
 </body>
 </html>

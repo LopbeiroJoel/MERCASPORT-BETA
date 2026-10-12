@@ -10,6 +10,8 @@ API Node.js/Express de Matteo et PostgreSQL de Joel.
 - `POST /applications` enregistre une candidature selon le contrat API déjà prévu.
 - `GET /health` vérifie la connexion à PostgreSQL.
 - `POST /auth/register` crée un compte joueur ou club et son profil.
+- `POST /auth/login` connecte le compte ; `GET /profile/me` récupère son identité.
+- `POST /auth/logout` annule sa session. Guide : [PROF-01 et PROF-02](docs/PROF-01-PROF-02.md).
 
 Le front est repris de la branche `front-end`, commit `a47f680`, dans `frontend/`.
 La liste n’utilise plus `ads.json` ni d’annonces fictives codées dans le serveur.
@@ -18,7 +20,8 @@ Elles sont toutes consultables, sans statut approuvé/attente/refus.
 
 L'API d'inscription est intégrée ; son formulaire reste à raccorder par le front.
 Guide court et contrat JSON : [backend/registration/README.md](backend/registration/README.md).
-Connexion/admin restent des pages à réaliser ; recherche et les liens
+La page connexion fonctionne après configuration ; la page profil identifie le compte joueur/club.
+Les fiches modifiables et l'administration restent à réaliser ; recherche et les liens
 Actualités/Contact restent à compléter par le front.
 
 ## Lancer dans Ubuntu/WSL
@@ -93,6 +96,7 @@ Le seed fournit 13 clubs, 28 équipes, 28 annonces et trois candidatures.
 npm test
 npm run test:sql
 npm run test:registration
+npm run test:profile
 npm run build
 ```
 

@@ -1,6 +1,10 @@
 const express = require('express');
 const path = require('node:path');
 const { createRegistrationRouter } = require('./registration/router');
+const { createSessionService } = require('./authentication/session');
+const { createLoginRouter } = require('./authentication/router');
+const { createLogoutRouter } = require('./authentication/logout-router');
+const { createProfileRouter } = require('./profile');
 
 const adColumns = `id, club_id, club_name AS club, team_id, team_name AS team,
   division, title, short_description, position, preferred_foot, requirements,
@@ -12,10 +16,20 @@ function validId(value) {
     && Number.isSafeInteger(Number(value)) && Number(value) <= 2147483647;
 }
 
-function configureApp(app, pool) {
+function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrigin = process.env.APP_ORIGIN } = {}) {
   app.disable('x-powered-by');
+  let sessions = null;
+  if (authSecret && appOrigin) {
+    try {
+      sessions = createSessionService(pool, { secret: authSecret, origins: [appOrigin],
+        allowLocalHttp: !process.env.VERCEL && process.env.NODE_ENV !== 'production' });
+    } catch { console.error('Configuration de connexion invalide.'); }
+  }
+  app.use('/auth', createLoginRouter(pool, { sessions }));
+  app.use('/auth', createLogoutRouter(sessions));
   // L'inscription utilise son propre parseur JSON et sa limite de 8 Ko.
   app.use('/auth', createRegistrationRouter(pool));
+  app.use('/profile', createProfileRouter(pool, sessions));
   app.use(express.json({ limit: '16kb' }));
 
   app.get('/health', async (req, res) => {

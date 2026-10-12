@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon profil - MercaSport</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="account-page">
+    <nav class="account-navigation">
+      <a href="index.html">Retour aux annonces</a>
+      <button id="logout-button" type="button" hidden>Se déconnecter</button>
+    </nav>
+    <h1 id="profile-title">Mon profil</h1>
+    <p id="profile-message" role="status">Chargement du profil…</p>
+
+    <section id="profile-content" hidden>
+      <header class="profile-header">
+        <img src="assets/default-avatar.svg" alt="Photo de profil par défaut" width="88" height="88">
+        <div>
+          <h2 id="profile-name"></h2>
+          <p id="profile-role"></p>
+        </div>
+      </header>
+      <dl class="profile-information">
+        <dt>Identifiant du compte</dt><dd id="profile-id"></dd>
+        <dt>E-mail du compte</dt><dd id="profile-email"></dd>
+      </dl>
+      <!-- Les fiches, annonces, parametres et modifications seront ajoutes aux etapes suivantes. -->
+    </section>
+  </main>
+  <script type="module" src="js/profile.mjs"></script>
+</body>
+</html>
