@@ -5,35 +5,50 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0"> <!-- adapte la page à la largeur du téléphone -->
   <title>Mercasport</title>                       <!-- titre affiché dans l'onglet du navigateur -->
-  <link rel="stylesheet" href="frontend/css/style.css">        <!-- relie le fichier de style -->
+  <link rel="stylesheet" href="css/style.css"> 
+  <link rel="stylesheet" href="css/style-header.css"> <!-- CSS de normalisation : supprime les différences entre navigateurs -->
+  <link rel="stylesheet" href="css/style-hero.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
 <body>                                            <!-- tout ce qui est visible dans la page -->
 
-  <header>                                        <!-- en-tête du site -->
-    <h1>Bienvenue sur Mercasport</h1>             <!-- titre principal (un seul h1 par page) -->
+  <header>                                        <!-- en-tête : logo, navigation, accès au compte -->
+    <!-- Emplacement du logo : le nom sert de repère tant que l'image n'est pas disponible. -->
+    <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+
+    <nav aria-label="Navigation principale">       <!-- liens vers les rubriques du site -->
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="#ads-list">Offres</a></li>
+        <!-- <li><a href="actualites.html">Actualités</a></li>
+        <li><a href="contact.html">Contact</a></li> -->
+      </ul>
+    </nav>
+
+    <div role="group" aria-label="Accès au compte"> <!-- actions séparées de la navigation centrale -->
+      <a href="login.html" class="button-secondary">Se connecter</a>
+      <a href="register.html" class="primary-button">S'inscrire</a>
+    </div>
   </header>
 
-  <nav>                                           <!-- barre de navigation -->
-    <ul>                                          <!-- liste non ordonnée de liens -->
-      <li><a href="index.html">Accueil</a></li>   <!-- chaque lien est dans un <li> -->
-      <li><a href="#ads-list">Offres</a></li>   <!-- vers la page de toutes les offres -->
-      <li><a href="actualites.html">Actualités</a></li>
-      <li><a href="contact.html">Contact</a></li>
-      <li><a href="login.html">Se connecter</a></li>
-      <li><a href="register.html">S'inscrire</a></li>
-    </ul>
-  </nav>
+  <div class="hero">
+    <!-- Visuel décoratif derrière le contenu ; le filtre sombre est ajouté en CSS. -->
+    <img src="img/hero.svg" alt="" class="hero-image">
 
-  <section class="search">                        <!-- zone de recherche ; "class" sert au style CSS -->
-    <h2>Démarrez votre carrière professionnelle ici</h2> <!-- titre de la section -->
-    <form action="#" method="get">                <!-- formulaire de recherche -->
-      <input type="text" name="keywords" placeholder="Mot-clés">      <!-- champ : mots-clés -->
-      <input type="text" name="location" placeholder="Localisation">  <!-- champ : lieu -->
-      <input type="text" name="company" placeholder="Club">           <!-- champ : club -->
-      <button type="submit">Rechercher</button>   <!-- envoie le formulaire (recharge la page pour l'instant) -->
-    </form>
-  </section>
+    <section class="search" aria-labelledby="hero-title">
+      <h1 id="hero-title">Bienvenue sur <span>Mercasport</span></h1>
+      <h2>Démarrez votre carrière professionnelle ici</h2>
+      <form action="#" method="get">              <!-- la recherche conserve son comportement actuel -->
+        <div>                                     <!-- regroupe les trois champs sur une même ligne -->
+          <input type="text" name="keywords" placeholder="Mot-clés" aria-label="Mot-clés">
+          <input type="text" name="location" placeholder="Localisation" aria-label="Localisation">
+          <input type="text" name="company" placeholder="Club" aria-label="Club">
+        </div>
+        <button type="submit">Rechercher</button>
+      </form>
+    </section>
+  </div>
 
   <section class="job-listings">                  <!-- zone des offres -->
     <h2>Dernières offres</h2>
