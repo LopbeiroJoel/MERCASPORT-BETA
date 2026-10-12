@@ -2,6 +2,7 @@
 const express = require('express');
 // Module intégré à Node : construit des chemins de fichiers adaptés au système.
 const path = require('node:path');
+const { createRegistrationRouter } = require('./registration/router');
 
 // Fragment SQL partagé par la liste et le détail : évite de répéter les colonnes.
 // AS renomme un champ dans le résultat ; coalesce choisit la première valeur non NULL.
