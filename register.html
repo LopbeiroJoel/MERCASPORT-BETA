@@ -1,0 +1,167 @@
+<!DOCTYPE html>                                   <!-- indique au navigateur que c'est du HTML5 -->
+<html lang="fr">                                  <!-- racine de la page, contenu en français -->
+<head>                                            <!-- infos invisibles : réglages, titre, CSS -->
+  <meta charset="UTF-8">                          <!-- encodage : permet d'afficher les accents -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- adapte la page aux téléphones -->
+  <title>Créer un compte - Mercasport</title>     <!-- titre affiché dans l'onglet du navigateur -->
+  <link rel="stylesheet" href="css/style.css">    <!-- relie le fichier de style (vérifie que le chemin est le même que dans index.html) -->
+</head>
+
+<body>
+
+  <header>
+    <h1>Inscription</h1>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="offres.html">Offres</a></li>
+      <li><a href="login.html">Se connecter</a></li>
+      <li><a href="register.html">S'inscrire</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h2>Créer un compte</h2>
+
+    <!-- method="post" : les données ne sont jamais écrites dans l'adresse de la page.
+         Le JavaScript prendra la main à l'envoi : le serveur n'accepte que du JSON. -->
+    <form method="post" id="register-form">
+
+      <!-- ===== 1. LE RÔLE ===== -->
+      <fieldset>
+        <legend>Choisissez votre rôle</legend>
+
+        <input type="radio" id="club" name="role" value="CLUB" required />
+        <label for="club">Club</label><br />
+
+        <input type="radio" id="player" name="role" value="PLAYER" />
+        <label for="player">Joueur</label><br />
+      </fieldset>
+
+      <!-- ===== 2. LES CHAMPS COMMUNS ===== -->
+      <label for="email">Email : </label>
+      <input type="email" id="email" name="email" maxlength="254" autocomplete="email" required />
+
+      <label for="username">Pseudo : </label>
+      <input type="text" id="username" name="username" minlength="3" maxlength="50" autocomplete="username" required />
+
+      <label for="password">Mot de passe : </label>
+      <input type="password" id="password" name="password" minlength="15" maxlength="128" autocomplete="new-password" required />
+
+      <label for="confirm-password">Confirmer le mot de passe : </label>
+      <input type="password" id="confirm-password" name="confirm-password" minlength="15" maxlength="128" autocomplete="new-password" required />
+
+      <!-- ===== 3. PROFIL JOUEUR (caché et désactivé tant que le rôle n'est pas choisi) ===== -->
+      <fieldset id="player-fields" hidden disabled>
+        <legend>Profil du joueur</legend>
+
+        <label for="first_name">Prénom : </label>
+        <input type="text" id="first_name" name="first_name" maxlength="100" required />
+
+        <label for="last_name">Nom : </label>
+        <input type="text" id="last_name" name="last_name" maxlength="100" required />
+
+        <label for="birth_date">Date de naissance : </label>
+        <input type="date" id="birth_date" name="birth_date" />
+
+        <!-- Un groupe de cases à cocher : un id différent par case, le même name pour tout le groupe.
+             Le name passera à "positions" quand le contrat avec le back sera validé. -->
+        <fieldset>
+          <legend>Postes (facultatif)</legend>
+
+          <!-- Gardien -->
+          <input type="checkbox" id="position-goalkeeper" name="position" value="GOALKEEPER" />
+          <label for="position-goalkeeper">Gardien</label><br />
+
+          <!-- Défense -->
+          <input type="checkbox" id="position-centre-back" name="position" value="CENTRE_BACK" />
+          <label for="position-centre-back">Défenseur central</label><br />
+
+          <input type="checkbox" id="position-right-back" name="position" value="RIGHT_BACK" />
+          <label for="position-right-back">Latéral droit</label><br />
+
+          <input type="checkbox" id="position-left-back" name="position" value="LEFT_BACK" />
+          <label for="position-left-back">Latéral gauche</label><br />
+
+          <input type="checkbox" id="position-right-wing-back" name="position" value="RIGHT_WING_BACK" />
+          <label for="position-right-wing-back">Piston droit</label><br />
+
+          <input type="checkbox" id="position-left-wing-back" name="position" value="LEFT_WING_BACK" />
+          <label for="position-left-wing-back">Piston gauche</label><br />
+
+          <!-- Milieu -->
+          <input type="checkbox" id="position-defensive-midfielder" name="position" value="DEFENSIVE_MIDFIELDER" />
+          <label for="position-defensive-midfielder">Milieu défensif</label><br />
+
+          <input type="checkbox" id="position-central-midfielder" name="position" value="CENTRAL_MIDFIELDER" />
+          <label for="position-central-midfielder">Milieu central</label><br />
+
+          <input type="checkbox" id="position-attacking-midfielder" name="position" value="ATTACKING_MIDFIELDER" />
+          <label for="position-attacking-midfielder">Milieu offensif</label><br />
+
+          <input type="checkbox" id="position-right-midfielder" name="position" value="RIGHT_MIDFIELDER" />
+          <label for="position-right-midfielder">Milieu droit</label><br />
+
+          <input type="checkbox" id="position-left-midfielder" name="position" value="LEFT_MIDFIELDER" />
+          <label for="position-left-midfielder">Milieu gauche</label><br />
+
+          <!-- Attaque -->
+          <input type="checkbox" id="position-right-winger" name="position" value="RIGHT_WINGER" />
+          <label for="position-right-winger">Ailier droit</label><br />
+
+          <input type="checkbox" id="position-left-winger" name="position" value="LEFT_WINGER" />
+          <label for="position-left-winger">Ailier gauche</label><br />
+
+          <input type="checkbox" id="position-striker" name="position" value="STRIKER" />
+          <label for="position-striker">Buteur</label><br />
+
+        </fieldset>
+
+        <label for="preferred_foot">Pied : </label>
+        <select id="preferred_foot" name="preferred_foot">
+          <option value="" disabled selected>Choisissez votre pied</option>
+          <option value="LEFT">Gauche</option>
+          <option value="RIGHT">Droit</option>
+          <option value="BOTH">Les deux</option>
+        </select>
+
+        <label for="height_cm">Taille (cm) : </label>
+        <input type="number" id="height_cm" name="height_cm" min="100" max="250" />
+
+        <label for="current_club">Club actuel : </label>
+        <input type="text" id="current_club" name="current_club" maxlength="150" />
+      </fieldset>
+
+      <!-- ===== 4. PROFIL CLUB (caché et désactivé tant que le rôle n'est pas choisi) ===== -->
+      <fieldset id="club-fields" hidden disabled>
+        <legend>Profil du club</legend>
+
+        <label for="name">Nom du club : </label>
+        <input type="text" id="name" name="name" maxlength="150" required />
+
+        <label for="city">Ville : </label>
+        <input type="text" id="city" name="city" maxlength="100" required />
+
+        <label for="divisions">Divisions : </label>
+        <input type="text" id="divisions" name="divisions" maxlength="100" />
+      </fieldset>
+
+      <button type="submit">Créer mon compte</button>
+    </form>
+
+    <!-- Zone où le script affichera le succès ou les erreurs.
+         role="alert" : les lecteurs d'écran annoncent le message dès qu'il apparaît. -->
+    <p id="register-message" role="alert"></p>
+  </main>
+
+  <footer>
+    <p>© 2026 MERCASPORT</p>
+  </footer>
+
+  <!-- Le script se charge EN DERNIER : les éléments ci-dessus existent déjà.
+       Le fichier js/register.js reste à créer. -->
+  <script src="js/register.js"></script>
+</body>
+</html>
