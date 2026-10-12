@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon profil - MercaSport</title>
+</head>
+<body>
+  <nav><a href="index.html">Annonces</a> | <a href="register.html">Inscription</a>
+    <button id="logout-button" type="button" hidden>Se déconnecter</button>
+  </nav>
+  <h1 id="profile-title">Mon profil</h1>
+  <p id="profile-message" role="status" aria-live="polite">Chargement du profil…</p>
+  <main id="profile-content" hidden>
+    <img src="assets/default-avatar.svg" alt="Photo de profil par défaut" width="88" height="88">
+    <h2 id="profile-name"></h2>
+    <p id="profile-role"></p>
+    <p>Identifiant : <span id="profile-id"></span></p>
+    <p>E-mail : <span id="profile-email"></span></p>
+    <p>Page privée : tu vois tes coordonnées même si elles sont masquées aux autres.</p>
+    <h2>Modifier mes informations</h2>
+    <form id="profile-form">
+      <p><label>Biographie<br><textarea id="biography" rows="4" cols="40" maxlength="2000"></textarea></label></p>
+      <p><label>Téléphone <input id="phone" type="tel" maxlength="30"></label></p>
+      <p><label>Localisation <input id="location" maxlength="100"></label></p>
+      <p><label><input id="email-visible" type="checkbox"> Autoriser l'affichage public de mon e-mail</label></p>
+      <p><label><input id="phone-visible" type="checkbox"> Autoriser l'affichage public de mon téléphone</label></p>
+      <p><label><input id="location-visible" type="checkbox"> Autoriser l'affichage public de ma localisation</label></p>
+      <button id="save-button" type="submit">Enregistrer</button>
+    </form>
+    <p>Le pseudo, l'e-mail, la photo et la fiche ci-dessous ne sont pas encore modifiables ici.</p>
+    <h2 id="sheet-title">Ma fiche</h2>
+    <dl id="profile-sheet"></dl>
+    <p><a href="index.html">Consulter les annonces</a></p>
+  </main>
+  <script type="module" src="js/profile.mjs"></script>
+</body>
+</html>

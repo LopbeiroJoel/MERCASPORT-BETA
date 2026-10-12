@@ -4,13 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inscription - MercaSport</title>
-  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main>
-    <h1>Inscription</h1>
-    <p>Page à réaliser par Thomas selon le plan essentiel.</p>
-    <a href="index.html">Retour aux annonces</a>
-  </main>
+  <nav><a href="index.html">Annonces</a> | <a href="login.html">Connexion</a></nav>
+  <h1>Inscription</h1>
+  <form id="register-form">
+    <p><label>Type de compte <select id="role"><option value="PLAYER">Joueur</option><option value="CLUB">Club</option></select></label></p>
+    <p><label>E-mail <input id="email" type="email" autocomplete="email" maxlength="254" required></label></p>
+    <p><label>Pseudo <input id="username" autocomplete="username" minlength="3" maxlength="50" required></label></p>
+    <p><label>Mot de passe <input id="password" type="password" autocomplete="new-password" minlength="15" maxlength="128" required></label></p>
+    <p>15 caractères minimum pour les nouvelles inscriptions.</p>
+    <p><label>Confirmer le mot de passe <input id="confirmation" type="password" autocomplete="new-password" required></label></p>
+    <fieldset id="player-fields">
+      <legend>Joueur</legend>
+      <p><label>Prénom <input id="first-name" autocomplete="given-name" maxlength="100" required></label></p>
+      <p><label>Nom <input id="last-name" autocomplete="family-name" maxlength="100" required></label></p>
+    </fieldset>
+    <fieldset id="club-fields" hidden disabled>
+      <legend>Club</legend>
+      <p><label>Nom du club <input id="club-name" maxlength="150" required></label></p>
+      <p><label>Ville <input id="club-city" maxlength="100" required></label></p>
+      <p><label>Divisions (facultatif) <input id="divisions" maxlength="100" placeholder="R3 / D4"></label></p>
+    </fieldset>
+    <p><button id="register-button" type="submit">Créer mon compte</button></p>
+  </form>
+  <p id="register-message" role="status" aria-live="polite"></p>
+  <p id="register-success" hidden><a href="login.html">Se connecter avec le nouveau compte</a></p>
+  <script type="module" src="js/register.mjs"></script>
 </body>
 </html>

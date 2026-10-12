@@ -1,11 +1,11 @@
 // PostgreSQL embarque jetable : aucun acces a Neon ni besoin de serveur local.
-function createTestPool() {
+function createTestPool({ migrations = [] } = {}) {
   const { PGlite } = require('@electric-sql/pglite');
   const fs = require('node:fs/promises');
   const path = require('node:path');
   const db = new PGlite();
   const ready = (async () => {
-    for (const name of ['schema.sql', 'seed.sql', 'registration.sql', 'registration.sql']) {
+    for (const name of ['schema.sql', 'seed.sql', 'registration.sql', 'registration.sql', ...migrations]) {
       await db.exec(await fs.readFile(path.join(__dirname, '../../../database', name), 'utf8'));
     }
   })();

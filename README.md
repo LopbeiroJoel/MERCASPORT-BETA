@@ -10,15 +10,17 @@ API Node.js/Express de Matteo et PostgreSQL de Joel.
 - `POST /applications` enregistre une candidature selon le contrat API déjà prévu.
 - `GET /health` vérifie la connexion à PostgreSQL.
 - `POST /auth/register` crée un compte joueur ou club et son profil.
+- `POST /auth/login` et `POST /auth/logout` gèrent la connexion et la déconnexion.
+- `GET /profile/me` lit son profil ; `PATCH /profile/me` enregistre les six champs communs autorisés.
 
 Le front est repris de la branche `front-end`, commit `a47f680`, dans `frontend/`.
 La liste n’utilise plus `ads.json` ni d’annonces fictives codées dans le serveur.
 Les annonces SQL de démonstration restent fictives, mais elles sont réellement lues dans la base.
 Elles sont toutes consultables, sans statut approuvé/attente/refus.
 
-L'API d'inscription est intégrée ; son formulaire reste à raccorder par le front.
+Les formulaires simples d'inscription, de connexion et de profil sont reliés à leurs API.
 Guide court et contrat JSON : [backend/registration/README.md](backend/registration/README.md).
-Connexion/admin restent des pages à réaliser ; recherche et les liens
+L'administration reste à réaliser ; recherche et les liens
 Actualités/Contact restent à compléter par le front.
 
 ## Lancer dans Ubuntu/WSL
@@ -126,3 +128,18 @@ La validation des certificats TLS n’est pas désactivée par le code.
 Références officielles : [Express sur Vercel](https://vercel.com/docs/frameworks/backend/express),
 [PostgreSQL hébergé via Marketplace](https://vercel.com/docs/postgres),
 [gestion des pools](https://vercel.com/kb/guide/efficiently-manage-database-connection-pools-with-fluid-compute).
+
+
+## Inscription, connexion et profil : pages de test
+
+Les pages de compte sont volontairement simples, sans CSS. Le design existant des annonces est conserve.
+Ouvrir `register.html` pour creer un joueur ou un club, `login.html` pour se connecter et `profile.html` pour consulter son profil.
+Le profil permet d'enregistrer biographie, telephone, localisation et leurs choix de visibilite.
+Le pseudo, l'e-mail, la photo et les fiches joueur/club restent en lecture seule dans cette version.
+
+Apres `registration.sql`, appliquer `database/profile.sql` et `database/profile-fields.sql`.
+Configurer en prive `DATABASE_URL`, `AUTH_SECRET` (64 caracteres hexadecimaux) et `APP_ORIGIN` :
+`http://localhost:3000` en local, l'origine HTTPS exacte du site sur Vercel.
+Puis lancer `npm ci` et `npm start`. Aucun mot de passe de test n'est stocke dans Git.
+Verification : `npm run test:registration`, `npm run test:profile` et `npm run build`.
+Les preferences de visibilite sont sauvegardees ; aucune route de profil public n'est ajoutee.

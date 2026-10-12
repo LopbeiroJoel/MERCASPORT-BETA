@@ -3,6 +3,10 @@ const express = require('express');
 // Module intégré à Node : construit des chemins de fichiers adaptés au système.
 const path = require('node:path');
 const { createRegistrationRouter } = require('./registration/router');
+const { createSessionService } = require('./authentication/session');
+const { createLoginRouter } = require('./authentication/router');
+const { createLogoutRouter } = require('./authentication/logout-router');
+const { createProfileRouter } = require('./profile');
 
 // Fragment SQL partagé par la liste et le détail : évite de répéter les colonnes.
 // AS renomme un champ dans le résultat ; coalesce choisit la première valeur non NULL.
@@ -27,9 +31,28 @@ function validId(value) {
 // Reçoit l'application Express et le Pool PostgreSQL, puis installe les traitements.
 // Un middleware est une fonction qui intervient dans le parcours d'une requête.
 // L'ordre des app.use et des routes compte : Express les examine dans l'ordre d'installation.
-function configureApp(app, pool) {
+function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrigin = process.env.APP_ORIGIN } = {}) {
   // Retire l'en-tête qui annonce l'utilisation d'Express.
   app.disable('x-powered-by');
+
+  // Ajouter les comptes sans modifier les routes d'annonces et de candidatures.
+  let sessions = null;
+  if (authSecret && appOrigin) {
+    try {
+      sessions = createSessionService(pool, {
+        secret: authSecret,
+        origins: [appOrigin],
+        allowLocalHttp: !process.env.VERCEL && process.env.NODE_ENV !== 'production'
+      });
+    } catch {
+      console.error('Configuration de connexion invalide.');
+    }
+  }
+  app.use('/auth', createLoginRouter(pool, { sessions }));
+  app.use('/auth', createLogoutRouter(sessions));
+  app.use('/auth', createRegistrationRouter(pool));
+  app.use('/profile', createProfileRouter(pool, sessions));
+
   // Décode les corps application/json vers req.body et limite leur taille à 16 Ko.
   // Ne lit pas les formulaires classiques ; un JSON mal formé part vers le gestionnaire d'erreurs.
   app.use(express.json({ limit: '16kb' }));

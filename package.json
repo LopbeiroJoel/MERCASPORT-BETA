@@ -11,7 +11,8 @@
     "configure": "python3 scripts/configure-local.py",
     "test": "python3 tests/integration.py",
     "test:sql": "python3 database/tests/run.py",
-    "test:registration": "node --test backend/registration/tests/register.test.js"
+    "test:registration": "node --test backend/registration/tests/register.test.js",
+    "test:profile": "node --test tests/profile.test.js"
   },
   "dependencies": { "express": "^5.2.1" },
   "devDependencies": { "@electric-sql/pglite": "0.5.8" }

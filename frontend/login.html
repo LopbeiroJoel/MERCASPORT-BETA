@@ -4,13 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion - MercaSport</title>
-  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main>
-    <h1>Connexion</h1>
-    <p>Page à réaliser par Thomas selon le plan essentiel.</p>
-    <a href="index.html">Retour aux annonces</a>
-  </main>
+  <nav><a href="index.html">Annonces</a> | <a href="register.html">Inscription</a></nav>
+  <h1>Connexion</h1>
+  <form id="login-form">
+    <p><label for="identifier">E-mail ou pseudo</label>
+    <input id="identifier" name="identifier" autocomplete="username" maxlength="254" required></p>
+    <p><label for="password">Mot de passe</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required></p>
+    <button id="login-button" type="submit">Se connecter</button>
+  </form>
+  <p id="login-message" role="status" aria-live="polite"></p>
+  <script type="module" src="js/login.mjs"></script>
 </body>
 </html>

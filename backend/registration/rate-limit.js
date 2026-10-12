@@ -30,4 +30,4 @@ function createRegistrationLimiter(pool) {
   };
 }
 
-module.exports = { createRegistrationLimiter };
+module.exports = { createRegistrationLimiter, clientAddress };
