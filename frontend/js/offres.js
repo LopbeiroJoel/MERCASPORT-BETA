@@ -4,13 +4,16 @@ const count = document.getElementById("offers-count");
 const positionFilter = document.getElementById("filter-position");
 const divisionFilter = document.getElementById("filter-division");
 const locationFilter = document.getElementById("filter-location");
+const detail = document.getElementById("ads-detail");     // la <dialog>
+const content = document.getElementById("ads-content");    // la <div> qu'on remplit
+const closeBtn = document.getElementById("x-detail");   // la croix
 
 // ===== ORDRES D'AFFICHAGE DES FILTRES =====
 const POSITION_ORDER = [
   "Gardien",
   "Défenseur central", "Latéral droit", "Latéral gauche", "Piston droit", "Piston gauche",
   "Milieu défensif", "Milieu central", "Milieu offensif", "Milieu droit", "Milieu gauche",
-  "Ailier droit", "Ailier gauche", "Avant-centreé", "Buteur",
+  "Ailier droit", "Ailier gauche", "Avant-centre", "Buteur",
 ];
 
 const DIVISION_ORDER = [
@@ -18,6 +21,16 @@ const DIVISION_ORDER = [
   "R3", "R2", "R1",
   "N3", "N2", "N1",
 ];
+
+// Ajoute "Libellé : valeur" dans la modale, seulement si la valeur existe
+function addLine(label, value) {
+  if (!value) return;                      // pas de valeur → on n'ajoute rien
+  const p = document.createElement("p");
+  p.textContent = label + " : " + value;
+  content.appendChild(p);
+}
+
+
 let allAds = [];   // toutes les offres reçues du serveur, gardées pour le filtrage
 
 // ===== 2. AFFICHER UNE LISTE D'OFFRES =====
@@ -40,10 +53,17 @@ function renderAds(ads) {
     const description = document.createElement("p");
     description.textContent = ad.short_description || ad.description;
 
+
+    const button = document.createElement("button");
+    button.textContent = "Voir les détails";
+    button.addEventListener("click", () => {
+      showDetail(ad);
+    });
     li.appendChild(title);
     li.appendChild(club);
     li.appendChild(location);
     li.appendChild(description);
+    li.appendChild(button);    
     list.appendChild(li);                              // la carte est ajoutée à la liste
   });
 }
@@ -66,17 +86,24 @@ async function loadAds() {
 }
 
 // ===== 4. CRÉER LES CASES À COCHER D'UN FILTRE =====
-// fieldset : le <fieldset> où ajouter les cases
-// field    : le nom de la propriété dans les offres ("position", "division" ou "location")
-// Trie values selon l'ordre de la liste order.
+
+// Trie values selon l'ordre de la liste order, sans tenir compte des majuscules ni des accents.
 // Une valeur absente de order est placée à la fin, par ordre alphabétique.
 function sortByOrder(values, order) {
-  return values.sort((a, b) => {
-    const rankA = order.includes(a) ? order.indexOf(a) : order.length;
-    const rankB = order.includes(b) ? order.indexOf(b) : order.length;
-    return rankA - rankB || a.localeCompare(b);
-  });
+  const normalizedOrder = order.map(normalizeText);   // ["gardien", "defenseur central", ...]
+
+  function rank(value) {
+    const index = normalizedOrder.indexOf(normalizeText(value));
+    return index === -1 ? order.length : index;       // -1 = introuvable → à la fin
+  }
+
+  return values.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
+
+// Crée une case à cocher par valeur différente trouvée dans les offres.
+// fieldset : le <fieldset> où ajouter les cases
+// field    : le nom de la propriété dans les offres ("position", "division" ou "location")
+// order    : (facultatif) la liste qui donne l'ordre d'affichage
 
 function buildCheckboxes(fieldset, field, order) {
   let values = [...new Set(allAds.map((ad) => ad[field]))].filter(Boolean);
@@ -88,7 +115,6 @@ function buildCheckboxes(fieldset, field, order) {
   }
 
   values.forEach((value) => {
-    // ... la suite ne change pas
     const label = document.createElement("label");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -151,4 +177,37 @@ filtersForm.addEventListener("input", applyFilters);   // une case cochée ou un
 filtersForm.addEventListener("reset", () => {
   setTimeout(applyFilters);                            // après la remise à zéro du formulaire
 });
+
+// ===== 8. AFFICHER LE DÉTAIL D'UNE OFFRE =====
+function showDetail(ad) {
+  content.innerHTML = "";                  // on vide le contenu de l'offre précédente
+
+  const title = document.createElement("h2");
+  title.textContent = ad.title;
+  content.appendChild(title);
+
+  addLine("Club", ad.club);
+  addLine("Ville", ad.location);
+  addLine("Poste", ad.position);
+  addLine("Division", ad.division);
+  addLine("Contrat", ad.contract);
+  addLine("Rythme", ad.work_time);
+  addLine("Rémunération", ad.salary);
+  addLine("Profil recherché", ad.requirements);
+  addLine("Missions", ad.missions);
+  addLine("Description", ad.description);
+
+  detail.showModal();                            // on ouvre la modale
+}
+
+closeBtn.addEventListener("click", () => {
+  detail.close();
+});
+
+detail.addEventListener("click", (event) => {
+  if (event.target === detail) {
+    detail.close();
+  }
+});
+
 loadAds();
