@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="css/style.css"> 
   <link rel="stylesheet" href="css/style-header.css"> <!-- CSS de normalisation : supprime les différences entre navigateurs -->
   <link rel="stylesheet" href="css/style-hero.css">
+  <link rel="stylesheet" href="css/style-job-listings.css">
+  <link rel="stylesheet" href="css/style-footer.css">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
@@ -50,10 +52,17 @@
     </section>
   </div>
 
-  <section class="job-listings">                  <!-- zone des offres -->
-    <h2>Dernières offres</h2>
-    <ul id="ads-list"></ul>                       <!-- liste VIDE : le JS y crée une carte par offre.
-                                                       Son id doit être identique à getElementById("ads-list") -->
+  <section class="job-listings" aria-labelledby="listings-title">
+    <div class="job-listings-heading">
+      <h2 id="listings-title">Dernières offres</h2>
+      <div class="job-listings-controls" role="group" aria-label="Navigation des offres">
+        <button type="button" id="ads-previous" aria-label="Offres précédentes" aria-controls="ads-list" disabled><span aria-hidden="true">←</span></button>
+        <button type="button" id="ads-next" aria-label="Offres suivantes" aria-controls="ads-list" disabled><span aria-hidden="true">→</span></button>
+      </div>
+    </div>
+    <!-- La liste reste alimentée par l'API ; tabindex permet le défilement au clavier. -->
+    <ul id="ads-list" tabindex="0" aria-label="Offres de recrutement" aria-busy="true"></ul>
+    <p id="ads-status" class="job-listings-status" role="status">Chargement des offres…</p>
   </section>
 
   <dialog id="ads-detail">                        <!-- la modale, cachée par défaut.
@@ -70,8 +79,41 @@
     </div>
   </dialog>
 
-  <footer>                                        <!-- pied de page -->
-    <p>© 2026 MERCASPORT</p>
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <a class="footer-logo" href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+          <p>Le mercato du football amateur.</p>
+          <p>Des clubs, des joueurs et une même passion. Trouvez l’équipe dans laquelle écrire la suite de votre parcours.</p>
+        </div>
+
+        <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
+          <h2 id="footer-navigation-title">Sur le terrain</h2>
+          <ul>
+            <li><a href="#ads-list">Découvrir les offres</a></li>
+            <li><a href="register.html">Créer un compte</a></li>
+            <li><a href="login.html">Se connecter</a></li>
+          </ul>
+        </nav>
+
+        <div class="footer-contact">
+          <h2>Parlons football</h2>
+          <!-- Coordonnées de démonstration, à remplacer avant publication. -->
+          <address>
+            <p>12, allée du Stade<br>67000 Strasbourg, France</p>
+            <p>bonjour@mercasport.example</p>
+            <p>Du lundi au vendredi<br>9 h – 18 h</p>
+          </address>
+          <p class="footer-demo-note">Coordonnées fictives pour cette démonstration.</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Mercasport. Tous droits réservés.</p>
+        <p>Le football commence par une rencontre.</p>
+      </div>
+    </div>
   </footer>
 
   <script type="module" src="js/app.mjs"></script>               <!-- charge le JS EN DERNIER : les éléments ci-dessus existent déjà -->
