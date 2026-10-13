@@ -58,6 +58,7 @@ updateFields();
 // ===== 5. À L'ENVOI DU FORMULAIRE =====
 const form = document.getElementById("register-form");         // le <form>
 const message = document.getElementById("register-message");   // le <p> où on affiche succès ou erreurs
+const button = document.getElementById("register-button");     // le bouton d'envoi du formulaire
 
 // "submit" = l'utilisateur valide le formulaire (bouton ou touche Entrée).
 // async : nécessaire pour pouvoir utiliser await (attendre la réponse du serveur).
@@ -121,6 +122,7 @@ form.addEventListener("submit", async (event) => {
   console.log({ ...data, password: "***" });
 
   // --- 5d. Envoyer au serveur et afficher la réponse ---
+  button.disabled = true;  // désactive le bouton pour éviter les clics multiples pendant l'attente de la réponse
   try {
     const response = await fetch("/auth/register", {
       method: "POST",                                    // POST = créer quelque chose sur le serveur
@@ -134,12 +136,19 @@ form.addEventListener("submit", async (event) => {
       // Code 200 à 299 (ici 201) : compte créé → { message: "Compte et profil créés.", ... }
       message.textContent = result.message;
     } else {
-      // 400, 409, 429, 503… → { error: "..." } déjà rédigé en français par le serveur
-      message.textContent = result.error;
+        if (result.fields) {
+            message.textContent = "Erreur dans les champs : " + Object.values(result.fields).join(", ");
+        } else {
+        // Code 400, 409, 429, 503… → { error: "..." } déjà rédigé en français par le serveur
+            message.textContent = result.error;
+        }
     }
   } catch (error) {
     // Le serveur n'a pas répondu du tout (back éteint, pas de réseau…)
     // ou sa réponse n'était pas du JSON : on affiche un message fixe.
+    console.error(error);   // message pour le développeur
     message.textContent = "Impossible de créer le compte. Veuillez réessayer plus tard.";
+  } finally {
+    button.disabled = false;   // on réactive le bouton, que la requête ait réussi ou échoué
   }
 });   // fin du listener "submit"
