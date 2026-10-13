@@ -5,6 +5,19 @@ const positionFilter = document.getElementById("filter-position");
 const divisionFilter = document.getElementById("filter-division");
 const locationFilter = document.getElementById("filter-location");
 
+// ===== ORDRES D'AFFICHAGE DES FILTRES =====
+const POSITION_ORDER = [
+  "Gardien",
+  "Défenseur central", "Latéral droit", "Latéral gauche", "Piston droit", "Piston gauche",
+  "Milieu défensif", "Milieu central", "Milieu offensif", "Milieu droit", "Milieu gauche",
+  "Ailier droit", "Ailier gauche", "Avant-centreé", "Buteur",
+];
+
+const DIVISION_ORDER = [
+  "D8", "D7", "D6", "D5", "D4", "D3", "D2", "D1",
+  "R3", "R2", "R1",
+  "N3", "N2", "N1",
+];
 let allAds = [];   // toutes les offres reçues du serveur, gardées pour le filtrage
 
 // ===== 2. AFFICHER UNE LISTE D'OFFRES =====
@@ -43,8 +56,8 @@ async function loadAds() {
     }
     allAds = await response.json();
     renderAds(allAds);                         // au début : on affiche tout
-    buildCheckboxes(positionFilter, "position");
-    buildCheckboxes(divisionFilter, "division");
+    buildCheckboxes(positionFilter, "position", POSITION_ORDER);
+    buildCheckboxes(divisionFilter, "division", DIVISION_ORDER);
     buildCheckboxes(locationFilter, "location");
   } catch (error) {
     console.error(error);
@@ -55,10 +68,27 @@ async function loadAds() {
 // ===== 4. CRÉER LES CASES À COCHER D'UN FILTRE =====
 // fieldset : le <fieldset> où ajouter les cases
 // field    : le nom de la propriété dans les offres ("position", "division" ou "location")
-function buildCheckboxes(fieldset, field) {
-  const values = [...new Set(allAds.map((ad) => ad[field]))].filter(Boolean).sort();
+// Trie values selon l'ordre de la liste order.
+// Une valeur absente de order est placée à la fin, par ordre alphabétique.
+function sortByOrder(values, order) {
+  return values.sort((a, b) => {
+    const rankA = order.includes(a) ? order.indexOf(a) : order.length;
+    const rankB = order.includes(b) ? order.indexOf(b) : order.length;
+    return rankA - rankB || a.localeCompare(b);
+  });
+}
+
+function buildCheckboxes(fieldset, field, order) {
+  let values = [...new Set(allAds.map((ad) => ad[field]))].filter(Boolean);
+
+  if (order) {
+    values = sortByOrder(values, order);   // ordre personnalisé (postes, divisions)
+  } else {
+    values.sort();                         // sinon, ordre alphabétique (villes)
+  }
 
   values.forEach((value) => {
+    // ... la suite ne change pas
     const label = document.createElement("label");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -78,17 +108,26 @@ function getChecked(field) {
   return Array.from(checkedBoxes).map((box) => box.value);
 }
 
+// ===== RENDRE UN TEXTE COMPARABLE =====
+// "Défenseur Central" → "defenseur central"
+function normalizeText(value) {
+  return value
+    .toLowerCase()                          // "Défenseur Central" → "défenseur central"
+    .normalize("NFD")                       // sépare chaque lettre de son accent : "é" → "e" + "´"
+    .replace(/[\u0300-\u036f]/g, "");       // supprime les accents isolés → "defenseur central"
+}
 // ===== 6. FILTRER ET RÉAFFICHER =====
 function applyFilters() {
-  const search = document.getElementById("filter-search").value.trim().toLowerCase();
+  const search = normalizeText(document.getElementById("filter-search").value.trim());  
   const positions = getChecked("position");
   const divisions = getChecked("division");
   const locations = getChecked("location");
 
   const filtered = allAds.filter((ad) => {
     // 1. La recherche : le titre OU le club contient le texte tapé
-    const text = (ad.title + " " + ad.club).toLowerCase();
-    const matchSearch = search === "" || text.includes(search);
+    const text = normalizeText((ad.title || "") + " " + (ad.club || "") + " " + (ad.position || ""));
+    const words = search.split(" ").filter(Boolean);              // "gardien strasbourg" → ["gardien", "strasbourg"]
+    const matchSearch = words.every((word) => text.includes(word)); // chaque mot doit être présent
 
     // 2. Le poste : aucune case cochée, OU le poste de l'annonce fait partie des cases cochées
     const matchPosition = positions.length === 0 || positions.includes(ad.position);
