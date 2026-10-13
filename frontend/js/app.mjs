@@ -3,6 +3,7 @@ const list = document.getElementById('ads-list');
 const detail = document.getElementById('ads-detail');
 const content = document.getElementById('ads-content');
 const closeBtn = document.getElementById('x-detail');
+const form = document.querySelector('.search form');
 let detailRequest = 0;
 
 function paragraph(text) {
@@ -70,6 +71,17 @@ async function loadAds() {
     list.append(item);
   }
 }
+
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  const formKeywords = form.querySelector('input[name="keywords"]');
+  const valueKeywords = formKeywords.value;
+  const formLocation = form.querySelector('input[name="location"]');
+  const valueLocation = formLocation.value;
+  const formCompany = form.querySelector('input[name="company"]');
+  const valueCompany = formCompany.value;
+  console.log(`Recherche : mots-clés = ${valueKeywords}, localisation = ${valueLocation}, entreprise = ${valueCompany}`);
+});
 
 closeBtn.addEventListener('click', () => detail.close());
 detail.addEventListener('close', () => { detailRequest += 1; });
