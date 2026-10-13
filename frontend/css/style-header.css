@@ -9,7 +9,7 @@ header {
     align-items: center;
     justify-content: space-between;
     gap: 2rem;
-    width: 80%;
+    width: var(--container-width);
     min-height: var(--header-height);
     margin: 0;
     padding: var(--space-3) var(--space-5);
