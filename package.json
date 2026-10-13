@@ -12,7 +12,8 @@
     "test": "python3 tests/integration.py",
     "test:sql": "python3 database/tests/run.py",
     "test:registration": "node --test backend/registration/tests/register.test.js",
-    "test:profile": "node --test tests/profile.test.js"
+    "test:profile": "node --test tests/profile.test.js",
+    "test:admin": "node --test tests/admin.test.js"
   },
   "dependencies": { "express": "^5.2.1" },
   "devDependencies": { "@electric-sql/pglite": "0.5.8" }
