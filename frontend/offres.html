@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">                                  <!-- racine de la page, contenu en français -->
+<head>                                            <!-- infos invisibles : réglages, titre, CSS -->
+  <meta charset="UTF-8">                          <!-- encodage : permet d'afficher les accents -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0"> <!-- adapte la page à la largeur du téléphone -->
+  <title>Offres - Mercasport</title>                       <!-- titre affiché dans l'onglet du navigateur -->
+  <link rel="stylesheet" href="css/style.css"> 
+  <link rel="stylesheet" href="css/style-header.css"> <!-- CSS de normalisation : supprime les différences entre navigateurs -->
+  <link rel="stylesheet" href="css/style-offres.css">
+  <link rel="stylesheet" href="css/style-job-listings.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+    <header>                                        <!-- en-tête : logo, navigation, accès au compte -->
+    <!-- Emplacement du logo : le nom sert de repère tant que l'image n'est pas disponible. -->
+    <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+
+    <nav aria-label="Navigation principale">       <!-- liens vers les rubriques du site -->
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="offres.html">Offres</a></li>
+        <!-- <li><a href="actualites.html">Actualités</a></li>
+        <li><a href="contact.html">Contact</a></li> -->
+      </ul>
+    </nav>
+
+    <div role="group" aria-label="Accès au compte"> <!-- actions séparées de la navigation centrale -->
+      <a href="login.html" class="button-secondary">Se connecter</a>
+      <a href="register.html" class="primary-button">S'inscrire</a>
+    </div>
+  </header>
+  <h1>Offres</h1>
+<div class="offers-layout">
+    <aside>
+    <h2>Filtres</h2>
+    <form id="filters">
+        <label for="filter-search">Recherche</label>
+        <input type="search" id="filter-search" name="search" placeholder="Titre ou club">
+
+        <fieldset id="filter-position">
+        <legend>Poste</legend>
+        <!-- les cases seront créées par le JS -->
+        </fieldset>
+
+        <fieldset id="filter-division">
+        <legend>Division</legend>
+        </fieldset>
+
+        <fieldset id="filter-location">
+        <legend>Ville</legend>
+        </fieldset>
+
+        <button type="reset">Réinitialiser</button>
+    </form>
+    </aside>
+    <main>
+    <p id="offers-count"></p>
+    <ul id="offers-list"></ul>
+    </main>
+</div>
+<dialog id="ads-detail">                       
+    <div class="ads-inner">
+        <button id="x-detail" aria-label="Fermer la fenêtre">&#10005;</button>
+        <div id="ads-content"></div>                    
+    </div>
+  </dialog>
+<footer>                                        <!-- pied de page -->
+    <p>© 2026 MERCASPORT</p>
+</footer>
+  <script type="module" src="js/offres.js"></script>
+</body>
+</html>
