@@ -2,6 +2,7 @@
 -- Apres le deploiement du nouveau code, executer player-positions-cleanup.sql.
 BEGIN;
 SET LOCAL lock_timeout = '5s';
+ALTER TABLE public.player_profiles DROP CONSTRAINT IF EXISTS player_profiles_positions_check;
 ALTER TABLE public.player_profiles ADD COLUMN IF NOT EXISTS positions TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
 UPDATE public.player_profiles SET positions = ARRAY[]::TEXT[] WHERE positions IS NULL;
 ALTER TABLE public.player_profiles ALTER COLUMN positions SET DEFAULT ARRAY[]::TEXT[];
@@ -10,15 +11,28 @@ ALTER TABLE public.player_profiles ALTER COLUMN positions SET NOT NULL;
 CREATE OR REPLACE FUNCTION public.valid_player_positions(p TEXT[])
 RETURNS BOOLEAN LANGUAGE sql IMMUTABLE AS $$
   SELECT COALESCE(
-    cardinality(p) <= 15
+    cardinality(p) <= 14
     AND COALESCE(array_ndims(p), 1) = 1
     AND array_position(p, NULL) IS NULL
     AND p <@ ARRAY['GOALKEEPER','CENTRE_BACK','RIGHT_BACK','LEFT_BACK',
       'RIGHT_WING_BACK','LEFT_WING_BACK','DEFENSIVE_MIDFIELDER',
       'CENTRAL_MIDFIELDER','ATTACKING_MIDFIELDER','RIGHT_MIDFIELDER',
-      'LEFT_MIDFIELDER','RIGHT_WINGER','LEFT_WINGER','SECOND_STRIKER','CENTRE_FORWARD']::TEXT[]
+      'LEFT_MIDFIELDER','RIGHT_WINGER','LEFT_WINGER','STRIKER']::TEXT[]
     AND cardinality(p) = (SELECT count(DISTINCT value) FROM unnest(p) AS value), FALSE);
 $$;
+
+-- Les deux anciens postes deviennent un seul Buteur, sans doublon.
+UPDATE public.player_profiles AS profile
+SET positions = ARRAY(
+  SELECT code FROM (
+    SELECT CASE WHEN value IN ('SECOND_STRIKER', 'CENTRE_FORWARD')
+      THEN 'STRIKER' ELSE value END AS code, min(ordinality) AS first_position
+    FROM unnest(profile.positions) WITH ORDINALITY AS selected(value, ordinality)
+    GROUP BY CASE WHEN value IN ('SECOND_STRIKER', 'CENTRE_FORWARD')
+      THEN 'STRIKER' ELSE value END
+  ) AS converted ORDER BY first_position
+)
+WHERE positions && ARRAY['SECOND_STRIKER', 'CENTRE_FORWARD']::TEXT[];
 
 CREATE TEMP TABLE legacy_position_map(label TEXT PRIMARY KEY, code TEXT NOT NULL) ON COMMIT DROP;
 INSERT INTO legacy_position_map VALUES
@@ -35,9 +49,9 @@ INSERT INTO legacy_position_map VALUES
 ('left_midfielder','LEFT_MIDFIELDER'),('milieu gauche','LEFT_MIDFIELDER'),
 ('right_winger','RIGHT_WINGER'),('ailier droit','RIGHT_WINGER'),
 ('left_winger','LEFT_WINGER'),('ailier gauche','LEFT_WINGER'),
-('second_striker','SECOND_STRIKER'),('second attaquant','SECOND_STRIKER'),('attaquant de soutien','SECOND_STRIKER'),
-('centre_forward','CENTRE_FORWARD'),('avant-centre','CENTRE_FORWARD'),('avant centre','CENTRE_FORWARD'),
-('buteur','CENTRE_FORWARD'),('striker','CENTRE_FORWARD');
+('second_striker','STRIKER'),('second attaquant','STRIKER'),('attaquant de soutien','STRIKER'),
+('centre_forward','STRIKER'),('avant-centre','STRIKER'),('avant centre','STRIKER'),
+('buteur','STRIKER'),('striker','STRIKER');
 
 DO $$
 DECLARE old_profile RECORD; converted TEXT;

@@ -38,7 +38,7 @@ Envoyer `Content-Type: application/json`, avec exactement ces cinq champs :
 - `password` : 15 a 128 caracteres, 512 octets maximum. Ne pas enlever ses espaces.
 - `role` : `PLAYER` ou `CLUB` uniquement.
 - Joueur : `first_name` et `last_name` obligatoires (100 caracteres chacun).
-  Facultatifs : `birth_date` (AAAA-MM-JJ non future), `positions` (tableau de 15 codes maximum sans doublon),
+  Facultatifs : `birth_date` (AAAA-MM-JJ non future), `positions` (tableau de 14 codes maximum sans doublon),
   `preferred_foot` (`RIGHT`/`LEFT`/`BOTH`), `height_cm` (entier 100-250),
   `current_club` (150). Omettre les champs vides ou envoyer `null`.
 - Club : `profile` contient `name` (150) et `city` (100) obligatoires,

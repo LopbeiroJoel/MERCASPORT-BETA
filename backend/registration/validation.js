@@ -4,7 +4,7 @@ const playerPositions = [
   'GOALKEEPER', 'CENTRE_BACK', 'RIGHT_BACK', 'LEFT_BACK',
   'RIGHT_WING_BACK', 'LEFT_WING_BACK', 'DEFENSIVE_MIDFIELDER',
   'CENTRAL_MIDFIELDER', 'ATTACKING_MIDFIELDER', 'RIGHT_MIDFIELDER',
-  'LEFT_MIDFIELDER', 'RIGHT_WINGER', 'LEFT_WINGER', 'SECOND_STRIKER', 'CENTRE_FORWARD'
+  'LEFT_MIDFIELDER', 'RIGHT_WINGER', 'LEFT_WINGER', 'STRIKER'
 ];
 
 function validateRegistration(body) {
@@ -72,10 +72,10 @@ function validateRegistration(body) {
     const positions = profile.positions;
     if (positions == null) {
       output.positions = [];
-    } else if (!Array.isArray(positions) || positions.length > 15
+    } else if (!Array.isArray(positions) || positions.length > 14
       || Array.from(positions).some(value => typeof value !== 'string' || !playerPositions.includes(value))
       || new Set(positions).size !== positions.length) {
-      errors['profile.positions'] = 'Envoyer un tableau de 15 postes maximum, sans doublon, avec les codes autorisés en majuscules.';
+      errors['profile.positions'] = 'Envoyer un tableau de 14 postes maximum, sans doublon, avec les codes autorisés en majuscules.';
     } else {
       output.positions = [...positions];
     }

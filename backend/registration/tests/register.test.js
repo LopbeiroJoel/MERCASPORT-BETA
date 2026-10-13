@@ -239,7 +239,7 @@ test('postes multiples : sauvegarde et reponse de la liste complete', async () =
   const positions = ['GOALKEEPER','CENTRE_BACK','RIGHT_BACK','LEFT_BACK',
     'RIGHT_WING_BACK','LEFT_WING_BACK','DEFENSIVE_MIDFIELDER','CENTRAL_MIDFIELDER',
     'ATTACKING_MIDFIELDER','RIGHT_MIDFIELDER','LEFT_MIDFIELDER','RIGHT_WINGER',
-    'LEFT_WINGER','SECOND_STRIKER','CENTRE_FORWARD'];
+    'LEFT_WINGER','STRIKER'];
   for (const [index, selection] of [positions, ['GOALKEEPER'], null, [], undefined].entries()) {
     const profile = { ...player.profile };
     if (selection !== undefined) profile.positions = selection;
@@ -255,7 +255,7 @@ test('postes multiples : sauvegarde et reponse de la liste complete', async () =
 
 test('positions invalides : erreur profile.positions, aucune creation de compte', async () => {
   const initial = await count();
-  for (const positions of ['GOALKEEPER', ['TOTO'], ['goalkeeper'], ['STRIKER'],
+  for (const positions of ['GOALKEEPER', ['TOTO'], ['goalkeeper'], ['SECOND_STRIKER'], ['CENTRE_FORWARD'],
     ['GOALKEEPER','GOALKEEPER'], Array(16).fill('GOALKEEPER'), [null], [123], [['GOALKEEPER']], {}]) {
     const response = await post({ ...player, profile: { ...player.profile, positions } });
     assert.equal(response.status, 400);
@@ -287,4 +287,19 @@ test('migration : conversion francaise, idempotence, refus sans perte puis suppr
   assert.deepEqual((await pool.query('SELECT positions FROM player_profiles WHERE user_id=$1', [user.id])).rows[0].positions, ['CENTRE_BACK','GOALKEEPER']);
   await assert.rejects(pool.query('UPDATE player_profiles SET positions=$1 WHERE user_id=$2', [['TOTO'], user.id]));
   await assert.rejects(pool.query('UPDATE player_profiles SET positions=$1 WHERE user_id=$2', [['GOALKEEPER','GOALKEEPER'], user.id]));
+});
+
+test('migration Buteur : fusion des anciens postes sans doublon ni perte des autres postes', async () => {
+  const fs = require('node:fs/promises');
+  const path = require('node:path');
+  const migration = await fs.readFile(path.join(__dirname, '../../../database/player-positions.sql'), 'utf8');
+  const user = (await pool.query('SELECT id FROM users WHERE email=$1', [player.email])).rows[0];
+  await pool.query('ALTER TABLE player_profiles DROP CONSTRAINT player_profiles_positions_check');
+  await pool.query('UPDATE player_profiles SET positions=$1 WHERE user_id=$2',
+    [['SECOND_STRIKER', 'GOALKEEPER', 'CENTRE_FORWARD', 'STRIKER'], user.id]);
+  await pool.exec(migration);
+  await pool.exec(migration);
+  assert.deepEqual((await pool.query('SELECT positions FROM player_profiles WHERE user_id=$1', [user.id])).rows[0].positions,
+    ['STRIKER', 'GOALKEEPER']);
+  await assert.rejects(pool.query('UPDATE player_profiles SET positions=$1 WHERE user_id=$2', [['CENTRE_FORWARD'], user.id]));
 });

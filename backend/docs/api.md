@@ -98,7 +98,7 @@ Ce changement concerne le profil joueur uniquement ; `ads.position` reste inchan
 ```
 
 - Facultatif : cle absente, `null` ou `[]` sont enregistres comme `[]`.
-- Sinon : tableau de textes, maximum 15 elements, aucun doublon.
+- Sinon : tableau de textes, maximum 14 elements, aucun doublon.
 - Chaque code doit etre exact, en majuscules ; aucune conversion silencieuse des nouvelles inscriptions.
 - Un texte seul, une valeur inconnue, un element null ou un tableau imbrique est refuse.
 - L'ancien champ `profile.position` et les postes sur un profil CLUB sont refuses.
@@ -121,8 +121,7 @@ RIGHT_MIDFIELDER
 LEFT_MIDFIELDER
 RIGHT_WINGER
 LEFT_WINGER
-SECOND_STRIKER
-CENTRE_FORWARD
+STRIKER
 ```
 
 ### GET /profile/me
