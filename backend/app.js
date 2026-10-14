@@ -8,6 +8,7 @@ const { createLoginRouter } = require('./authentication/router');
 const { createLogoutRouter } = require('./authentication/logout-router');
 const { createProfileRouter } = require('./profile');
 const { createAdminRouter } = require('./admin/router');
+const { createAdsRouter } = require('./ads/router');
 
 // Fragment SQL partagé par la liste et le détail : évite de répéter les colonnes.
 // AS renomme un champ dans le résultat ; coalesce choisit la première valeur non NULL.
@@ -62,6 +63,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   app.use('/auth', createRegistrationRouter(pool));
   app.use('/profile', createProfileRouter(pool, sessions));
   app.use('/admin', createAdminRouter(pool, sessions));
+  app.use('/ads', createAdsRouter(pool, sessions));
 
   // Décode les corps application/json vers req.body et limite leur taille à 16 Ko.
   // Ne lit pas les formulaires classiques ; un JSON mal formé part vers le gestionnaire d'erreurs.
