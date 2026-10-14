@@ -62,7 +62,23 @@
 <dialog id="ads-detail">                       
     <div class="ads-inner">
         <button id="x-detail" aria-label="Fermer la fenêtre">&#10005;</button>
-        <div id="ads-content"></div>                    
+        <div id="ads-content"></div>
+        
+        <h3>Postuler</h3>
+        <form id="apply-form">
+            <label for="apply-name">Nom :</label>
+            <input type="text" id="apply-name" name="name" maxlength="200" autocomplete="name" required>
+            <label for="apply-email">Email :</label>
+            <input type="email" id="apply-email" name="email" maxlength="255" autocomplete="email" required>
+            <label for="apply-phone">Téléphone (facultatif) :</label>
+            <input type="tel" id="apply-phone" name="phone" maxlength="30" autocomplete="tel"
+                inputmode="tel" pattern="\+?[0-9]{6,15}"
+                title="Uniquement des chiffres (un + est accepté au début), 6 à 15 chiffres">
+            <label for="apply-text">Message :</label>
+            <textarea id="apply-text" name="text" rows="4" maxlength="2000"></textarea>
+            <button type="submit" id ="apply-submit">Envoyer ma candidature</button>
+        </form>
+        <p role="status" id="apply-message"></p>
     </div>
   </dialog>
 <footer>                                        <!-- pied de page -->
