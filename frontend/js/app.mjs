@@ -132,6 +132,13 @@ function renderAds(ads) {
   requestAnimationFrame(updateCarouselControls);
 }
 
+function normalizeText(value) {
+  value = value ?? '';
+  value = value.trim().toLowerCase();
+  value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return value;
+}
+
 const form = document.querySelector('.search form');
 form.addEventListener('submit', event => {
   event.preventDefault();
@@ -141,16 +148,12 @@ form.addEventListener('submit', event => {
   let valueLocation = formLocation.value;
   let formCompany = form.querySelector('input[name="company"]');
   let valueCompany = formCompany.value;
-  // on nettoie les valeurs pour éviter les erreurs
-  valueKeywords = valueKeywords.trim().toLowerCase();
-  valueLocation = valueLocation.trim().toLowerCase();
-  valueCompany = valueCompany.trim().toLowerCase();
 
   // on filtre les annonces en fonction des critères de recherche
   const adsFiltered = allAds.filter(ad => {
-    return ad.title.trim().toLowerCase().includes(valueKeywords) &&
-      (ad.location ?? '').trim().toLowerCase().includes(valueLocation) &&
-      ad.club.trim().toLowerCase().includes(valueCompany);
+    return normalizeText(ad.title).includes(normalizeText(valueKeywords)) &&
+      normalizeText(ad.location ?? '').includes(normalizeText(valueLocation)) &&
+      normalizeText(ad.club).includes(normalizeText(valueCompany));
   });
 
   renderAds(adsFiltered);
