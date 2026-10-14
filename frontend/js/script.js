@@ -96,8 +96,11 @@ async function loadAds() {
   } catch (error) {
     console.error(error);                               // message pour le développeur
     adsStatus.textContent = "Impossible de charger les offres. Veuillez réessayer plus tard.";  // message pour le visiteur
+  
+  } finally {
+    list.setAttribute("aria-busy", "false");                       // le chargement est terminé, même si elle est vide
   }
-}
+}                                                       // fin de la fonction loadAds()
 
 loadAds();                                              // appel de la fonction, une seule fois
 
