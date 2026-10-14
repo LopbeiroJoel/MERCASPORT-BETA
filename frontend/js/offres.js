@@ -7,7 +7,9 @@ const locationFilter = document.getElementById("filter-location");
 const detail = document.getElementById("ads-detail");     // la <dialog>
 const content = document.getElementById("ads-content");    // la <div> qu'on remplit
 const closeBtn = document.getElementById("x-detail");   // la croix
-
+const applyForm = document.getElementById("apply-form");
+const applyMessage = document.getElementById("apply-message");
+const applyButton = document.getElementById("apply-submit");
 // ===== ORDRES D'AFFICHAGE DES FILTRES =====
 const POSITION_ORDER = [
   "Gardien",
@@ -30,7 +32,7 @@ function addLine(label, value) {
   content.appendChild(p);
 }
 
-
+let currentAdId = null;   // l'id de l'offre affichée dans la modale (null = aucune)
 let allAds = [];   // toutes les offres reçues du serveur, gardées pour le filtrage
 
 // ===== 2. AFFICHER UNE LISTE D'OFFRES =====
@@ -180,6 +182,10 @@ filtersForm.addEventListener("reset", () => {
 
 // ===== 8. AFFICHER LE DÉTAIL D'UNE OFFRE =====
 function showDetail(ad) {
+  currentAdId = ad.id;                 // on retient l'offre ouverte
+  applyForm.reset();                   // on vide le formulaire
+  applyMessage.textContent = "";     // on efface l'ancien message
+
   content.innerHTML = "";                  // on vide le contenu de l'offre précédente
 
   const title = document.createElement("h2");
@@ -207,6 +213,50 @@ closeBtn.addEventListener("click", () => {
 detail.addEventListener("click", (event) => {
   if (event.target === detail) {
     detail.close();
+  }
+});
+
+// ===== Téléphone : on ne garde que les chiffres (et un + au début) =====
+const phoneInput = document.getElementById("apply-phone");
+
+phoneInput.addEventListener("input", () => {
+  phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, "");
+});
+
+// ===== 9. ENVOYER UNE CANDIDATURE =====
+applyForm.addEventListener("submit", async (event) => {
+  event.preventDefault();                                   // pas de rechargement de la page
+
+  const data = {
+    ad_id: currentAdId,                                  // l'offre ouverte
+    name: document.getElementById("apply-name").value.trim(),
+    email: document.getElementById("apply-email").value.trim(),
+    phone: phoneInput.value || null, 
+    message: document.getElementById("apply-text").value.trim() || null,
+  };
+
+  applyButton.disabled = true;                    // bloque le bouton pendant l'envoi
+  applyMessage.textContent = "Envoi en cours…";
+
+  try {
+    const response = await fetch("/applications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+
+    if (response.ok) {
+      applyMessage.textContent = "Candidature envoyée ! Le club reviendra vers vous.";
+      applyForm.reset();                         // on vide le formulaire après succès
+    } else {
+      applyMessage.textContent = result.error;   // message du serveur
+    }
+  } catch (error) {
+    console.error(error);
+    applyMessage.textContent = "Impossible de joindre le serveur. Réessayez plus tard.";
+  } finally {
+    applyButton.disabled = false;                  // on réactive le bouton
   }
 });
 
