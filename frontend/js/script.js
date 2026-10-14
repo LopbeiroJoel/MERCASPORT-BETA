@@ -5,7 +5,7 @@ const detail = document.getElementById("ads-detail");   // le <dialog> (la modal
 const content = document.getElementById("ads-content"); // la <div> dans la modale, vidée et remplie à chaque clic
 const closeBtn = document.getElementById("x-detail");   // la croix, qui reste en place dans la modale
 const API_URL = "";        // l'adresse de l'API
-
+const adsStatus = document.getElementById("ads-status");   // le <p> qui affiche le nombre d'offres ou un message d'erreur
 // ===== 2. CHARGER LES OFFRES ET CRÉER LES CARTES =====
 
 async function loadAds() {
@@ -92,13 +92,10 @@ async function loadAds() {
 
       li.appendChild(button);                           // le bouton est accroché à la carte, en dernier
     });                                                 // fin de la boucle
-
+    adsStatus.textContent = mostRecent.length + " offres à découvrir.";
   } catch (error) {
     console.error(error);                               // message pour le développeur
-
-    const message = document.createElement("p");        // message pour le visiteur
-    message.textContent = "Impossible de charger les offres. Veuillez réessayer plus tard.";
-    list.appendChild(message);
+    adsStatus.textContent = "Impossible de charger les offres. Veuillez réessayer plus tard.";  // message pour le visiteur
   }
 }
 
