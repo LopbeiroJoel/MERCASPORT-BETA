@@ -1,4 +1,4 @@
-// Afficher le pseudo sur l'accueil si le serveur confirme la connexion.
+// Afficher le pseudo dans le bandeau si le serveur confirme la connexion.
 async function loadAccount() {
   const link = document.getElementById('account-link');
   const register = document.getElementById('register-link');
