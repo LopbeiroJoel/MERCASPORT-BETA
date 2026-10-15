@@ -42,11 +42,34 @@ function fillSheet(profile, isPlayer) {
   }
 }
 
+// Afficher le lien uniquement après vérification des droits par le serveur.
+async function loadAdminAccess() {
+  const link = document.getElementById('admin-link');
+  link.hidden = true;
+  try {
+    const response = await fetch('/admin/me', { credentials: 'same-origin', cache: 'no-store' });
+    if (!response.ok) return false;
+    const data = await response.json();
+    const allowed = data.admin?.role === 'ADMIN';
+    link.hidden = !allowed;
+    return allowed;
+  } catch {
+    return false;
+  }
+}
+
 async function loadProfile() {
+  const isAdmin = await loadAdminAccess();
   try {
     const response = await fetch('/profile/me', { credentials: 'same-origin', cache: 'no-store' });
     if (response.status === 401) {
       window.location.replace('login.html');
+      return;
+    }
+    if (response.status === 403 && isAdmin) {
+      document.getElementById('profile-title').textContent = 'Mon compte administrateur';
+      logoutButton.hidden = false;
+      message.textContent = 'Utilise le lien Panel admin pour accéder à l’administration.';
       return;
     }
     if (!response.ok) throw new Error('Profil indisponible. Vérifie la configuration du backend et de la base.');
