@@ -4,6 +4,15 @@ Le front et l’API partagent la même origine : `http://localhost:3000` en loca
 le domaine du projet sur Vercel. Les appels navigateur utilisent `/ads` et `/ads/:id`.
 Les annonces viennent de PostgreSQL, via `public.ads_details` ; aucun filtre de statut.
 
+## GET /auth/me
+
+Utilise le cookie de session existant pour identifier le compte connecté.
+`200` : `{ "user": { "id": 18, "username": "JoelTestDemo", "role": "PLAYER" } }`.
+Aucun email ni mot de passe n'est renvoyé. Réponse non mise en cache (`no-store`).
+`401 AUTH_REQUIRED` : session absente, expirée, révoquée ou compte bloqué.
+`503` : authentification non configurée ou service indisponible.
+Sur l'accueil, le pseudo remplace « Se connecter » et mène au profil.
+
 ## GET /health
 
 Vérifie aussi la connexion PostgreSQL : `200` avec `{ "status": "OK", "timestamp": "..." }`.
@@ -139,3 +148,11 @@ La route PATCH existante conserve ses six champs communs : cette modification n'
 3. Relancer la premiere migration, puis `database/player-positions-cleanup.sql`.
    Seule l'ancienne colonne du profil joueur est retiree, sans CASCADE.
    Une correspondance inconnue arrete la conversion ; completer la table de correspondance avant suppression.
+
+
+## Modifier son pseudo : PATCH /profile/me
+
+Envoyer `{"username":"Mon nouveau pseudo"}` avec le cookie de session et la même origine.
+Le pseudo suit les règles de l'inscription (3 à 50 caractères) et doit être unique.
+`200` renvoie le compte actualisé ; `400` pour un pseudo invalide ; `409 USERNAME_TAKEN` pour un doublon.
+Le compte modifié est toujours celui de la session. Les autres champs du profil restent modifiables dans le même formulaire.

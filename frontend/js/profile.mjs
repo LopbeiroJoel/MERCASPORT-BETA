@@ -6,6 +6,7 @@ const logoutButton = document.getElementById('logout-button');
 
 function fillAccount(user) {
   document.getElementById('profile-name').textContent = user.username;
+  document.getElementById('username').value = user.username;
   document.getElementById('profile-id').textContent = user.id;
   document.getElementById('profile-email').textContent = user.email;
   for (const field of ['biography', 'phone', 'location']) {
@@ -42,11 +43,34 @@ function fillSheet(profile, isPlayer) {
   }
 }
 
+// Afficher le lien uniquement après vérification des droits par le serveur.
+async function loadAdminAccess() {
+  const link = document.getElementById('admin-link');
+  link.hidden = true;
+  try {
+    const response = await fetch('/admin/me', { credentials: 'same-origin', cache: 'no-store' });
+    if (!response.ok) return false;
+    const data = await response.json();
+    const allowed = data.admin?.role === 'ADMIN';
+    link.hidden = !allowed;
+    return allowed;
+  } catch {
+    return false;
+  }
+}
+
 async function loadProfile() {
+  const isAdmin = await loadAdminAccess();
   try {
     const response = await fetch('/profile/me', { credentials: 'same-origin', cache: 'no-store' });
     if (response.status === 401) {
       window.location.replace('login.html');
+      return;
+    }
+    if (response.status === 403 && isAdmin) {
+      document.getElementById('profile-title').textContent = 'Mon compte administrateur';
+      logoutButton.hidden = false;
+      message.textContent = 'Utilise le lien Panel admin pour accéder à l’administration.';
       return;
     }
     if (!response.ok) throw new Error('Profil indisponible. Vérifie la configuration du backend et de la base.');
@@ -70,7 +94,7 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   saveButton.disabled = true;
   message.textContent = 'Enregistrement…';
-  const body = {};
+  const body = { username: document.getElementById('username').value };
   for (const field of ['biography', 'phone', 'location']) body[field] = document.getElementById(field).value;
   for (const field of ['email', 'phone', 'location']) body[field + '_visible'] = document.getElementById(field + '-visible').checked;
   try {
@@ -83,7 +107,7 @@ form.addEventListener('submit', async event => {
       return;
     }
     const data = await response.json();
-    if (!response.ok) throw new Error(data.field ? 'Champ invalide : ' + data.field : 'Enregistrement refusé ou indisponible.');
+    if (!response.ok) throw new Error(data.message || (data.field ? 'Champ invalide : ' + data.field : 'Enregistrement refusé ou indisponible.'));
     fillAccount(data.user);
     message.textContent = 'Profil enregistré dans la base. Recharge la page pour vérifier.';
   } catch (error) {

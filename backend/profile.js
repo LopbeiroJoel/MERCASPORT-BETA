@@ -1,4 +1,5 @@
 const express = require('express');
+const { validateRegistration } = require('./registration/validation');
 
 function createProfileRouter(pool, sessions) {
   const router = express.Router();
@@ -102,6 +103,7 @@ function createProfileRouter(pool, sessions) {
       }
 
       const allowedFields = [
+        'username',
         'biography',
         'phone',
         'location',
@@ -123,6 +125,15 @@ function createProfileRouter(pool, sessions) {
 
       if (Object.keys(body).length === 0) {
         return res.status(400).json({ code: 'EMPTY_UPDATE' });
+      }
+
+      // Réutiliser les mêmes règles de pseudo qu'à l'inscription.
+      if (Object.hasOwn(body, 'username')) {
+        const { data, errors } = validateRegistration({ username: body.username });
+        if (errors.username) {
+          return res.status(400).json({ code: 'INVALID_FIELD', field: 'username', message: errors.username });
+        }
+        body.username = data.username;
       }
 
       // Vérifier les textes et leurs longueurs.
@@ -203,7 +214,10 @@ function createProfileRouter(pool, sessions) {
           role: identity.role
         }
       });
-    } catch {
+    } catch (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ code: 'USERNAME_TAKEN', message: 'Ce pseudo est déjà utilisé.' });
+      }
       return res.status(503).json({ code: 'PROFILE_UNAVAILABLE' });
     }
   });

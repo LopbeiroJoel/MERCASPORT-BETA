@@ -23,15 +23,14 @@
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="offres.html">Offres</a></li>
-        <!-- <li><a href="about.html">À propos</a></li> -->
         <!-- <li><a href="actualites.html">Actualités</a></li>
         <li><a href="contact.html">Contact</a></li> -->
       </ul>
     </nav>
 
     <div role="group" aria-label="Accès au compte"> <!-- actions séparées de la navigation centrale -->
-      <a href="login.html" class="button-secondary">Se connecter</a>
-      <a href="register.html" class="primary-button">S'inscrire</a>
+      <a id="account-link" href="login.html" class="button-secondary">Se connecter</a>
+      <a id="register-link" href="register.html" class="primary-button">S'inscrire</a>
     </div>
   </header>
 
@@ -42,7 +41,7 @@
     <section class="search" aria-labelledby="hero-title">
       <h1 id="hero-title">Bienvenue sur <span>Mercasport</span></h1>
       <h2>Démarrez votre carrière professionnelle ici</h2>
-      <form action="#" method="get">              <!-- la recherche conserve son comportement actuel -->
+      <form action="offres.html" method="get">              <!-- GET transmet les critères dans l’URL de la page offres -->
         <div>                                     <!-- regroupe les trois champs sur une même ligne -->
           <input type="text" name="keywords" placeholder="Mot-clés" aria-label="Mot-clés">
           <input type="text" name="location" placeholder="Localisation" aria-label="Localisation">
@@ -92,8 +91,7 @@
         <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
           <h2 id="footer-navigation-title">Sur le terrain</h2>
           <ul>
-            <li><a href="offres.html">Découvrir les offres</a></li>
-            <li><a href="about.html">À propos</a></li>
+            <li><a href="#ads-list">Découvrir les offres</a></li>
             <li><a href="register.html">Créer un compte</a></li>
             <li><a href="login.html">Se connecter</a></li>
           </ul>
@@ -118,6 +116,7 @@
     </div>
   </footer>
 
-  <script type="module" src="js/script.js"></script>               <!-- charge le JS EN DERNIER : les éléments ci-dessus existent déjà -->
+  <script type="module" src="js/account.mjs"></script>
+ <script src="js/script.js"></script>
 </body>
 </html>

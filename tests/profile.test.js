@@ -265,3 +265,89 @@ test('formulaire Thomas servi au bon endroit avec les deux roles et les 14 poste
   assert.ok(!html.includes('value="SECOND_STRIKER"'));
   assert.ok(!html.includes('value="CENTRE_FORWARD"'));
 });
+
+test('accueil : auth/me refuse les visiteurs et renvoie seulement id, pseudo et rôle', async () => {
+  const anonymous = await fetch(base + '/auth/me');
+  assert.equal(anonymous.status, 401);
+  assert.equal(anonymous.headers.get('cache-control'), 'no-store');
+  assert.equal((await fetch(base + '/auth/me', { headers: { Cookie: '__Host-mercasport_session=faux' } })).status, 401);
+  for (const account of [player, club]) {
+    const cookie = await login(account.email);
+    const response = await fetch(base + '/auth/me', { headers: { Cookie: cookie } });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { user: { id: account.id, username: account.username, role: account.role } });
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+  }
+});
+
+test('accueil : pseudo actualisé, déconnexion et comptes bloqués pris en compte', async () => {
+  const cookie = await login(player.email);
+  try {
+    await pool.query("UPDATE users SET username='Pseudo Actualisé' WHERE id=$1", [player.id]);
+    const response = await fetch(base + '/auth/me', { headers: { Cookie: cookie } });
+    assert.equal((await response.json()).user.username, 'Pseudo Actualisé');
+    for (const status of ['BANNED', 'DISABLED']) {
+      await pool.query('UPDATE users SET status=$1 WHERE id=$2', [status, player.id]);
+      assert.equal((await fetch(base + '/auth/me', { headers: { Cookie: cookie } })).status, 401);
+    }
+  } finally {
+    await pool.query("UPDATE users SET username=$1, status='PENDING' WHERE id=$2", [player.username, player.id]);
+  }
+  assert.equal((await post('/auth/logout', {}, cookie)).status, 204);
+  assert.equal((await fetch(base + '/auth/me', { headers: { Cookie: cookie } })).status, 401);
+});
+
+test('accueil : authentification non configurée ou SQL en panne, sans détail privé', async () => {
+  const cookie = await login(player.email);
+  for (const configured of [false, true]) {
+    const app = configureApp(express(), {
+      query: async () => { throw new Error('SQL privé'); }
+    }, { authSecret: configured ? secret : '', appOrigin: configured ? origin : '' });
+    const other = app.listen(0, '127.0.0.1');
+    await once(other, 'listening');
+    try {
+      const response = await fetch('http://127.0.0.1:' + other.address().port + '/auth/me', { headers: { Cookie: cookie } });
+      assert.equal(response.status, 503);
+      assert.deepEqual(await response.json(), { code: configured ? 'AUTH_UNAVAILABLE' : 'AUTH_NOT_CONFIGURED' });
+    } finally {
+      await new Promise(resolve => other.close(resolve));
+    }
+  }
+});
+
+
+test('pseudo : modification personnelle, normalisation et connexion avec le nouveau pseudo', async () => {
+  const cookie = await login(player.email);
+  try {
+    const response = await patch({ username: '  Nouveau pseudo  ' }, cookie);
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).user.username, 'Nouveau pseudo');
+    assert.equal((await (await me(cookie)).json()).user.username, 'Nouveau pseudo');
+    assert.equal((await pool.query('SELECT username FROM users WHERE id=$1', [club.id])).rows[0].username, club.username);
+    const newCookie = await login('nouveau pseudo');
+    assert.equal((await me(newCookie)).status, 200);
+    assert.equal((await post('/auth/login', { identifier: player.username, password })).status, 401);
+    const home = await fetch(base + '/auth/me', { headers: { Cookie: cookie } });
+    assert.equal((await home.json()).user.username, 'Nouveau pseudo');
+  } finally {
+    await pool.query('UPDATE users SET username=$1 WHERE id=$2', [player.username, player.id]);
+  }
+});
+
+test('pseudo : valeurs invalides, doublons et modification d’un autre compte refusés', async () => {
+  const cookie = await login(player.email);
+  for (const username of ['', 'ab', 'x'.repeat(51), 42, null, '<script>', 'Pseudo\u0000']) {
+    const response = await patch({ username }, cookie);
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).field, 'username');
+  }
+  assert.equal((await patch({ username: 'Sans session' })).status, 401);
+  assert.equal((await patch({ username: 'Autre origine' }, cookie, 'https://evil.test')).status, 403);
+  assert.equal((await patch({ username: 'Autre compte', id: club.id }, cookie)).status, 400);
+  const conflict = await patch({ username: club.username.toUpperCase(), biography: 'Ne pas enregistrer' }, cookie);
+  assert.equal(conflict.status, 409);
+  assert.equal((await conflict.json()).code, 'USERNAME_TAKEN');
+  const user = (await (await me(cookie)).json()).user;
+  assert.equal(user.username, player.username);
+  assert.notEqual(user.biography, 'Ne pas enregistrer');
+});

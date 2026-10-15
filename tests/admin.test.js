@@ -117,31 +117,34 @@ test('bannissement : compte conserve, sessions revoquees, connexion et annonces 
   assert.equal(log[0].reason, '');
 });
 
-test('suppression : annonce conservee en SQL, masquee au public et aux candidatures', async () => {
+test('suppression : annonce et candidatures retirées du SQL et des listes', async () => {
   const ad = (await pool.query('SELECT id FROM ads WHERE author_id=3 ORDER BY id LIMIT 1')).rows[0];
   const before = Number((await pool.query('SELECT count(*) AS n FROM ads')).rows[0].n);
+  await pool.query("INSERT INTO applications(ad_id,name,email) VALUES ($1,'Test','delete@example.com')", [ad.id]);
+  await pool.query("INSERT INTO admin_actions(admin_user_id,action,target_ad_id) VALUES (1,'DELETE_AD',$1)", [ad.id]);
   const response = await post('/admin/ads/' + ad.id + '/delete');
   assert.equal(response.status, 200);
-  assert.deepEqual((await response.json()).ad, { id: ad.id, status: 'DELETED' });
-  const stored = (await pool.query('SELECT status,deleted_at FROM ads WHERE id=$1', [ad.id])).rows[0];
-  assert.equal(stored.status, 'DELETED');
-  assert.ok(stored.deleted_at);
-  assert.equal(Number((await pool.query('SELECT count(*) AS n FROM ads')).rows[0].n), before);
+  assert.deepEqual((await response.json()).ad, { id: ad.id });
+  assert.equal(Number((await pool.query('SELECT count(*) AS n FROM ads')).rows[0].n), before - 1);
+  for (const [table, key] of [['ads','id'], ['applications','ad_id'], ['ad_positions','ad_id'], ['admin_actions','target_ad_id']]) {
+    assert.equal((await pool.query(`SELECT * FROM ${table} WHERE ${key}=$1`, [ad.id])).rows.length, 0);
+  }
   assert.equal((await get('/ads/' + ad.id, null)).status, 404);
   assert.ok((await (await get('/ads', null)).json()).every(row => row.id !== ad.id));
   assert.equal((await post('/applications', { ad_id: ad.id, name: 'Test', email: 'test@example.invalid' }, null)).status, 404);
   const adminAds = await (await get('/admin/ads?search=' + ad.id)).json();
-  assert.ok(adminAds.ads.some(row => row.id === ad.id && row.status === 'DELETED'));
-  assert.equal((await post('/admin/ads/' + ad.id + '/delete')).status, 409);
-  assert.equal((await pool.query("SELECT * FROM admin_actions WHERE action='DELETE_AD' AND target_ad_id=$1", [ad.id])).rows.length, 1);
+  assert.ok(adminAds.ads.every(row => row.id !== ad.id));
+  assert.equal((await post('/admin/ads/' + ad.id + '/delete')).status, 404);
 });
 
 test('transactions : une erreur du journal annule la sanction et la revocation des sessions', async () => {
   const cookie = await cookieFor(4);
   const ad = (await pool.query("SELECT id FROM ads WHERE status='PUBLISHED' AND author_id=3 ORDER BY id LIMIT 1")).rows[0];
   await pool.exec(`CREATE FUNCTION test_refuse_admin_log() RETURNS trigger LANGUAGE plpgsql AS $$
-    BEGIN RAISE EXCEPTION 'Erreur de test'; END $$;
+    BEGIN RAISE EXCEPTION 'Erreur de test' USING ERRCODE = 'XX000'; END $$;
     CREATE TRIGGER refuse_admin_log BEFORE INSERT ON admin_actions
+    FOR EACH ROW EXECUTE FUNCTION test_refuse_admin_log();
+    CREATE TRIGGER refuse_ad_delete BEFORE DELETE ON ads
     FOR EACH ROW EXECUTE FUNCTION test_refuse_admin_log();`);
   try {
     assert.equal((await post('/admin/users/4/ban')).status, 503);
@@ -150,7 +153,7 @@ test('transactions : une erreur du journal annule la sanction et la revocation d
     assert.equal((await post('/admin/ads/' + ad.id + '/delete')).status, 503);
     assert.equal((await pool.query('SELECT status FROM ads WHERE id=$1', [ad.id])).rows[0].status, 'PUBLISHED');
   } finally {
-    await pool.exec('DROP TRIGGER refuse_admin_log ON admin_actions; DROP FUNCTION test_refuse_admin_log();');
+    await pool.exec('DROP TRIGGER refuse_admin_log ON admin_actions; DROP TRIGGER refuse_ad_delete ON ads; DROP FUNCTION test_refuse_admin_log();');
   }
 });
 

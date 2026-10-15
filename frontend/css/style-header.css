@@ -9,7 +9,7 @@ header {
     align-items: center;
     justify-content: space-between;
     gap: 2rem;
-    width: var(--container-width);
+    width: min(calc(100% - 2rem), var(--container-width));
     min-height: var(--header-height);
     margin: 0;
     padding: var(--space-3) var(--space-5);
@@ -148,4 +148,25 @@ header>a[aria-label="Mercasport — Accueil"] {
     #ads-list {
         scroll-margin-top: calc(2 * var(--header-height) + var(--space-7));
     }
+}
+
+/* Compte connecté : les couleurs vertes déjà utilisées par MercaSport. */
+header>[role="group"]>a.account-connected {
+    display: block;
+    color: var(--primary-500);
+    background: var(--neutral-900);
+    border: 1px solid var(--primary-500);
+    font-weight: 700;
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+header>[role="group"]>a.account-connected:hover {
+    background: var(--neutral-800);
+}
+
+header>[role="group"]>a[hidden] {
+    display: none;
 }

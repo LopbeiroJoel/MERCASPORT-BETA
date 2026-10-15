@@ -1,21 +1,393 @@
+/* Page Offres : reprend les surfaces, cartes et typographies de l'accueil. */
+.offers-page > header {
+  width: min(calc(100% - 2 * var(--container-padding)), var(--container-width));
+}
+
+.offers-page-content {
+  width: min(calc(100% - 2 * var(--container-padding)), var(--container-width));
+  margin-inline: auto;
+  padding-top: calc(var(--header-height) + var(--space-8));
+  padding-bottom: var(--space-8);
+}
+
+.offers-intro {
+  padding-block: var(--space-6) var(--space-7);
+  border-bottom: var(--border-default);
+  margin-bottom: var(--space-7);
+}
+
+.offers-intro h1 {
+  max-width: 20ch;
+  font-size: clamp(var(--font-size-3xl), 4vw, 3.5rem);
+}
+
+.offers-intro p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
 .offers-layout {
   display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 2rem;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
 }
 
-#filters {
+.offers-filters {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
+  max-height: calc(100vh - var(--header-height) - var(--space-7));
+  overflow-y: auto;
+  padding: var(--space-5);
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-600) transparent;
+}
+
+.offers-filters-heading {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
 }
 
-#filters label {
+.offers-filters-heading h2,
+.offers-results-heading h2 {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.offers-filters-heading h2 {
+  font-size: var(--font-size-md);
+}
+
+.offers-reset {
+  padding: var(--space-1) 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary-100);
+  font-size: var(--font-size-xs);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.offers-reset:hover:not(:disabled) {
+  background: transparent;
+  color: var(--primary-200);
+}
+
+.offers-search-fields {
+  display: grid;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+}
+
+.offers-search-fields label {
   display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.offers-search-fields input {
+  width: 100%;
+  padding: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.offers-filter-group {
+  border-top: var(--border-default);
+  padding-block: var(--space-4);
+}
+
+.offers-filter-group:last-child {
+  padding-bottom: 0;
+}
+
+.offers-filter-group summary {
+  cursor: pointer;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.offers-filter-group summary::marker {
+  color: var(--primary-200);
+}
+
+.offers-filter-group summary:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 4px;
+  border-radius: var(--radius-xs);
+}
+
+.offers-filter-group fieldset {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.offers-filter-group label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.offers-filter-group input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 3px 0 0;
+  padding: 0;
+  accent-color: var(--primary-200);
+}
+
+.offers-filter-group label:has(input:checked) {
+  color: var(--primary-100);
+}
+
+.offers-results {
+  min-width: 0;
+}
+
+.offers-results-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--space-7);
+  margin-bottom: var(--space-5);
+}
+
+.offers-results-heading h2 {
+  font-size: var(--font-size-xl);
+}
+
+#offers-count {
+  margin: 0;
+  color: var(--primary-200);
+  font-size: var(--font-size-sm);
+}
+
+#offers-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+#offers-list .job-card {
+  min-height: 360px;
+}
+
+#offers-list .offers-empty {
+  grid-column: 1 / -1;
+  padding: var(--space-7);
+  background: var(--color-surface-1);
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.offers-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Détail et candidature : une lecture confortable, sans modifier le parcours existant. */
+.offers-page #ads-detail {
+  width: min(1040px, calc(100% - 2 * var(--space-4)));
+  max-height: 88vh;
+  padding: 0;
+  overscroll-behavior: contain;
+}
+
+.offers-page #ads-detail::backdrop {
+  background: rgb(0 0 0 / 75%);
+}
+
+.offers-page .ads-inner {
+  padding: var(--space-6);
+}
+
+.offers-page #x-detail {
+  display: block;
+  position: sticky;
+  top: var(--space-3);
+  margin-left: auto;
+  margin-bottom: var(--space-4);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--primary-100);
+  background: var(--color-surface-2);
+  color: var(--primary-100);
+  z-index: var(--z-base);
+}
+
+.offers-dialog-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+#ads-content h2 {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-6);
+}
+
+.offer-detail-field {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.offer-detail-field strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.offers-application {
+  padding: var(--space-5);
+  background: var(--color-surface-1);
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.offers-application h3 {
+  font-size: var(--font-size-3xl);
+}
+
+.offers-application > p,
+#apply-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+#apply-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+#apply-form label {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+#apply-form input,
+#apply-form textarea {
+  width: 100%;
+}
+
+#apply-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+#apply-submit {
+  margin-top: var(--space-4);
+}
+
+#apply-message:empty {
+  display: none;
+}
+
+#apply-message {
+  margin: var(--space-4) 0 0;
+}
+
+@media (max-width: 1000px) {
+  .offers-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  #offers-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .offers-layout {
+  .offers-page-content {
+    padding-top: calc(2 * var(--header-height) + var(--space-6));
+  }
+
+  .offers-layout,
+  .offers-dialog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .offers-filters {
+    position: static;
+    max-height: none;
+  }
+
+  .offers-search-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .offers-filter-group fieldset {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .offers-page-content,
+  .offers-page > header {
+    width: calc(100% - 2 * var(--space-4));
+  }
+
+  .offers-search-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .offers-page > header {
+    gap: var(--space-2);
+  }
+
+  .offers-page header > [role="group"] {
+    gap: var(--space-1);
+  }
+
+  .offers-page header > [role="group"] > a {
+    padding: var(--space-2);
+    font-size: var(--font-size-xs);
+  }
+
+  .offers-page #ads-detail .ads-inner {
+    padding: var(--space-4);
+  }
+
+  .offers-filter-group fieldset {
     grid-template-columns: 1fr;
   }
 }
