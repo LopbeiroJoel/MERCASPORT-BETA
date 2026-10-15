@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix='mercasport-api-') as scratch:
                DB_HOST=str(socket), DB_PORT='15433', DB_NAME='postgres',
                DB_USER=subprocess.check_output(['id', '-un'], text=True).strip())
     try:
-        for name in ['schema.sql', 'seed.sql']:
+        for name in ['schema.sql', 'seed.sql', 'admin.sql']:
             with (repo / 'database' / name).open() as stream:
                 result = subprocess.run([str(pg_bin / 'psql'), '-X', '-v', 'ON_ERROR_STOP=1'],
                                         env=env, stdin=stream, text=True, capture_output=True)

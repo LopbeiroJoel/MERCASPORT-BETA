@@ -17,6 +17,10 @@ const errors = {
   AD_NOT_FOUND: 'Annonce introuvable.',
   AD_ALREADY_DELETED: 'Annonce déjà supprimée.',
   DELETE_AD_UNAVAILABLE: 'Suppression échouée : aucune modification enregistrée.',
+  ACCOUNT_CONFLICT: 'Ce pseudo ou cet e-mail est déjà utilisé.',
+  USER_UPDATE_UNAVAILABLE: 'Modification du compte indisponible.',
+  ADMIN_UNAVAILABLE: 'Modification indisponible. Réessaie plus tard.',
+  INVALID_TEXT: 'Le titre doit contenir entre 1 et 150 caractères.',
   CONFIRMATION_REQUIRED: 'La confirmation du bannissement est obligatoire.'
 };
 
@@ -25,7 +29,7 @@ async function request(url, options = {}) {
   const data = response.status === 204 ? null : await response.json();
   if (!response.ok) {
     if (response.status === 401) panel.hidden = true;
-    throw new Error(errors[data?.code] || 'Demande refusée ou service indisponible.');
+    throw new Error(Object.values(data?.fields || {}).join(' ') || data?.message || errors[data?.code] || 'Demande refusée ou service indisponible.');
   }
   return data;
 }
@@ -60,7 +64,11 @@ async function loadUsers() {
     button.textContent = 'Bannir';
     button.disabled = user.status === 'BANNED' || protectedIds.has(user.id) || user.id === admin.userId;
     button.addEventListener('click', () => banUser(user, button));
-    action.replaceChildren(button);
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.textContent = 'Modifier le pseudo';
+    editButton.addEventListener('click', () => editUser(user));
+    action.replaceChildren(editButton, button);
     results.append(row);
   }
 }
@@ -123,7 +131,11 @@ async function loadAds() {
     button.textContent = 'Supprimer';
     button.disabled = ad.status === 'DELETED';
     button.addEventListener('click', () => deleteAd(ad, button));
-    action.replaceChildren(button);
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.textContent = 'Modifier l’annonce';
+    editButton.addEventListener('click', () => editAd(ad));
+    action.replaceChildren(editButton, button);
     results.append(row);
   }
 }
@@ -146,6 +158,38 @@ async function runDelete(ad, button) {
     button.disabled = false;
     showError(error);
   }
+}
+
+// Version simple : une fenêtre de saisie, puis un appel PATCH.
+async function editUser(user) {
+  const username = window.prompt('Nouveau pseudo du compte ' + user.id + ' :', user.username);
+  if (username === null) return;
+  try {
+    await request('/admin/users/' + user.id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username })
+    });
+    await loadUsers();
+    message.textContent = 'Pseudo enregistré.';
+  } catch (error) { showError(error); }
+}
+
+async function editAd(ad) {
+  try {
+    const detail = await request('/admin/ads/' + ad.id);
+    const title = window.prompt('Nouveau titre de l’annonce ' + ad.id + ' :', detail.ad.title);
+    if (title === null) return;
+    const description = window.prompt('Nouvelle description :', detail.ad.description || '');
+    if (description === null) return;
+    await request('/admin/ads/' + ad.id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description })
+    });
+    await loadAds();
+    message.textContent = 'Annonce enregistrée.';
+  } catch (error) { showError(error); }
 }
 
 async function loadAdmins() {
