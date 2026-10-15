@@ -1,39 +1,101 @@
-<!DOCTYPE html>                                   <!-- indique au navigateur que c'est du HTML5 -->
-<html lang="fr">                                  <!-- racine de la page, contenu en français -->
-<head>                                            <!-- infos invisibles : réglages, titre, CSS -->
-  <meta charset="UTF-8">                          <!-- encodage : permet d'afficher les accents -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- adapte la page aux téléphones -->
-  <title>Se connecter - Mercasport</title>     <!-- titre affiché dans l'onglet du navigateur -->
-  <link rel="stylesheet" href="css/style.css">    <!-- relie le fichier de style -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - MercaSport</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style-header.css">
+  <link rel="stylesheet" href="css/style-footer.css">
+  <link rel="stylesheet" href="css/style-connexion.css">
 </head>
+<body class="connexion-page">
+  <header>                                        <!-- en-tête : logo, navigation, accès au compte -->
+    <!-- Emplacement du logo : le nom sert de repère tant que l'image n'est pas disponible. -->
+    <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
 
-<body>
+    <nav aria-label="Navigation principale">       <!-- liens vers les rubriques du site -->
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="offres.html">Offres</a></li>
+        <!-- <li><a href="actualites.html">Actualités</a></li>
+        <li><a href="contact.html">Contact</a></li> -->
+      </ul>
+    </nav>
 
-  <header>
-    <h1>Bienvenue sur Mercasport</h1>
+    <div role="group" aria-label="Accès au compte"> <!-- actions séparées de la navigation centrale -->
+      <a href="login.html" class="button-secondary" aria-current="page">Se connecter</a>
+      <a href="register.html" class="primary-button">S'inscrire</a>
+    </div>
   </header>
 
-  <nav>
-    <ul>
-      <li><a href="index.html">Accueil</a></li>
-      <li><a href="offres.html">Offres</a></li>
-      <li><a href="login.html">Se connecter</a></li>
-      <li><a href="register.html">S'inscrire</a></li>
-    </ul>
-  </nav>
-  <main>
-    <h2>Connexion</h2>
-    <form method="post" id="login-form">
-      <label for="identifier">E-mail ou pseudo</label>
-      <input id="identifier" name="identifier" autocomplete="username" maxlength="254" required>
-      <label for="password">Mot de passe</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
-      <button id="login-button" type="submit">Se connecter</button> 
-    </form>
-    <p>Pas encore de compte ? <a href="register.html">Créer un compte</a></p> <p id="login-message" role="status" aria-live="polite"></p>
+  <main class="connexion-main">
+    <div class="connexion-layout">
+      <section class="connexion-card" aria-labelledby="connexion-title">
+        <h1 id="connexion-title">Connexion</h1>
+        <p class="connexion-description">Heureux de vous retrouver. Connectez-vous à votre compte Mercasport.</p>
+
+        <!-- Identifiants et attributs conservés pour le JavaScript de connexion existant. -->
+        <form id="login-form">
+          <div class="connexion-field">
+            <label for="identifier">E-mail ou pseudo</label>
+            <input id="identifier" name="identifier" autocomplete="username" maxlength="254" placeholder="Votre e-mail ou votre pseudo" required>
+          </div>
+          <div class="connexion-field">
+            <label for="password">Mot de passe</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" placeholder="Votre mot de passe" required>
+          </div>
+          <button id="login-button" type="submit">Se connecter</button>
+        </form>
+        <p id="login-message" role="status" aria-live="polite"></p>
+
+        <p class="connexion-register">Pas encore de compte ? <a href="register.html">S’inscrire</a></p>
+      </section>
+
+      <aside class="connexion-story" aria-labelledby="connexion-story-title">
+        <h2 id="connexion-story-title">De retour sur le terrain.</h2>
+        <p>Retrouvez votre profil et les clubs qui recrutent. Votre prochaine équipe vous attend peut-être déjà.</p>
+        <div class="connexion-visual" aria-hidden="true"></div>
+        <a href="offres.html">Découvrir les offres avant de se connecter</a>
+      </aside>
+    </div>
   </main>
-  <footer>
-    <p>© 2026 MERCASPORT</p>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <a class="footer-logo" href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+          <p>Le mercato du football amateur.</p>
+          <p>Des clubs, des joueurs et une même passion. Trouvez l’équipe dans laquelle écrire la suite de votre parcours.</p>
+        </div>
+
+        <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
+          <h2 id="footer-navigation-title">Sur le terrain</h2>
+          <ul>
+            <li><a href="offres.html">Découvrir les offres</a></li>
+            <li><a href="register.html">Créer un compte</a></li>
+            <li><a href="login.html">Se connecter</a></li>
+          </ul>
+        </nav>
+
+        <div class="footer-contact">
+          <h2>Parlons football</h2>
+          <!-- Coordonnées de démonstration, à remplacer avant publication. -->
+          <address>
+            <p>12, allée du Stade<br>67000 Strasbourg, France</p>
+            <p>bonjour@mercasport.example</p>
+            <p>Du lundi au vendredi<br>9 h – 18 h</p>
+          </address>
+          <p class="footer-demo-note">Coordonnées fictives pour cette démonstration.</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Mercasport. Tous droits réservés.</p>
+        <p>Le football commence par une rencontre.</p>
+      </div>
+    </div>
   </footer>
   <script type="module" src="js/login.mjs"></script>
 </body>
