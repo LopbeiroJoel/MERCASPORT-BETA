@@ -134,7 +134,7 @@ form.addEventListener("submit", async (event) => {
 
     if (response.ok) {
       // Code 200 à 299 (ici 201) : compte créé → { message: "Compte et profil créés.", ... }
-      message.textContent = result.message;
+      window.location.href = "index.html";
     } else {
         if (result.fields) {
             message.textContent = "Erreur dans les champs : " + Object.values(result.fields).join(", ");
