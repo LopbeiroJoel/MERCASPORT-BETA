@@ -7,9 +7,8 @@
 </head>
 <body>
   <h1>Panel administrateur</h1>
-  <p><a href="login.html">Connexion</a> | <a href="index.html">Retour au site</a></p>
+  <p><a href="login.html">Connexion</a> | <a href="profile.html">Mon profil</a> | <a href="index.html">Retour au site</a></p>
   <p id="message" role="status" aria-live="polite">Vérification de l'accès…</p>
-
   <main id="panel" hidden>
     <p id="identity"></p>
     <button id="logout" type="button">Se déconnecter</button>
@@ -22,17 +21,93 @@
     </section>
 
     <h2>Utilisateurs</h2>
-    <form id="users-search-form">
-      <label for="users-search">ID, pseudo, e-mail ou nom du club :</label>
-      <input id="users-search" maxlength="100" type="search">
-      <button type="submit">Rechercher</button>
-    </form>
-    <p id="users-count"></p>
-    <p>Maximum 50 résultats. Le bannissement demande une confirmation, sans motif.</p>
-    <table border="1">
-      <thead><tr><th>ID</th><th>Pseudo</th><th>E-mail</th><th>Type</th><th>Statut</th><th>Club</th><th>Action</th></tr></thead>
-      <tbody id="users-results"></tbody>
-    </table>
+    <div role="tablist" aria-label="Type de compte">
+      <button id="players-tab" type="button" role="tab" aria-selected="true" aria-controls="users-tab-panel">Joueurs</button>
+      <button id="clubs-tab" type="button" role="tab" aria-selected="false" aria-controls="users-tab-panel">Clubs</button>
+    </div>
+    <section id="users-tab-panel" role="tabpanel" aria-labelledby="players-tab">
+      <h3 id="users-title">Comptes joueurs</h3>
+      <form id="users-search-form">
+        <label for="users-search">ID, pseudo, e-mail ou nom du club :</label>
+        <input id="users-search" maxlength="100" type="search">
+        <button type="submit">Rechercher</button>
+      </form>
+      <p id="users-count"></p>
+      <p>Maximum 50 résultats par recherche et par type de compte.</p>
+      <table border="1">
+        <thead><tr><th>ID</th><th>Pseudo</th><th>E-mail</th><th>Type</th><th>Statut</th><th>Club</th><th>Actions</th></tr></thead>
+        <tbody id="users-results"></tbody>
+      </table>
+    </section>
+
+    <section id="user-editor" hidden>
+      <h2 id="user-editor-title">Modifier un compte</h2>
+      <button id="close-user-editor" type="button">Fermer la modification du compte</button>
+      <p>Chaque bouton enregistre uniquement sa rubrique. Le type joueur/club et les droits admin ne se changent pas ici.</p>
+      <form id="account-form">
+        <fieldset>
+          <legend>Pseudo et e-mail</legend>
+          <p><label>Pseudo <input id="edit-username" required minlength="3" maxlength="50"></label></p>
+          <p><label>E-mail <input id="edit-email" type="email" required maxlength="254"></label></p>
+          <p>Changer l'e-mail déconnecte les sessions du compte et remet son adresse à vérifier.</p>
+          <button type="submit">Enregistrer le pseudo et l'e-mail</button>
+        </fieldset>
+      </form>
+      <form id="user-profile-form">
+        <fieldset>
+          <legend>Coordonnées et présentation</legend>
+          <p><label>Photo (URL ou chemin local) <input id="edit-photo_url" maxlength="2000"></label></p>
+          <p><label>Téléphone <input id="edit-phone" type="tel" maxlength="30"></label></p>
+          <p><label>Localisation <input id="edit-location" maxlength="100"></label></p>
+          <p><label>Biographie<br><textarea id="edit-biography" rows="3" maxlength="2000"></textarea></label></p>
+          <p><label><input id="edit-email_visible" type="checkbox"> E-mail visible publiquement</label></p>
+          <p><label><input id="edit-phone_visible" type="checkbox"> Téléphone visible publiquement</label></p>
+          <p><label><input id="edit-location_visible" type="checkbox"> Localisation visible publiquement</label></p>
+        </fieldset>
+        <fieldset id="player-fields" hidden disabled>
+          <legend>Fiche joueur</legend>
+          <p><label>Prénom <input id="edit-first_name" required maxlength="100"></label></p>
+          <p><label>Nom <input id="edit-last_name" required maxlength="100"></label></p>
+          <p><label>Date de naissance <input id="edit-birth_date" type="date"></label></p>
+          <fieldset><legend>Postes</legend><div id="edit-player-positions"></div></fieldset>
+          <p><label>Pied fort <select id="edit-preferred_foot"><option value="">Non renseigné</option><option value="RIGHT">Droit</option><option value="LEFT">Gauche</option><option value="BOTH">Les deux</option></select></label></p>
+          <p><label>Taille en cm <input id="edit-height_cm" type="number" min="100" max="250"></label></p>
+          <p><label>Club actuel <input id="edit-current_club" maxlength="150"></label></p>
+          <p><label>Anciens clubs<br><textarea id="edit-past_clubs" rows="2" maxlength="2000"></textarea></label></p>
+          <p><label>Expérience<br><textarea id="edit-experience" rows="2" maxlength="2000"></textarea></label></p>
+          <p><label>Niveau <input id="edit-level" maxlength="100"></label></p>
+        </fieldset>
+        <fieldset id="club-fields" hidden disabled>
+          <legend>Fiche club</legend>
+          <p><label>Nom du club <input id="edit-name" required maxlength="150"></label></p>
+          <p><label>Ville <input id="edit-city" required maxlength="100"></label></p>
+          <p><label>Divisions <input id="edit-divisions" maxlength="100"></label></p>
+          <p><label>Description<br><textarea id="edit-description" rows="3" maxlength="5000"></textarea></label></p>
+          <p><label>Informations générales<br><textarea id="edit-general_info" rows="3" maxlength="2000"></textarea></label></p>
+        </fieldset>
+        <button type="submit">Enregistrer les coordonnées et la fiche</button>
+      </form>
+      <form id="status-form">
+        <fieldset id="status-fields">
+          <legend>Statut du compte</legend>
+          <select id="edit-status" aria-label="Statut du compte"><option value="PENDING">En attente</option><option value="ACTIVE">Actif</option><option value="BANNED">Banni</option><option value="DISABLED">Désactivé</option></select>
+          <button type="submit">Enregistrer le statut</button>
+          <p>Les comptes admin sont protégés des changements de statut.</p>
+        </fieldset>
+      </form>
+      <form id="verification-form">
+        <p><label><input id="edit-is_verified" type="checkbox"> Adresse e-mail vérifiée</label>
+        <button type="submit">Enregistrer la vérification</button></p>
+      </form>
+      <form id="password-form">
+        <fieldset>
+          <legend>Remplacer le mot de passe</legend>
+          <p>Le mot de passe actuel n'est jamais affiché. Le remplacement déconnecte le compte.</p>
+          <label>Nouveau mot de passe <input id="edit-password" type="password" autocomplete="new-password" required minlength="15" maxlength="128"></label>
+          <button type="submit">Remplacer le mot de passe</button>
+        </fieldset>
+      </form>
+    </section>
 
     <h2>Annonces</h2>
     <form id="ads-search-form">
@@ -42,11 +117,28 @@
     </form>
     <p id="ads-count"></p>
     <table border="1">
-      <thead><tr><th>ID</th><th>Titre</th><th>Auteur</th><th>Type</th><th>Club</th><th>Statut SQL</th><th>Date</th><th>Action</th></tr></thead>
+      <thead><tr><th>ID</th><th>Titre</th><th>Auteur</th><th>Type</th><th>Club</th><th>Statut SQL</th><th>Date</th><th>Actions</th></tr></thead>
       <tbody id="ads-results"></tbody>
     </table>
-
-    <p>Utilise les boutons pour modifier un pseudo, modifier le titre et la description d’une annonce, bannir ou supprimer. Les modifications sont enregistrées dans la base.</p>
+    <section id="ad-editor" hidden>
+      <h2 id="ad-editor-title">Modifier une annonce</h2>
+      <button id="close-ad-editor" type="button">Fermer la modification de l'annonce</button>
+      <form id="ad-form">
+        <p><label>Titre <input id="ad-title" required maxlength="150"></label></p>
+        <p><label>Ville <input id="ad-city" maxlength="100"></label></p>
+        <p><label>Département <select id="ad-department"><option value="">Non renseigné</option><option>Bas-Rhin</option><option>Haut-Rhin</option><option>Moselle</option><option>Meurthe-et-Moselle</option><option>Meuse</option><option>Vosges</option></select></label></p>
+        <p><label>Division <select id="ad-division_code"></select></label></p>
+        <fieldset><legend>Postes recherchés (au moins un)</legend><div id="edit-ad-positions"></div></fieldset>
+        <p><label>Description<br><textarea id="ad-description" required rows="4" maxlength="5000"></textarea></label></p>
+        <p><label>Pied préféré <select id="ad-preferred_foot"><option value="">Non renseigné</option><option>Droit</option><option>Gauche</option><option>Deux pieds</option><option>Indifférent</option></select></label></p>
+        <p><label>Rémunération <input id="ad-salary" maxlength="100"></label></p>
+        <p><label>Tranche d'âge <select id="ad-age_range"><option value="">Non renseigné</option><option value="UNDER_18">Moins de 18 ans</option><option value="18_25">18 à 25 ans</option><option value="26_35">26 à 35 ans</option><option value="36_PLUS">36 ans et plus</option><option value="ANY">Indifférent</option></select></label></p>
+        <p><label>Expérience <select id="ad-experience_level"><option value="">Non renseignée</option><option value="BEGINNER">Débutant</option><option value="DEPARTMENTAL">Départemental</option><option value="REGIONAL">Régional</option><option value="NATIONAL">National</option><option value="ANY">Indifférent</option></select></label></p>
+        <p><label>Essai possible <select id="ad-trial_possible"><option value="">Non renseigné</option><option value="true">Oui</option><option value="false">Non</option></select></label></p>
+        <p><label>Informations supplémentaires<br><textarea id="ad-additional_info" rows="3" maxlength="2000"></textarea></label></p>
+        <button type="submit">Enregistrer l'annonce</button>
+      </form>
+    </section>
   </main>
   <script type="module" src="js/admin.mjs"></script>
 </body>

@@ -1,4 +1,6 @@
 const express = require('express');
+const { transaction } = require('./helpers');
+const { deleteAd } = require('./deletion');
 const { requireAdmin } = require('./permissions');
 const { validateUserUpdate } = require('./user-validation');
 const { createUsersRouter } = require('./users');
@@ -38,6 +40,10 @@ function createAdminRouter(pool, sessions) {
     }
   });
 router.get('/users', async (req, res) => {
+  const role = req.query.role ?? '';
+  if (typeof role !== 'string' || !['', 'PLAYER', 'CLUB'].includes(role)) {
+    return res.status(400).json({ code: 'INVALID_ROLE_FILTER' });
+  }
   const search = req.query.search ?? '';
 
   if (typeof search !== 'string' || search.length > 100 || search.includes('\u0000')) {
@@ -55,6 +61,7 @@ router.get('/users', async (req, res) => {
        FROM public.users u
        LEFT JOIN public.club_profiles c ON c.user_id = u.id
        WHERE upper(u.role) IN ('PLAYER', 'CLUB')
+         AND ($2 = '' OR upper(u.role) = $2)
          AND (
            $1 = ''
            OR u.id::text = $1
@@ -64,7 +71,7 @@ router.get('/users', async (req, res) => {
          )
        ORDER BY u.id DESC
        LIMIT 50`,
-      [term]
+      [term, role]
     );
 
     res.json({
@@ -263,7 +270,7 @@ router.post(
     }
   }
 );
-  // Suppression logique : conserver l'annonce dans Neon.
+  // Ancienne URL conservée, avec la même suppression définitive que DELETE /ads/:id.
   router.post('/ads/:id/delete', (req, res, next) => {
     if (!sessions.allowsOrigin(req)) return res.status(403).json({ code: 'ORIGIN_DENIED' });
     if (!req.is('application/json')) return res.status(415).json({ code: 'JSON_REQUIRED' });
@@ -277,31 +284,8 @@ router.post(
         || Object.keys(req.body).some(key => key !== 'confirm')) {
       return res.status(400).json({ code: 'CONFIRMATION_REQUIRED' });
     }
-    let client;
-    try {
-      client = await pool.connect();
-      await client.query('BEGIN');
-      const { rows } = await client.query('SELECT id, status FROM public.ads WHERE id=$1 FOR UPDATE', [adId]);
-      if (!rows.length) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ code: 'AD_NOT_FOUND' });
-      }
-      if (rows[0].status === 'DELETED') {
-        await client.query('ROLLBACK');
-        return res.status(409).json({ code: 'AD_ALREADY_DELETED' });
-      }
-      await client.query(`UPDATE public.ads SET status='DELETED', deleted_at=CURRENT_TIMESTAMP,
-        deletion_reason=NULL WHERE id=$1`, [adId]);
-      await client.query(`INSERT INTO public.admin_actions (admin_user_id,action,target_ad_id)
-        VALUES ($1,'DELETE_AD',$2)`, [req.admin.userId,adId]);
-      await client.query('COMMIT');
-      res.json({ ad: { id: adId, status: 'DELETED' } });
-    } catch {
-      if (client) await client.query('ROLLBACK').catch(() => {});
-      res.status(503).json({ code: 'DELETE_AD_UNAVAILABLE' });
-    } finally {
-      if (client) client.release();
-    }
+    await transaction(pool, req.admin.userId, client => deleteAd(client, adId));
+    res.json({ ad: { id: adId } });
   });
 
 router.get('/users/:id', async (req, res) => {

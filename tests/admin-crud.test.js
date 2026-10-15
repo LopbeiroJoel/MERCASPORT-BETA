@@ -61,7 +61,8 @@ test('toutes les nouvelles ressources et méthodes sont réservées aux admins',
     }
   }
   for (const [route, method] of [['/users/2/profile', 'GET'], ['/users/2/profile', 'POST'],
-    ['/users/2/profile', 'PATCH'], ['/users/2/profile', 'DELETE'], ['/users/2/status', 'PATCH'], ['/users/2/password', 'PUT']]) {
+    ['/users/2/profile', 'PATCH'], ['/users/2/profile', 'DELETE'], ['/users/2/status', 'PATCH'],
+    ['/users/2/verification', 'PATCH'], ['/users/2/password', 'PUT']]) {
     assert.equal((await request('/admin' + route, method, ['POST', 'PATCH', 'PUT'].includes(method) ? {} : undefined, memberCookie)).status, 403);
   }
   assert.ok([401, 403].includes((await request('/admin/teams', 'POST', {}, adminCookie, 'https://autre.invalid')).status));
@@ -108,6 +109,31 @@ test('profils : lecture, modification des données communes et synchronisation d
   }
 });
 
+test('onglets : filtre serveur joueur/club avant la limite de résultats', async () => {
+  const players = await json('/admin/users?role=PLAYER');
+  const clubs = await json('/admin/users?role=CLUB');
+  assert.ok(players.users.length > 0 && clubs.users.length > 0);
+  assert.ok(players.users.every(user => user.role.toUpperCase() === 'PLAYER'));
+  assert.ok(clubs.users.every(user => user.role.toUpperCase() === 'CLUB'));
+  const searched = await json('/admin/users?role=PLAYER&search=' + player.id);
+  assert.ok(searched.users.some(user => user.id === player.id));
+  for (const query of ['role=ADMIN', 'role=PLAYER&role=CLUB', 'role=club', 'role=1%20OR%201=1']) {
+    assert.equal((await request('/admin/users?' + query)).status, 400);
+  }
+});
+
+test('vérification e-mail : route admin explicite, booléen obligatoire et aucun secret', async () => {
+  const result = await json('/admin/users/' + player.id + '/verification', 'PATCH', { is_verified: true });
+  assert.equal(result.user.is_verified, true);
+  assert.ok(!('password_hash' in result.user));
+  assert.equal((await pool.query('SELECT is_verified FROM users WHERE id = $1', [player.id])).rows[0].is_verified, true);
+  await json('/admin/users/' + player.id + '/verification', 'PATCH', { is_verified: false });
+  for (const data of [{ is_verified: 'true' }, { is_verified: null }, { is_verified: 1 }, {}, { is_verified: true, role: 'ADMIN' }]) {
+    assert.equal((await request('/admin/users/' + player.id + '/verification', 'PATCH', data)).status, 400);
+  }
+  assert.equal((await request('/admin/users/2147483647/verification', 'PATCH', { is_verified: true })).status, 404);
+});
+
 test('clubs et équipes : CRUD, pagination, cohérence des profils et refus des cascades', async () => {
   const created = (await json('/admin/clubs', 'POST', { name: 'Club indépendant', city: 'Mulhouse' }, 201)).club;
   assert.equal((await json('/admin/clubs/' + created.id)).club.id, created.id);
@@ -148,7 +174,8 @@ test('annonces : création pour un propriétaire, modification d’autres clubs 
   assert.equal(playerAd.club_id, null);
   assert.equal((await request('/admin/ads/' + playerAd.id, 'DELETE')).status, 204);
   assert.equal((await request('/ads/' + playerAd.id)).status, 404);
-  assert.equal((await json('/admin/ads/' + playerAd.id)).ad.status, 'DELETED');
+  assert.equal((await request('/admin/ads/' + playerAd.id)).status, 404);
+  assert.equal((await pool.query('SELECT id FROM ads WHERE id=$1', [playerAd.id])).rows.length, 0);
 });
 
 test('candidatures : CRUD et refus de suppression d’un profil encore utilisé', async () => {
@@ -186,7 +213,7 @@ test('catalogues : lecture, modification, suppression protégée et recréation 
   assert.equal((await request('/admin/positions/STRIKER', 'PATCH', { sort_order: 1 })).status, 409);
 });
 
-test('statuts, mot de passe et suppression logique des comptes', async () => {
+test('statuts, mot de passe et suppression définitive des comptes', async () => {
   await json('/admin/users/' + player.id + '/status', 'PATCH', { status: 'ACTIVE' });
   const oldCookie = await cookieFor(player.id);
   assert.equal((await request('/profile/me', 'GET', undefined, oldCookie)).status, 200);
@@ -199,7 +226,12 @@ test('statuts, mot de passe et suppression logique des comptes', async () => {
   assert.equal((await request('/admin/users/1/status', 'PATCH', { status: 'DISABLED' })).status, 403);
   assert.equal((await request('/admin/users/' + clubUser.id + '/status', 'PATCH', { status: 'TOTO' })).status, 400);
   assert.equal((await request('/admin/users/' + clubUser.id, 'DELETE')).status, 204);
-  assert.equal((await json('/admin/users/' + clubUser.id)).user.status, 'DISABLED');
+  assert.equal((await request('/admin/users/' + clubUser.id)).status, 404);
+  for (const table of ['users', 'club_profiles', 'clubs', 'auth_sessions']) {
+    const key = table === 'users' ? 'id' : 'user_id';
+    assert.equal((await pool.query(`SELECT * FROM ${table} WHERE ${key}=$1`, [clubUser.id])).rows.length, 0);
+  }
+  assert.equal((await pool.query('SELECT id FROM ads WHERE id=$1', [ad.id])).rows.length, 0);
   assert.equal((await request('/ads/' + ad.id)).status, 404);
 });
 
@@ -246,4 +278,63 @@ test('JSON, identifiants, champs inconnus et références invalides sont refusé
   const denied = await fetch(base + '/admin/clubs', { method: 'POST',
     headers: { Cookie: adminCookie, Origin: origin, 'Content-Type': 'text/plain' }, body: 'texte' });
   assert.equal(denied.status, 415);
+});
+
+
+test('suppression joueur : profils, sessions, annonces, candidatures et historique effacés', async () => {
+  const user = (await json('/admin/users', 'POST', { email: 'delete-player@example.com', username: 'DeletePlayer', password,
+    role: 'PLAYER', profile: { first_name: 'Test', last_name: 'Delete', positions: ['STRIKER'] } }, 201)).user;
+  const cookie = await cookieFor(user.id);
+  const playerId = (await pool.query('SELECT id FROM players WHERE user_id=$1', [user.id])).rows[0].id;
+  const ownAd = (await json('/admin/ads', 'POST', { ...adBody, author_id: user.id }, 201)).ad;
+  const otherAd = (await pool.query('SELECT id FROM ads WHERE author_id=3 LIMIT 1')).rows[0];
+  const application = (await json('/admin/applications', 'POST', { ad_id: otherAd.id, player_id: playerId,
+    name: 'Test', email: 'delete-player@example.com' }, 201)).application;
+  await pool.query("INSERT INTO admin_actions(admin_user_id,action,target_user_id) VALUES (1,'BAN_USER',$1)", [user.id]);
+  assert.equal((await request('/admin/users/' + user.id, 'DELETE')).status, 204);
+  for (const [table, key, value] of [['users','id',user.id], ['players','user_id',user.id], ['player_profiles','user_id',user.id],
+    ['auth_sessions','user_id',user.id], ['admin_actions','target_user_id',user.id], ['ads','id',ownAd.id], ['applications','id',application.id]]) {
+    assert.equal((await pool.query(`SELECT * FROM ${table} WHERE ${key}=$1`, [value])).rows.length, 0);
+  }
+  assert.equal((await request('/profile/me', 'GET', undefined, cookie)).status, 401);
+  assert.equal((await request('/admin/users/' + user.id, 'DELETE')).status, 404);
+  assert.equal((await pool.query('SELECT id FROM ads WHERE id=$1', [otherAd.id])).rows.length, 1);
+});
+
+test('suppression club : équipes et anciennes annonces sans auteur effacées avec le compte', async () => {
+  const user = (await json('/admin/users', 'POST', { email: 'delete-club@example.com', username: 'DeleteClub', password,
+    role: 'CLUB', profile: { name: 'Club Delete', city: 'Colmar' } }, 201)).user;
+  const club = (await pool.query('SELECT id FROM clubs WHERE user_id=$1', [user.id])).rows[0];
+  const team = (await json('/admin/teams', 'POST', { club_id: club.id, name: 'Equipe', division: 'R3' }, 201)).team;
+  let oldAd;
+  await pool.exec('ALTER TABLE ads DISABLE TRIGGER USER');
+  try {
+  oldAd = (await pool.query("INSERT INTO ads(team_id,club_id,title,position,description) VALUES ($1,$2,'Ancienne','Gardien','Test') RETURNING id", [team.id, club.id])).rows[0];
+  } finally {
+    await pool.exec('ALTER TABLE ads ENABLE TRIGGER USER');
+  }
+  await pool.query("INSERT INTO admin_actions(admin_user_id,action,target_ad_id) VALUES (1,'DELETE_AD',$1)", [oldAd.id]);
+  assert.equal((await request('/admin/users/' + user.id, 'DELETE')).status, 204);
+  assert.equal((await pool.query('SELECT id FROM teams WHERE id=$1', [team.id])).rows.length, 0);
+  assert.equal((await pool.query('SELECT id FROM ads WHERE id=$1', [oldAd.id])).rows.length, 0);
+});
+
+test('suppression compte : une erreur SQL annule aussi le retrait des dépendances', async () => {
+  const user = (await json('/admin/users', 'POST', { email: 'rollback-delete@example.com', username: 'RollbackDelete', password,
+    role: 'PLAYER', profile: { first_name: 'Test', last_name: 'Rollback' } }, 201)).user;
+  const cookie = await cookieFor(user.id);
+  const ownAd = (await json('/admin/ads', 'POST', { ...adBody, author_id: user.id }, 201)).ad;
+  await pool.exec(`CREATE FUNCTION refuse_user_delete() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'Erreur SQL privée' USING ERRCODE = 'XX000'; END $$;
+    CREATE TRIGGER refuse_user_delete BEFORE DELETE ON users FOR EACH ROW EXECUTE FUNCTION refuse_user_delete();`);
+  try {
+    assert.equal((await request('/admin/users/' + user.id, 'DELETE')).status, 503);
+    assert.equal((await pool.query('SELECT id FROM users WHERE id=$1', [user.id])).rows.length, 1);
+    assert.equal((await pool.query('SELECT user_id FROM player_profiles WHERE user_id=$1', [user.id])).rows.length, 1);
+    assert.equal((await pool.query('SELECT id FROM ads WHERE id=$1', [ownAd.id])).rows.length, 1);
+    assert.equal((await pool.query('SELECT ad_id FROM ad_positions WHERE ad_id=$1', [ownAd.id])).rows.length, 2);
+    assert.equal((await request('/profile/me', 'GET', undefined, cookie)).status, 200);
+  } finally {
+    await pool.exec('DROP TRIGGER refuse_user_delete ON users; DROP FUNCTION refuse_user_delete();');
+  }
 });
