@@ -12,6 +12,26 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
   const router = express.Router();
   const limiter = sessions ? createSqlRateLimiter(pool, sessions.rateKey, { maxAttempts, windowMs }) : null;
   let active = 0, dummy;
+  // Retrouver le compte connecté grâce au cookie de session existant.
+  router.get('/me', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    if (!sessions) return res.status(503).json({ code: 'AUTH_NOT_CONFIGURED' });
+    try {
+      const identity = await sessions.authenticate(req);
+      if (!identity) return res.status(401).json({ code: 'AUTH_REQUIRED' });
+      const { rows } = await pool.query(
+        `SELECT id, username, upper(role) AS role FROM public.users
+         WHERE id = $1 AND status NOT IN ('BANNED', 'DISABLED')`,
+        [identity.userId]
+      );
+      if (!rows.length) return res.status(401).json({ code: 'AUTH_REQUIRED' });
+      return res.json({ user: rows[0] });
+    } catch {
+      return res.status(503).json({ code: 'AUTH_UNAVAILABLE' });
+    }
+  });
+
+
   router.post('/login', async (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     if (!sessions) return res.status(503).json({ code: 'AUTH_NOT_CONFIGURED' });

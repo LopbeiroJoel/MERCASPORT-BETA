@@ -4,6 +4,15 @@ Le front et l’API partagent la même origine : `http://localhost:3000` en loca
 le domaine du projet sur Vercel. Les appels navigateur utilisent `/ads` et `/ads/:id`.
 Les annonces viennent de PostgreSQL, via `public.ads_details` ; aucun filtre de statut.
 
+## GET /auth/me
+
+Utilise le cookie de session existant pour identifier le compte connecté.
+`200` : `{ "user": { "id": 18, "username": "JoelTestDemo", "role": "PLAYER" } }`.
+Aucun email ni mot de passe n'est renvoyé. Réponse non mise en cache (`no-store`).
+`401 AUTH_REQUIRED` : session absente, expirée, révoquée ou compte bloqué.
+`503` : authentification non configurée ou service indisponible.
+Sur l'accueil, le pseudo remplace « Se connecter » et mène au profil.
+
 ## GET /health
 
 Vérifie aussi la connexion PostgreSQL : `200` avec `{ "status": "OK", "timestamp": "..." }`.

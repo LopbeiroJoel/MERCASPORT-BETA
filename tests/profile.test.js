@@ -265,3 +265,52 @@ test('formulaire Thomas servi au bon endroit avec les deux roles et les 14 poste
   assert.ok(!html.includes('value="SECOND_STRIKER"'));
   assert.ok(!html.includes('value="CENTRE_FORWARD"'));
 });
+
+test('accueil : auth/me refuse les visiteurs et renvoie seulement id, pseudo et rôle', async () => {
+  const anonymous = await fetch(base + '/auth/me');
+  assert.equal(anonymous.status, 401);
+  assert.equal(anonymous.headers.get('cache-control'), 'no-store');
+  assert.equal((await fetch(base + '/auth/me', { headers: { Cookie: '__Host-mercasport_session=faux' } })).status, 401);
+  for (const account of [player, club]) {
+    const cookie = await login(account.email);
+    const response = await fetch(base + '/auth/me', { headers: { Cookie: cookie } });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { user: { id: account.id, username: account.username, role: account.role } });
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+  }
+});
+
+test('accueil : pseudo actualisé, déconnexion et comptes bloqués pris en compte', async () => {
+  const cookie = await login(player.email);
+  try {
+    await pool.query("UPDATE users SET username='Pseudo Actualisé' WHERE id=$1", [player.id]);
+    const response = await fetch(base + '/auth/me', { headers: { Cookie: cookie } });
+    assert.equal((await response.json()).user.username, 'Pseudo Actualisé');
+    for (const status of ['BANNED', 'DISABLED']) {
+      await pool.query('UPDATE users SET status=$1 WHERE id=$2', [status, player.id]);
+      assert.equal((await fetch(base + '/auth/me', { headers: { Cookie: cookie } })).status, 401);
+    }
+  } finally {
+    await pool.query("UPDATE users SET username=$1, status='PENDING' WHERE id=$2", [player.username, player.id]);
+  }
+  assert.equal((await post('/auth/logout', {}, cookie)).status, 204);
+  assert.equal((await fetch(base + '/auth/me', { headers: { Cookie: cookie } })).status, 401);
+});
+
+test('accueil : authentification non configurée ou SQL en panne, sans détail privé', async () => {
+  const cookie = await login(player.email);
+  for (const configured of [false, true]) {
+    const app = configureApp(express(), {
+      query: async () => { throw new Error('SQL privé'); }
+    }, { authSecret: configured ? secret : '', appOrigin: configured ? origin : '' });
+    const other = app.listen(0, '127.0.0.1');
+    await once(other, 'listening');
+    try {
+      const response = await fetch('http://127.0.0.1:' + other.address().port + '/auth/me', { headers: { Cookie: cookie } });
+      assert.equal(response.status, 503);
+      assert.deepEqual(await response.json(), { code: configured ? 'AUTH_UNAVAILABLE' : 'AUTH_NOT_CONFIGURED' });
+    } finally {
+      await new Promise(resolve => other.close(resolve));
+    }
+  }
+});

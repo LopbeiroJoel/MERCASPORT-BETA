@@ -29,8 +29,8 @@
     </nav>
 
     <div role="group" aria-label="Accès au compte"> <!-- actions séparées de la navigation centrale -->
-      <a href="login.html" class="button-secondary">Se connecter</a>
-      <a href="register.html" class="primary-button">S'inscrire</a>
+      <a id="account-link" href="login.html" class="button-secondary">Se connecter</a>
+      <a id="register-link" href="register.html" class="primary-button">S'inscrire</a>
     </div>
   </header>
 
@@ -116,6 +116,7 @@
     </div>
   </footer>
 
+  <script type="module" src="js/account.mjs"></script>
   <script type="module" src="js/app.mjs"></script>               <!-- charge le JS EN DERNIER : les éléments ci-dessus existent déjà -->
 </body>
 </html>
