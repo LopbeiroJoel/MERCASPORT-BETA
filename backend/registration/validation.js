@@ -102,4 +102,4 @@ function validateRegistration(body) {
   return { errors, data };
 }
 
-module.exports = { validateRegistration };
+module.exports = { validateRegistration, playerPositions };

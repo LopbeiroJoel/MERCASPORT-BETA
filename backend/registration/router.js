@@ -49,6 +49,14 @@ function createRegistrationRouter(pool) {
       const p = data.profile;
       let profile;
       if (data.role === 'PLAYER') {
+        // Un poste retiré du catalogue par l'admin ne peut plus être sélectionné.
+        const references = await client.query(
+          'SELECT code FROM public.positions WHERE code = ANY($1::text[]) FOR SHARE', [p.positions]);
+        if (references.rows.length !== p.positions.length) {
+          const error = new Error('Poste indisponible');
+          error.code = 'POSITIONS_UNAVAILABLE';
+          throw error;
+        }
         profile = await client.query(`INSERT INTO public.player_profiles
           (user_id, first_name, last_name, birth_date, positions, preferred_foot, height_cm, current_club)
           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
@@ -70,6 +78,11 @@ function createRegistrationRouter(pool) {
     } catch (error) {
       if (inTransaction && client) {
         try { await client.query('ROLLBACK'); } catch { /* Ne pas exposer les détails SQL. */ }
+      }
+      if (error.code === 'POSITIONS_UNAVAILABLE') {
+        return res.status(400).json({ code: 'VALIDATION_ERROR', fields: {
+          'profile.positions': 'Un poste sélectionné est absent du catalogue.'
+        } });
       }
       if (error.code === '23505') return conflict(res); // Protège aussi les inscriptions simultanées.
       if (error.code === 'HASH_BUSY') {
