@@ -38,6 +38,10 @@ function createAdminRouter(pool, sessions) {
     }
   });
 router.get('/users', async (req, res) => {
+  const role = req.query.role ?? '';
+  if (typeof role !== 'string' || !['', 'PLAYER', 'CLUB'].includes(role)) {
+    return res.status(400).json({ code: 'INVALID_ROLE_FILTER' });
+  }
   const search = req.query.search ?? '';
 
   if (typeof search !== 'string' || search.length > 100 || search.includes('\u0000')) {
@@ -55,6 +59,7 @@ router.get('/users', async (req, res) => {
        FROM public.users u
        LEFT JOIN public.club_profiles c ON c.user_id = u.id
        WHERE upper(u.role) IN ('PLAYER', 'CLUB')
+         AND ($2 = '' OR upper(u.role) = $2)
          AND (
            $1 = ''
            OR u.id::text = $1
@@ -64,7 +69,7 @@ router.get('/users', async (req, res) => {
          )
        ORDER BY u.id DESC
        LIMIT 50`,
-      [term]
+      [term, role]
     );
 
     res.json({

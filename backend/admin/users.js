@@ -63,6 +63,18 @@ function createUsersRouter(pool) {
   // Supprimer un compte le désactive : aucun profil ni aucune candidature perdus.
   router.delete('/users/:id', (req, res) => setStatus(req, res, 'DISABLED'));
 
+  router.patch('/users/:id/verification', async (req, res) => {
+    const userId = id(req.params.id);
+    const input = body(req.body, ['is_verified'], ['is_verified']);
+    if (typeof input.is_verified !== 'boolean') fail(400, 'INVALID_VERIFICATION');
+    const user = await transaction(pool, req.admin.userId, async client => {
+      const result = await client.query(`UPDATE public.users SET is_verified = $1
+        WHERE id = $2 RETURNING id, username, email, role, status, is_verified`, [input.is_verified, userId]);
+      if (!result.rows.length) fail(404, 'USER_NOT_FOUND');
+      return result.rows[0];
+    });
+    res.json({ user });
+  });
   router.put('/users/:id/password', async (req, res) => {
     const userId = id(req.params.id);
     const password = body(req.body, ['password'], ['password']).password;

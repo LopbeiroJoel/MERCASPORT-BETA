@@ -1,7 +1,11 @@
 # API admin MercaSport
 
-Backend uniquement. Le frontend existant n'est pas modifié ; il ne montre donc pas encore
-les boutons des nouvelles opérations. Tester ces routes avec un client REST.
+Le panel reste un HTML simple sans CSS. Les onglets Joueurs et Clubs séparent les comptes
+avec un filtre côté serveur. Le bouton Modifier le compte ouvre les formulaires de pseudo,
+e-mail, coordonnées, fiche, statut, vérification de l'adresse et nouveau mot de passe.
+Chaque rubrique possède son propre bouton Enregistrer. Le bouton Modifier l'annonce ouvre
+un formulaire pour les champs de recrutement. Les autres opérations CRUD restent accessibles
+par l'API, sans nouvel écran ajouté pour les équipes, candidatures ou catalogues.
 
 ## Connexion
 
@@ -29,6 +33,7 @@ Autres routes :
 - GET /admin/me : identité de l'admin connecté.
 - GET /admin/administrators : comptes ayant des droits administratifs.
 - PATCH /admin/users/:id/status : {"status":"ACTIVE"}, ou PENDING, BANNED, DISABLED.
+- PATCH /admin/users/:id/verification : {"is_verified":true} ou false, réservé aux admins.
 - PUT /admin/users/:id/password : {"password":"Une longue phrase de remplacement !"}.
 - PUT /admin/users/:id/profile : création ou modification du profil avec les données reçues.
 
@@ -167,6 +172,8 @@ Toutes les écritures nouvelles revérifient les droits admin dans une transacti
 Les valeurs SQL sont paramétrées. Les noms de table/colonnes proviennent de constantes du code.
 Les listes clubs/teams/applications/positions/divisions acceptent limit (1 à 100) et offset.
 Les recherches users/ads conservent search et leur limite historique de 50 résultats.
+GET /admin/users accepte aussi role=PLAYER ou role=CLUB, appliqué avant LIMIT 50.
+Sans role, les deux types sont recherchés. Les autres valeurs et paramètres role répétés sont refusés.
 Les réponses ne sont pas mises en cache.
 
 ## Organisation du code

@@ -61,7 +61,8 @@ test('toutes les nouvelles ressources et méthodes sont réservées aux admins',
     }
   }
   for (const [route, method] of [['/users/2/profile', 'GET'], ['/users/2/profile', 'POST'],
-    ['/users/2/profile', 'PATCH'], ['/users/2/profile', 'DELETE'], ['/users/2/status', 'PATCH'], ['/users/2/password', 'PUT']]) {
+    ['/users/2/profile', 'PATCH'], ['/users/2/profile', 'DELETE'], ['/users/2/status', 'PATCH'],
+    ['/users/2/verification', 'PATCH'], ['/users/2/password', 'PUT']]) {
     assert.equal((await request('/admin' + route, method, ['POST', 'PATCH', 'PUT'].includes(method) ? {} : undefined, memberCookie)).status, 403);
   }
   assert.ok([401, 403].includes((await request('/admin/teams', 'POST', {}, adminCookie, 'https://autre.invalid')).status));
@@ -106,6 +107,31 @@ test('profils : lecture, modification des données communes et synchronisation d
     { height_cm: 300 }, { photo_url: 'javascript:alert(1)' }, { role: 'ADMIN' }]) {
     assert.equal((await request('/admin/users/' + player.id + '/profile', 'PATCH', data)).status, 400);
   }
+});
+
+test('onglets : filtre serveur joueur/club avant la limite de résultats', async () => {
+  const players = await json('/admin/users?role=PLAYER');
+  const clubs = await json('/admin/users?role=CLUB');
+  assert.ok(players.users.length > 0 && clubs.users.length > 0);
+  assert.ok(players.users.every(user => user.role.toUpperCase() === 'PLAYER'));
+  assert.ok(clubs.users.every(user => user.role.toUpperCase() === 'CLUB'));
+  const searched = await json('/admin/users?role=PLAYER&search=' + player.id);
+  assert.ok(searched.users.some(user => user.id === player.id));
+  for (const query of ['role=ADMIN', 'role=PLAYER&role=CLUB', 'role=club', 'role=1%20OR%201=1']) {
+    assert.equal((await request('/admin/users?' + query)).status, 400);
+  }
+});
+
+test('vérification e-mail : route admin explicite, booléen obligatoire et aucun secret', async () => {
+  const result = await json('/admin/users/' + player.id + '/verification', 'PATCH', { is_verified: true });
+  assert.equal(result.user.is_verified, true);
+  assert.ok(!('password_hash' in result.user));
+  assert.equal((await pool.query('SELECT is_verified FROM users WHERE id = $1', [player.id])).rows[0].is_verified, true);
+  await json('/admin/users/' + player.id + '/verification', 'PATCH', { is_verified: false });
+  for (const data of [{ is_verified: 'true' }, { is_verified: null }, { is_verified: 1 }, {}, { is_verified: true, role: 'ADMIN' }]) {
+    assert.equal((await request('/admin/users/' + player.id + '/verification', 'PATCH', data)).status, 400);
+  }
+  assert.equal((await request('/admin/users/2147483647/verification', 'PATCH', { is_verified: true })).status, 404);
 });
 
 test('clubs et équipes : CRUD, pagination, cohérence des profils et refus des cascades', async () => {
