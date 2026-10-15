@@ -3,14 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administration - MercaSport</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Panel administrateur - MercaSport</title>
 </head>
 <body>
-  <main>
-    <h1>Administration</h1>
-    <p>Page à réaliser par Thomas selon le plan essentiel.</p>
-    <a href="index.html">Retour aux annonces</a>
+  <h1>Panel administrateur</h1>
+  <p><a href="login.html">Connexion</a> | <a href="index.html">Retour au site</a></p>
+  <p id="message" role="status" aria-live="polite">Vérification de l'accès…</p>
+
+  <main id="panel" hidden>
+    <p id="identity"></p>
+    <button id="logout" type="button">Se déconnecter</button>
+
+    <section id="confirmation" hidden>
+      <h2>Confirmer l'action</h2>
+      <p id="confirmation-message"></p>
+      <button id="confirm-action" type="button">Confirmer</button>
+      <button id="cancel-action" type="button">Annuler</button>
+    </section>
+
+    <h2>Utilisateurs</h2>
+    <form id="users-search-form">
+      <label for="users-search">ID, pseudo, e-mail ou nom du club :</label>
+      <input id="users-search" maxlength="100" type="search">
+      <button type="submit">Rechercher</button>
+    </form>
+    <p id="users-count"></p>
+    <p>Maximum 50 résultats. Le bannissement demande une confirmation, sans motif.</p>
+    <table border="1">
+      <thead><tr><th>ID</th><th>Pseudo</th><th>E-mail</th><th>Type</th><th>Statut</th><th>Club</th><th>Action</th></tr></thead>
+      <tbody id="users-results"></tbody>
+    </table>
+
+    <h2>Annonces</h2>
+    <form id="ads-search-form">
+      <label for="ads-search">ID, titre, auteur ou club :</label>
+      <input id="ads-search" maxlength="100" type="search">
+      <button type="submit">Rechercher</button>
+    </form>
+    <p id="ads-count"></p>
+    <table border="1">
+      <thead><tr><th>ID</th><th>Titre</th><th>Auteur</th><th>Type</th><th>Club</th><th>Statut SQL</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody id="ads-results"></tbody>
+    </table>
+
+    <p>Panel V1 : rechercher, bannir un utilisateur et supprimer une annonce.</p>
   </main>
+  <script type="module" src="js/admin.mjs"></script>
 </body>
 </html>

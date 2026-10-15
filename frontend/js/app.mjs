@@ -139,25 +139,8 @@ function normalizeText(value) {
   return value;
 }
 
-const form = document.querySelector('.search form');
-form.addEventListener('submit', event => {
-  event.preventDefault();
-  let formKeywords = form.querySelector('input[name="keywords"]');
-  let valueKeywords = formKeywords.value;
-  let formLocation = form.querySelector('input[name="location"]');
-  let valueLocation = formLocation.value;
-  let formCompany = form.querySelector('input[name="company"]');
-  let valueCompany = formCompany.value;
-
-  // on filtre les annonces en fonction des critères de recherche
-  const adsFiltered = allAds.filter(ad => {
-    return normalizeText(ad.title).includes(normalizeText(valueKeywords)) &&
-      normalizeText(ad.location ?? '').includes(normalizeText(valueLocation)) &&
-      normalizeText(ad.club).includes(normalizeText(valueCompany));
-  });
-
-  renderAds(adsFiltered);
-});
+// Le formulaire GET de l'accueil transmet les critères à offres.html dans l'URL.
+// On laisse le navigateur gérer la navigation et l'encodage des caractères.
 
 closeBtn.addEventListener('click', () => detail.close());
 detail.addEventListener('close', () => { detailRequest += 1; });
