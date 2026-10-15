@@ -150,15 +150,19 @@ Un poste retiré du catalogue est refusé aux nouvelles inscriptions et modifica
 
 ## Suppressions et statuts
 
-- DELETE user : désactivation DISABLED et révocation des sessions. Les données restent en SQL.
-- DELETE ad : statut DELETED et date, données et candidatures conservées.
+- DELETE user : suppression définitive du compte, profils, sessions, joueur/club, équipes du club,
+  annonces associées, candidatures liées au joueur ou aux annonces et historique lié.
+- DELETE ad : suppression définitive de l'annonce, ses postes associés, candidatures et historique lié.
+- Les suppressions de comptes et d'annonces sont transactionnelles : toute erreur annule toute l'opération.
+- POST /admin/ads/:id/delete fait la même suppression définitive et renvoie {"ad":{"id":42}}.
+- Aucune purge automatique des anciens comptes DISABLED ou annonces DELETED : il faut les supprimer explicitement.
 - DELETE club/team/profile : suppression définitive seulement si les relations le permettent.
   Pas de cascade implicite sur les équipes, annonces ou candidatures ; sinon 409.
 - DELETE application : suppression définitive de cette candidature uniquement.
 - DELETE poste/division : suppression seulement si le code est inutilisé ; sinon 409.
 
 Les comptes ayant des droits admin et le compte administrateur connecté sont protégés
-des désactivations/bannissements par ces routes. Les changements de rôle ne sont pas exposés.
+des suppressions/désactivations/bannissements par ces routes. Les changements de rôle ne sont pas exposés.
 
 ## Réponses et sécurité
 

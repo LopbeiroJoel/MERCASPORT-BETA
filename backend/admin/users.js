@@ -1,4 +1,5 @@
 const express = require('express');
+const { deleteUser } = require('./deletion');
 const { validateRegistration } = require('../registration/validation');
 const { hashPassword } = require('../registration/password');
 const { fail, id, body, transaction, insert, checkPositions } = require('./helpers');
@@ -51,7 +52,6 @@ function createUsersRouter(pool) {
         WHERE user_id = $1 AND revoked_at IS NULL`, [userId]);
       return (await client.query(`SELECT ${publicUser} FROM public.users WHERE id = $1`, [userId])).rows[0];
     });
-    if (req.method === 'DELETE') return res.status(204).end();
     res.json({ user });
   }
 
@@ -60,8 +60,10 @@ function createUsersRouter(pool) {
     if (!['PENDING', 'ACTIVE', 'BANNED', 'DISABLED'].includes(value)) fail(400, 'INVALID_STATUS');
     await setStatus(req, res, value);
   });
-  // Supprimer un compte le désactive : aucun profil ni aucune candidature perdus.
-  router.delete('/users/:id', (req, res) => setStatus(req, res, 'DISABLED'));
+  router.delete('/users/:id', async (req, res) => {
+    await transaction(pool, req.admin.userId, client => deleteUser(client, id(req.params.id), req.admin.userId));
+    res.status(204).end();
+  });
 
   router.patch('/users/:id/verification', async (req, res) => {
     const userId = id(req.params.id);

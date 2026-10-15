@@ -9,7 +9,7 @@ let pendingAction;
 const errors = {
   AUTH_REQUIRED: 'Session absente ou expirée. Connecte-toi avec le lien Connexion.',
   ADMIN_ACCESS_DENIED: 'Ce compte ne possède pas de droits ADMIN actifs.',
-  ADMIN_ACCOUNT_PROTECTED: 'Un compte administrateur ne peut pas être banni ici.',
+  ADMIN_ACCOUNT_PROTECTED: 'Un compte administrateur ne peut pas être banni ou supprimé ici.',
   USER_ALREADY_BANNED: 'Ce compte est déjà banni.',
   USER_NOT_FOUND: 'Compte introuvable.',
   INVALID_SEARCH: 'Recherche invalide : 100 caractères maximum.',
@@ -71,7 +71,27 @@ async function loadUsers() {
     editButton.type = 'button';
     editButton.textContent = 'Modifier le compte';
     editButton.addEventListener('click', () => editUser(user));
-    action.replaceChildren(editButton, button);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.textContent = 'Supprimer définitivement';
+    removeButton.disabled = protectedIds.has(user.id) || user.id === admin.userId;
+    removeButton.addEventListener('click', () => {
+      askConfirmation('Supprimer définitivement ' + user.username + ', ses profils, annonces et candidatures liées ?', async () => {
+        removeButton.disabled = true;
+        try {
+          await request('/admin/users/' + user.id, { method: 'DELETE' });
+          document.getElementById('user-editor').hidden = true;
+          document.getElementById('ad-editor').hidden = true;
+          message.textContent = 'Compte ' + user.id + ' supprimé définitivement.';
+          await loadUsers();
+          await loadAds();
+        } catch (error) {
+          removeButton.disabled = false;
+          showError(error);
+        }
+      });
+    });
+    action.replaceChildren(editButton, button, removeButton);
     results.append(row);
   }
 }
@@ -132,7 +152,6 @@ async function loadAds() {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = 'Supprimer';
-    button.disabled = ad.status === 'DELETED';
     button.addEventListener('click', () => deleteAd(ad, button));
     const editButton = document.createElement('button');
     editButton.type = 'button';
@@ -144,18 +163,15 @@ async function loadAds() {
 }
 
 function deleteAd(ad, button) {
-  askConfirmation('Supprimer l’annonce ' + ad.id + ' : ' + ad.title + ' ?', () => runDelete(ad, button));
+  askConfirmation('Supprimer définitivement l’annonce et ses candidatures : ' + ad.id + ' : ' + ad.title + ' ?', () => runDelete(ad, button));
 }
 
 async function runDelete(ad, button) {
   button.disabled = true;
   try {
-    await request('/admin/ads/' + ad.id + '/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirm: true })
-    });
-    message.textContent = 'Annonce ' + ad.id + ' supprimée du site.';
+    await request('/admin/ads/' + ad.id, { method: 'DELETE' });
+    document.getElementById('ad-editor').hidden = true;
+    message.textContent = 'Annonce ' + ad.id + ' supprimée définitivement.';
     await loadAds();
   } catch (error) {
     button.disabled = false;

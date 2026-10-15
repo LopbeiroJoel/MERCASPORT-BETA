@@ -1,4 +1,5 @@
 const express = require('express');
+const { deleteAd } = require('./deletion');
 const { validateAd } = require('../ads/validation');
 const { fail, id, body, text, transaction, insert, update } = require('./helpers');
 
@@ -66,14 +67,7 @@ function createAdminAdsRouter(pool) {
   router.post('/ads', saveAd);
   router.patch('/ads/:id', saveAd);
   router.delete('/ads/:id', async (req, res) => {
-    await transaction(pool, req.admin.userId, async client => {
-      const adId = id(req.params.id);
-      const result = await client.query(`UPDATE public.ads SET status = 'DELETED', deleted_at = CURRENT_TIMESTAMP,
-        deletion_reason = NULL WHERE id = $1 AND status = 'PUBLISHED' RETURNING id`, [adId]);
-      if (!result.rows.length) fail(404, 'AD_NOT_FOUND');
-      await client.query(`INSERT INTO public.admin_actions(admin_user_id, action, target_ad_id)
-        VALUES ($1, 'DELETE_AD', $2)`, [req.admin.userId, adId]);
-    });
+    await transaction(pool, req.admin.userId, client => deleteAd(client, id(req.params.id)));
     res.status(204).end();
   });
   return router;
