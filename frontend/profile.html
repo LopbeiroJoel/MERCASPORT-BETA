@@ -19,7 +19,10 @@
         <li><a href="profile.html" aria-current="page">Mon profil</a></li>
       </ul>
     </nav>
-    <button id="logout-button" type="button" hidden>Se déconnecter</button>
+    <div role="group" aria-label="Actions du compte">
+      <a id="admin-link" href="admin.html" hidden>Panel admin</a>
+      <button id="logout-button" type="button" hidden>Se déconnecter</button>
+    </div>
   </header>
 
   <main class="profile-main">

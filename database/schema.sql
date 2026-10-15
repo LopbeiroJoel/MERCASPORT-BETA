@@ -272,7 +272,6 @@ JOIN public.clubs c ON c.id = t.club_id
 ;
 
 -- Suppression uniquement des anciens champs de moderation, pas des annonces.
-ALTER TABLE public.ads DROP COLUMN IF EXISTS status;
 ALTER TABLE public.clubs DROP COLUMN IF EXISTS status;
 
 COMMIT;

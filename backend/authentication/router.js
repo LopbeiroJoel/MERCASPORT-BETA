@@ -62,7 +62,8 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
       } else {
         await verifyPassword(b.password, dummyHash); valid = false;
       }
-      if (!user || !valid) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Identifiant ou mot de passe incorrect.' });
+      // Les comptes bloques ne peuvent pas ouvrir une nouvelle session.
+      if (!user || !valid || ['BANNED', 'DISABLED'].includes(user.status)) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Identifiant ou mot de passe incorrect.' });
       if (!['PLAYER', 'CLUB', 'ADMIN'].includes(user.role)) return res.status(401).json({ code: 'INVALID_CREDENTIALS' });
       await sessions.issue(user, res);
       const { password_hash, ...publicUser } = user;
