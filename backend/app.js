@@ -7,6 +7,7 @@ const { createSessionService } = require('./authentication/session');
 const { createLoginRouter } = require('./authentication/router');
 const { createLogoutRouter } = require('./authentication/logout-router');
 const { createProfileRouter } = require('./profile');
+const { createAdminRouter } = require('./admin/router');
 
 // Fragment SQL partagé par la liste et le détail : évite de répéter les colonnes.
 // AS renomme un champ dans le résultat ; coalesce choisit la première valeur non NULL.
@@ -16,6 +17,14 @@ const adColumns = `id, club_id, club_name AS club, team_id, team_name AS team,
   division, title, short_description, position, preferred_foot, requirements,
   contract, work_time, salary, coalesce(location, city) AS location,
   description, missions, created_at`;
+
+// Masquer les annonces supprimees et celles des comptes bloques.
+const visibleAdsFilter = `id IN (
+  SELECT a.id FROM public.ads a
+  LEFT JOIN public.users u ON u.id = a.author_id
+  WHERE a.status = 'PUBLISHED'
+    AND COALESCE(u.status, '') NOT IN ('BANNED', 'DISABLED')
+)`;
 
 // Vérifie qu'un identifiant est un entier positif utilisable par une colonne INTEGER PostgreSQL.
 // typeof vérifie le type ; includes accepte ici un nombre ou une chaîne.
@@ -52,6 +61,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   app.use('/auth', createLogoutRouter(sessions));
   app.use('/auth', createRegistrationRouter(pool));
   app.use('/profile', createProfileRouter(pool, sessions));
+  app.use('/admin', createAdminRouter(pool, sessions));
 
   // Décode les corps application/json vers req.body et limite leur taille à 16 Ko.
   // Ne lit pas les formulaires classiques ; un JSON mal formé part vers le gestionnaire d'erreurs.
@@ -80,6 +90,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
     // $1 à $5 correspondent dans l'ordre aux cinq valeurs du tableau.
     // RETURNING renvoie l'ID et la date générés par la base pour la nouvelle candidature.
     const result = await pool.query(`SELECT ${adColumns} FROM public.ads_details
+      WHERE ${visibleAdsFilter}
       ORDER BY created_at DESC, id DESC`);
     // result est le résultat pg ; result.rows est le tableau des lignes (objets JavaScript).
     // Même sans annonce, on renvoie 200 et [] : une liste vide reste une réponse valide.
@@ -96,7 +107,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
     // $1 est un paramètre SQL : sa valeur vient du premier élément du tableau séparé.
     // pg transmet SQL et valeurs séparément : l'ID ne devient pas du code SQL.
     const result = await pool.query(
-      `SELECT ${adColumns} FROM public.ads_details WHERE id = $1`, [Number(req.params.id)]);
+      `SELECT ${adColumns} FROM public.ads_details WHERE id = $1 AND ${visibleAdsFilter}`, [Number(req.params.id)]);
     // length est le nombre de lignes ; !0 vaut true : aucun résultat trouvé.
     if (!result.rows.length) {
       return res.status(404).json({ error: 'Annonce introuvable.' });
@@ -139,7 +150,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
     // RETURNING renvoie l'ID et la date générés par la base pour la nouvelle candidature.
     const result = await pool.query(`
       INSERT INTO public.applications (ad_id, name, email, phone, message)
-      SELECT id, $2, $3, $4, $5 FROM public.ads WHERE id = $1
+      SELECT id, $2, $3, $4, $5 FROM public.ads WHERE id = $1 AND ${visibleAdsFilter}
       RETURNING id, created_at`, [Number(ad_id), name.trim(), email.trim().toLowerCase(),
       // ?. appelle trim seulement si phone n'est ni null ni undefined.
       // || null remplace un téléphone vide par NULL ; ?? remplace uniquement null/undefined.

@@ -73,6 +73,8 @@ function createSessionService(pool, { secret, origins, lifetimeSeconds = 1800, a
       const actual = Buffer.from(payload.credential);
       if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
       const { id, role, status, is_verified } = rows[0];
+      // Refuser aussi les sessions deja ouvertes avant la sanction.
+      if (['BANNED', 'DISABLED'].includes(status)) return null;
       return { userId: id, role: role.toUpperCase(), status, is_verified };
     },
     async revoke(req) {
