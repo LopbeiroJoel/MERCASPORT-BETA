@@ -6,6 +6,8 @@ const content = document.getElementById("ads-content"); // la <div> dans la moda
 const closeBtn = document.getElementById("x-detail");   // la croix, qui reste en place dans la modale
 const API_URL = "";        // l'adresse de l'API
 const adsStatus = document.getElementById("ads-status");   // le <p> qui affiche le nombre d'offres ou un message d'erreur
+const previousBtn = document.getElementById("ads-previous");   // le bouton "Précédent" du carrousel
+const nextBtn = document.getElementById("ads-next");           // le bouton "Suivant" du carrousel
 // ===== 2. CHARGER LES OFFRES ET CRÉER LES CARTES =====
 
 async function loadAds() {
@@ -93,6 +95,8 @@ async function loadAds() {
       li.appendChild(button);                           // le bouton est accroché à la carte, en dernier
     });                                                 // fin de la boucle
     adsStatus.textContent = mostRecent.length + " offres à découvrir.";
+    previousBtn.removeAttribute("disabled");                       // active le bouton "Précédent"
+    nextBtn.removeAttribute("disabled");                           // active le bouton "Suivant"
   } catch (error) {
     console.error(error);                               // message pour le développeur
     adsStatus.textContent = "Impossible de charger les offres. Veuillez réessayer plus tard.";  // message pour le visiteur
@@ -109,6 +113,12 @@ loadAds();                                              // appel de la fonction,
 closeBtn.addEventListener("click", () => {              // clic sur la croix
   detail.close();
 });
+previousBtn.addEventListener("click", () => {
+    list.scrollBy({ left: -300, behavior: "smooth" });
+    });
+nextBtn.addEventListener("click", () => {
+    list.scrollBy({ left: 300, behavior: "smooth" });
+    });
 
 detail.addEventListener("click", (event) => {           // clic n'importe où sur le <dialog>
   if (event.target === detail) {                        // seulement si c'est le fond assombri
