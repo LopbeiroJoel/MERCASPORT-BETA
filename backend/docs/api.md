@@ -148,3 +148,11 @@ La route PATCH existante conserve ses six champs communs : cette modification n'
 3. Relancer la premiere migration, puis `database/player-positions-cleanup.sql`.
    Seule l'ancienne colonne du profil joueur est retiree, sans CASCADE.
    Une correspondance inconnue arrete la conversion ; completer la table de correspondance avant suppression.
+
+
+## Modifier son pseudo : PATCH /profile/me
+
+Envoyer `{"username":"Mon nouveau pseudo"}` avec le cookie de session et la même origine.
+Le pseudo suit les règles de l'inscription (3 à 50 caractères) et doit être unique.
+`200` renvoie le compte actualisé ; `400` pour un pseudo invalide ; `409 USERNAME_TAKEN` pour un doublon.
+Le compte modifié est toujours celui de la session. Les autres champs du profil restent modifiables dans le même formulaire.

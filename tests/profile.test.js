@@ -314,3 +314,40 @@ test('accueil : authentification non configurée ou SQL en panne, sans détail p
     }
   }
 });
+
+
+test('pseudo : modification personnelle, normalisation et connexion avec le nouveau pseudo', async () => {
+  const cookie = await login(player.email);
+  try {
+    const response = await patch({ username: '  Nouveau pseudo  ' }, cookie);
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).user.username, 'Nouveau pseudo');
+    assert.equal((await (await me(cookie)).json()).user.username, 'Nouveau pseudo');
+    assert.equal((await pool.query('SELECT username FROM users WHERE id=$1', [club.id])).rows[0].username, club.username);
+    const newCookie = await login('nouveau pseudo');
+    assert.equal((await me(newCookie)).status, 200);
+    assert.equal((await post('/auth/login', { identifier: player.username, password })).status, 401);
+    const home = await fetch(base + '/auth/me', { headers: { Cookie: cookie } });
+    assert.equal((await home.json()).user.username, 'Nouveau pseudo');
+  } finally {
+    await pool.query('UPDATE users SET username=$1 WHERE id=$2', [player.username, player.id]);
+  }
+});
+
+test('pseudo : valeurs invalides, doublons et modification d’un autre compte refusés', async () => {
+  const cookie = await login(player.email);
+  for (const username of ['', 'ab', 'x'.repeat(51), 42, null, '<script>', 'Pseudo\u0000']) {
+    const response = await patch({ username }, cookie);
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).field, 'username');
+  }
+  assert.equal((await patch({ username: 'Sans session' })).status, 401);
+  assert.equal((await patch({ username: 'Autre origine' }, cookie, 'https://evil.test')).status, 403);
+  assert.equal((await patch({ username: 'Autre compte', id: club.id }, cookie)).status, 400);
+  const conflict = await patch({ username: club.username.toUpperCase(), biography: 'Ne pas enregistrer' }, cookie);
+  assert.equal(conflict.status, 409);
+  assert.equal((await conflict.json()).code, 'USERNAME_TAKEN');
+  const user = (await (await me(cookie)).json()).user;
+  assert.equal(user.username, player.username);
+  assert.notEqual(user.biography, 'Ne pas enregistrer');
+});

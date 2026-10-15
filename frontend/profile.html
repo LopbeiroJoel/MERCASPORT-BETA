@@ -56,6 +56,10 @@
           </div>
           <form id="profile-form">
             <div class="profile-field">
+              <label for="username">Pseudo</label>
+              <input id="username" required minlength="3" maxlength="50" autocomplete="username">
+            </div>
+            <div class="profile-field">
               <label for="biography">Biographie</label>
               <textarea id="biography" rows="5" maxlength="2000" placeholder="Votre parcours, vos ambitions, votre passion du football…" aria-describedby="biography-help"></textarea>
               <p class="profile-field-help" id="biography-help">2 000 caractères maximum.</p>
@@ -89,7 +93,7 @@
             <h2 id="sheet-title">Ma fiche</h2>
             <span class="profile-readonly">Lecture seule</span>
           </div>
-          <p class="profile-sheet-note">Le pseudo, l’e-mail, la photo et les informations de cette fiche ne sont pas encore modifiables ici.</p>
+          <p class="profile-sheet-note">L’e-mail, la photo et les informations de cette fiche ne sont pas encore modifiables ici.</p>
           <dl id="profile-sheet"></dl>
         </section>
       </div>

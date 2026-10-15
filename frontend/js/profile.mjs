@@ -6,6 +6,7 @@ const logoutButton = document.getElementById('logout-button');
 
 function fillAccount(user) {
   document.getElementById('profile-name').textContent = user.username;
+  document.getElementById('username').value = user.username;
   document.getElementById('profile-id').textContent = user.id;
   document.getElementById('profile-email').textContent = user.email;
   for (const field of ['biography', 'phone', 'location']) {
@@ -93,7 +94,7 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   saveButton.disabled = true;
   message.textContent = 'Enregistrement…';
-  const body = {};
+  const body = { username: document.getElementById('username').value };
   for (const field of ['biography', 'phone', 'location']) body[field] = document.getElementById(field).value;
   for (const field of ['email', 'phone', 'location']) body[field + '_visible'] = document.getElementById(field + '-visible').checked;
   try {
@@ -106,7 +107,7 @@ form.addEventListener('submit', async event => {
       return;
     }
     const data = await response.json();
-    if (!response.ok) throw new Error(data.field ? 'Champ invalide : ' + data.field : 'Enregistrement refusé ou indisponible.');
+    if (!response.ok) throw new Error(data.message || (data.field ? 'Champ invalide : ' + data.field : 'Enregistrement refusé ou indisponible.'));
     fillAccount(data.user);
     message.textContent = 'Profil enregistré dans la base. Recharge la page pour vérifier.';
   } catch (error) {
