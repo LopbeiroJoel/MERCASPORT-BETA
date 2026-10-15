@@ -7,11 +7,12 @@
   <title>Offres - Mercasport</title>                       <!-- titre affiché dans l'onglet du navigateur -->
   <link rel="stylesheet" href="css/style.css"> 
   <link rel="stylesheet" href="css/style-header.css"> <!-- CSS de normalisation : supprime les différences entre navigateurs -->
-  <link rel="stylesheet" href="css/style-offres.css">
   <link rel="stylesheet" href="css/style-job-listings.css">
+  <link rel="stylesheet" href="css/style-footer.css">
+  <link rel="stylesheet" href="css/style-offres.css">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
-<body>
+<body class="offers-page">
     <header>                                        <!-- en-tête : logo, navigation, accès au compte -->
     <!-- Emplacement du logo : le nom sert de repère tant que l'image n'est pas disponible. -->
     <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
@@ -19,7 +20,7 @@
     <nav aria-label="Navigation principale">       <!-- liens vers les rubriques du site -->
       <ul>
         <li><a href="index.html">Accueil</a></li>
-        <li><a href="offres.html">Offres</a></li>
+        <li><a href="offres.html" aria-current="page">Offres</a></li>
         <!-- <li><a href="actualites.html">Actualités</a></li>
         <li><a href="contact.html">Contact</a></li> -->
       </ul>
@@ -30,41 +31,67 @@
       <a href="register.html" class="primary-button">S'inscrire</a>
     </div>
   </header>
-  <h1>Offres</h1>
-<div class="offers-layout">
-    <aside>
-    <h2>Filtres</h2>
-    <form id="filters">
-        <label for="filter-search">Recherche</label>
-        <input type="search" id="filter-search" name="search" placeholder="Titre ou club">
+  <main class="offers-page-content">
+    <div class="offers-intro">
+      <h1>Trouvez votre prochain club.</h1>
+      <p>Un poste, une équipe, une nouvelle saison. Découvrez les clubs qui recrutent près de chez vous.</p>
+    </div>
 
-        <fieldset id="filter-position">
-        <legend>Poste</legend>
-        <!-- les cases seront créées par le JS -->
-        </fieldset>
+    <div class="offers-layout">
+      <aside class="offers-filters" aria-labelledby="filters-title">
+        <div class="offers-filters-heading">
+          <h2 id="filters-title">Affiner la recherche</h2>
+          <button type="reset" form="filters" class="offers-reset">Tout effacer</button>
+        </div>
+        <form id="filters" action="offres.html" method="get">
+          <div class="offers-search-fields">
+            <div>
+              <label for="filter-search">Mots-clés</label>
+              <input type="search" id="filter-search" name="keywords" placeholder="Titre ou poste">
+            </div>
+            <div>
+              <label for="filter-location-search">Localisation</label>
+              <input type="search" id="filter-location-search" name="location" placeholder="Ville">
+            </div>
+            <div>
+              <label for="filter-company">Club</label>
+              <input type="search" id="filter-company" name="company" placeholder="Nom du club">
+            </div>
+          </div>
+          <!-- Les groupes se replient sans JavaScript ; les cases restent créées depuis l'API. -->
+          <details class="offers-filter-group" open>
+            <summary>Poste</summary>
+            <fieldset id="filter-position"><legend class="offers-sr-only">Poste</legend></fieldset>
+          </details>
+          <details class="offers-filter-group">
+            <summary>Division</summary>
+            <fieldset id="filter-division"><legend class="offers-sr-only">Division</legend></fieldset>
+          </details>
+          <details class="offers-filter-group">
+            <summary>Ville</summary>
+            <fieldset id="filter-location"><legend class="offers-sr-only">Ville</legend></fieldset>
+          </details>
+        </form>
+      </aside>
 
-        <fieldset id="filter-division">
-        <legend>Division</legend>
-        </fieldset>
+      <section class="offers-results" aria-labelledby="results-title">
+        <div class="offers-results-heading">
+          <h2 id="results-title">Sur le marché</h2>
+          <p id="offers-count" role="status">Chargement…</p>
+        </div>
+        <ul id="offers-list" aria-label="Offres de recrutement" aria-busy="true"></ul>
+      </section>
+    </div>
+  </main>
 
-        <fieldset id="filter-location">
-        <legend>Ville</legend>
-        </fieldset>
-
-        <button type="reset">Réinitialiser</button>
-    </form>
-    </aside>
-    <main>
-    <p id="offers-count"></p>
-    <ul id="offers-list"></ul>
-    </main>
-</div>
-<dialog id="ads-detail">                       
+<dialog id="ads-detail" aria-labelledby="offer-detail-title">
     <div class="ads-inner">
         <button id="x-detail" aria-label="Fermer la fenêtre">&#10005;</button>
+        <div class="offers-dialog-layout">
         <div id="ads-content"></div>
-        
-        <h3>Postuler</h3>
+        <section class="offers-application" aria-labelledby="apply-title">
+        <h3 id="apply-title">Rejoignez l’équipe.</h3>
+        <p>Présentez-vous au club et partagez votre envie de jouer.</p>
         <form id="apply-form">
             <label for="apply-name">Nom :</label>
             <input type="text" id="apply-name" name="name" maxlength="200" autocomplete="name" required>
@@ -76,14 +103,49 @@
                 title="Uniquement des chiffres (un + est accepté au début), 6 à 15 chiffres">
             <label for="apply-text">Message :</label>
             <textarea id="apply-text" name="text" rows="4" maxlength="2000"></textarea>
-            <button type="submit" id ="apply-submit">Envoyer ma candidature</button>
+            <button type="submit" id="apply-submit">Envoyer ma candidature</button>
         </form>
         <p role="status" id="apply-message"></p>
+        </section>
+        </div>
     </div>
   </dialog>
-<footer>                                        <!-- pied de page -->
-    <p>© 2026 MERCASPORT</p>
-</footer>
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <a class="footer-logo" href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+          <p>Le mercato du football amateur.</p>
+          <p>Des clubs, des joueurs et une même passion. Trouvez l’équipe dans laquelle écrire la suite de votre parcours.</p>
+        </div>
+
+        <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
+          <h2 id="footer-navigation-title">Sur le terrain</h2>
+          <ul>
+            <li><a href="offres.html">Découvrir les offres</a></li>
+            <li><a href="register.html">Créer un compte</a></li>
+            <li><a href="login.html">Se connecter</a></li>
+          </ul>
+        </nav>
+
+        <div class="footer-contact">
+          <h2>Parlons football</h2>
+          <!-- Coordonnées de démonstration, à remplacer avant publication. -->
+          <address>
+            <p>12, allée du Stade<br>67000 Strasbourg, France</p>
+            <p>bonjour@mercasport.example</p>
+            <p>Du lundi au vendredi<br>9 h – 18 h</p>
+          </address>
+          <p class="footer-demo-note">Coordonnées fictives pour cette démonstration.</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Mercasport. Tous droits réservés.</p>
+        <p>Le football commence par une rencontre.</p>
+      </div>
+    </div>
+  </footer>
   <script type="module" src="js/offres.js"></script>
 </body>
 </html>
