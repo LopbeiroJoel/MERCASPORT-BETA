@@ -1,21 +1,40 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion - MercaSport</title>
+<!DOCTYPE html>                                   <!-- indique au navigateur que c'est du HTML5 -->
+<html lang="fr">                                  <!-- racine de la page, contenu en français -->
+<head>                                            <!-- infos invisibles : réglages, titre, CSS -->
+  <meta charset="UTF-8">                          <!-- encodage : permet d'afficher les accents -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- adapte la page aux téléphones -->
+  <title>Se connecter - Mercasport</title>     <!-- titre affiché dans l'onglet du navigateur -->
+  <link rel="stylesheet" href="css/style.css">    <!-- relie le fichier de style -->
 </head>
+
 <body>
-  <nav><a href="index.html">Annonces</a> | <a href="register.html">Inscription</a></nav>
-  <h1>Connexion</h1>
-  <form id="login-form">
-    <p><label for="identifier">E-mail ou pseudo</label>
-    <input id="identifier" name="identifier" autocomplete="username" maxlength="254" required></p>
-    <p><label for="password">Mot de passe</label>
-    <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required></p>
-    <button id="login-button" type="submit">Se connecter</button>
-  </form>
-  <p id="login-message" role="status" aria-live="polite"></p>
+
+  <header>
+    <h1>Bienvenue sur Mercasport</h1>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="offres.html">Offres</a></li>
+      <li><a href="login.html">Se connecter</a></li>
+      <li><a href="register.html">S'inscrire</a></li>
+    </ul>
+  </nav>
+  <main>
+    <h2>Connexion</h2>
+    <form method="post" id="login-form">
+      <label for="identifier">E-mail ou pseudo</label>
+      <input id="identifier" name="identifier" autocomplete="username" maxlength="254" required>
+      <label for="password">Mot de passe</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+      <button id="login-button" type="submit">Se connecter</button> 
+    </form>
+    <p>Pas encore de compte ? <a href="register.html">Créer un compte</a></p> <p id="login-message" role="status" aria-live="polite"></p>
+  </main>
+  <footer>
+    <p>© 2026 MERCASPORT</p>
+  </footer>
   <script type="module" src="js/login.mjs"></script>
 </body>
 </html>
