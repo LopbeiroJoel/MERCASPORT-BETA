@@ -4,35 +4,131 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon profil - MercaSport</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style-header.css">
+  <link rel="stylesheet" href="css/style-footer.css">
+  <link rel="stylesheet" href="css/style-profile.css">
 </head>
-<body>
-  <nav><a href="index.html">Annonces</a> | <a href="register.html">Inscription</a>
+<body class="profile-page">
+  <header>
+    <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+    <nav aria-label="Navigation principale">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="offres.html">Offres</a></li>
+        <li><a href="profile.html" aria-current="page">Mon profil</a></li>
+      </ul>
+    </nav>
     <button id="logout-button" type="button" hidden>Se déconnecter</button>
-  </nav>
-  <h1 id="profile-title">Mon profil</h1>
-  <p id="profile-message" role="status" aria-live="polite">Chargement du profil…</p>
-  <main id="profile-content" hidden>
-    <img src="assets/default-avatar.svg" alt="Photo de profil par défaut" width="88" height="88">
-    <h2 id="profile-name"></h2>
-    <p id="profile-role"></p>
-    <p>Identifiant : <span id="profile-id"></span></p>
-    <p>E-mail : <span id="profile-email"></span></p>
-    <p>Page privée : tu vois tes coordonnées même si elles sont masquées aux autres.</p>
-    <h2>Modifier mes informations</h2>
-    <form id="profile-form">
-      <p><label>Biographie<br><textarea id="biography" rows="4" cols="40" maxlength="2000"></textarea></label></p>
-      <p><label>Téléphone <input id="phone" type="tel" maxlength="30"></label></p>
-      <p><label>Localisation <input id="location" maxlength="100"></label></p>
-      <p><label><input id="email-visible" type="checkbox"> Autoriser l'affichage public de mon e-mail</label></p>
-      <p><label><input id="phone-visible" type="checkbox"> Autoriser l'affichage public de mon téléphone</label></p>
-      <p><label><input id="location-visible" type="checkbox"> Autoriser l'affichage public de ma localisation</label></p>
-      <button id="save-button" type="submit">Enregistrer</button>
-    </form>
-    <p>Le pseudo, l'e-mail, la photo et la fiche ci-dessous ne sont pas encore modifiables ici.</p>
-    <h2 id="sheet-title">Ma fiche</h2>
-    <dl id="profile-sheet"></dl>
-    <p><a href="index.html">Consulter les annonces</a></p>
+  </header>
+
+  <main class="profile-main">
+    <div class="profile-intro">
+      <h1 id="profile-title">Mon profil</h1>
+      <p>Votre parcours, vos coordonnées et votre place sur le terrain.</p>
+    </div>
+    <p id="profile-message" role="status" aria-live="polite">Chargement du profil…</p>
+
+    <!-- Le JavaScript révèle ce contenu uniquement après vérification de la session. -->
+    <div id="profile-content" class="profile-layout" hidden>
+      <aside class="profile-summary" aria-labelledby="profile-name">
+        <img class="profile-avatar" src="assets/default-avatar.svg" alt="Photo de profil par défaut" width="88" height="88">
+        <p id="profile-role" class="profile-role"></p>
+        <h2 id="profile-name"></h2>
+        <dl class="profile-account-details">
+          <dt>E-mail du compte</dt>
+          <dd id="profile-email"></dd>
+          <dt>Identifiant</dt>
+          <dd id="profile-id"></dd>
+        </dl>
+        <p class="profile-private-note">Cet espace est privé. Vos coordonnées restent visibles ici, même si vous choisissez de les masquer aux autres.</p>
+        <a class="profile-offers-link" href="offres.html">Consulter les offres</a>
+      </aside>
+
+      <div class="profile-panels">
+        <section class="profile-panel" aria-labelledby="profile-edit-title">
+          <div class="profile-panel-heading">
+            <h2 id="profile-edit-title">Mes informations</h2>
+            <p>Présentez-vous et gardez vos coordonnées à jour.</p>
+          </div>
+          <form id="profile-form">
+            <div class="profile-field">
+              <label for="biography">Biographie</label>
+              <textarea id="biography" rows="5" maxlength="2000" placeholder="Votre parcours, vos ambitions, votre passion du football…" aria-describedby="biography-help"></textarea>
+              <p class="profile-field-help" id="biography-help">2 000 caractères maximum.</p>
+            </div>
+            <div class="profile-contact-fields">
+              <div class="profile-field">
+                <label for="phone">Téléphone</label>
+                <input id="phone" type="tel" maxlength="30" autocomplete="tel" placeholder="Votre numéro de téléphone">
+              </div>
+              <div class="profile-field">
+                <label for="location">Localisation</label>
+                <input id="location" maxlength="100" autocomplete="address-level2" placeholder="Votre ville">
+              </div>
+            </div>
+            <fieldset class="profile-visibility">
+              <legend>Visibilité de mes coordonnées</legend>
+              <p>Choisissez les coordonnées dont vous autorisez l’affichage public.</p>
+              <label><input id="email-visible" type="checkbox"><span>Autoriser l’affichage public de mon e-mail</span></label>
+              <label><input id="phone-visible" type="checkbox"><span>Autoriser l’affichage public de mon téléphone</span></label>
+              <label><input id="location-visible" type="checkbox"><span>Autoriser l’affichage public de ma localisation</span></label>
+            </fieldset>
+            <div class="profile-save-bar">
+              <p>Les changements sont appliqués après enregistrement.</p>
+              <button id="save-button" type="submit">Enregistrer</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="profile-panel profile-sheet-panel" aria-labelledby="sheet-title">
+          <div class="profile-panel-heading">
+            <h2 id="sheet-title">Ma fiche</h2>
+            <span class="profile-readonly">Lecture seule</span>
+          </div>
+          <p class="profile-sheet-note">Le pseudo, l’e-mail, la photo et les informations de cette fiche ne sont pas encore modifiables ici.</p>
+          <dl id="profile-sheet"></dl>
+        </section>
+      </div>
+    </div>
   </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <a class="footer-logo" href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+          <p>Le mercato du football amateur.</p>
+          <p>Des clubs, des joueurs et une même passion. Trouvez l’équipe dans laquelle écrire la suite de votre parcours.</p>
+        </div>
+
+        <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
+          <h2 id="footer-navigation-title">Sur le terrain</h2>
+          <ul>
+            <li><a href="offres.html">Découvrir les offres</a></li>
+            <li><a href="register.html">Créer un compte</a></li>
+            <li><a href="login.html">Se connecter</a></li>
+          </ul>
+        </nav>
+
+        <div class="footer-contact">
+          <h2>Parlons football</h2>
+          <!-- Coordonnées de démonstration, à remplacer avant publication. -->
+          <address>
+            <p>12, allée du Stade<br>67000 Strasbourg, France</p>
+            <p>bonjour@mercasport.example</p>
+            <p>Du lundi au vendredi<br>9 h – 18 h</p>
+          </address>
+          <p class="footer-demo-note">Coordonnées fictives pour cette démonstration.</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Mercasport. Tous droits réservés.</p>
+        <p>Le football commence par une rencontre.</p>
+      </div>
+    </div>
+  </footer>
   <script type="module" src="js/profile.mjs"></script>
 </body>
 </html>
