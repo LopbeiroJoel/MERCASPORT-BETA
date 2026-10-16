@@ -102,10 +102,16 @@ form.addEventListener("submit", async (event) => {
       current_club: document.getElementById("current_club").value.trim() || null,    // "" → null
     };
   } else {
+    // Les divisions cochées, par exemple ["R3", "D4"].
+    const checkedDivisions = document.querySelectorAll('input[name="divisions"]:checked');
+    const divisions = Array.from(checkedDivisions).map((box) => box.value);
+
     profile = {
-      name: document.getElementById("name").value.trim(),                     // obligatoire
-      city: document.getElementById("city").value.trim(),                     // obligatoire
-      divisions: document.getElementById("divisions").value.trim() || null,   // facultatif : "" → null
+      name: document.getElementById("name").value.trim(),    // obligatoire
+      city: document.getElementById("city").value.trim(),    // obligatoire
+      // Le serveur attend un TEXTE : ["R3", "D4"] devient "R3 / D4".
+      // Aucune case cochée : join donne "", et "" || null donne null.
+      divisions: divisions.join(" / ") || null,
     };
   }
 
