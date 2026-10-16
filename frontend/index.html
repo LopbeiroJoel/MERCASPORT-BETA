@@ -26,6 +26,8 @@
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="offres.html">Offres</a></li>
+        <li><a href="publier.html" class="header-publish"><span aria-hidden="true">＋</span> Poster une offre</a></li>
+        <li><a href="a-propos.html">À propos</a></li>
         <!-- <li><a href="actualites.html">Actualités</a></li>
         <li><a href="contact.html">Contact</a></li> -->
       </ul>
@@ -40,6 +42,7 @@
   <div class="hero">
     <!-- Visuel décoratif derrière le contenu ; le filtre sombre est ajouté en CSS. -->
     <img src="img/hero.svg" alt="" class="hero-image">
+    <svg id="hero-match" class="hero-match" aria-hidden="true" focusable="false"></svg>
 
     <section class="search" aria-labelledby="hero-title">
       <h1 id="hero-title">Bienvenue sur <span>Mercasport</span></h1>
@@ -122,5 +125,6 @@
   <script type="module" src="js/account.mjs"></script>
  <script src="js/script.js"></script>
   <script type="module" src="js/header.mjs"></script>
+  <script type="module" src="js/hero-match.mjs"></script>
 </body>
 </html>

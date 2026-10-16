@@ -1,4 +1,3 @@
-/* Carrousel natif : les offres restent une liste et défilent sans bibliothèque. */
 .job-listings {
   width: min(80%, var(--container-width));
   margin-inline: auto;
@@ -15,6 +14,8 @@
 
 .job-listings-heading h2 {
   margin: 0;
+  font-family: "Manrope", var(--font-body);
+  font-weight: var(--font-weight-bold);
   font-size: clamp(var(--font-size-3xl), 4vw, var(--font-size-4xl));
 }
 
@@ -49,7 +50,6 @@
 #ads-list {
   display: grid;
   grid-auto-flow: column;
-  /* Trois cartes et un aperçu de la suivante sur un grand écran. */
   grid-auto-columns: clamp(280px, 31%, 380px);
   gap: var(--space-5);
   overflow-x: auto;
@@ -169,3 +169,8 @@
     gap: var(--space-4);
   }
 }
+.job-card > button { border-radius: 10px; transition: background-color 160ms ease, transform 160ms ease; }
+.job-card > button:hover:not(:disabled) { transform: translateY(-1px); }
+.job-card > button:focus-visible { outline: 2px solid var(--primary-400); outline-offset: 4px; }
+
+@media (prefers-reduced-motion: reduce) { .job-card > button:hover:not(:disabled) { transform: none; } }

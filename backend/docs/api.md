@@ -2,7 +2,7 @@
 
 Le front et l’API partagent la même origine : `http://localhost:3000` en local,
 le domaine du projet sur Vercel. Les appels navigateur utilisent `/ads` et `/ads/:id`.
-Les annonces viennent de PostgreSQL, via `public.ads_details` ; aucun filtre de statut.
+Les annonces viennent de PostgreSQL, via `public.ads_details`. Les lectures publiques excluent les annonces retirées et les auteurs bannis ou désactivés.
 
 ## GET /auth/me
 
@@ -138,7 +138,7 @@ STRIKER
 Le compte connecte recoit sa fiche joueur avec `profile.positions`, toujours un tableau.
 L'identifiant vient de la session. La route ne retourne aucun mot de passe.
 L'affichage en francais des codes est gere par Thomas.
-La route PATCH existante conserve ses six champs communs : cette modification n'ajoute pas l'edition des postes.
+La route PATCH permet aussi de modifier sa fiche joueur avec l’objet `profile` décrit ci-dessous.
 
 ### Migration Neon
 
@@ -156,3 +156,58 @@ Envoyer `{"username":"Mon nouveau pseudo"}` avec le cookie de session et la mêm
 Le pseudo suit les règles de l'inscription (3 à 50 caractères) et doit être unique.
 `200` renvoie le compte actualisé ; `400` pour un pseudo invalide ; `409 USERNAME_TAKEN` pour un doublon.
 Le compte modifié est toujours celui de la session. Les autres champs du profil restent modifiables dans le même formulaire.
+
+
+## Publication par un club
+
+`GET /ads/options` : catalogues SQL `positions` (code, label) et `divisions` (code), départements du formulaire (Bas-Rhin, Haut-Rhin), pieds, tranches d’âge et niveaux d’expérience. Lecture publique, sans données personnelles.
+
+`POST /ads` : compte CLUB connecté, actif et associé à son club ; cookie de session et origine autorisée obligatoires. Le serveur fixe l’auteur et le club depuis la session. Aucun identifiant d’auteur n’est accepté dans le JSON.
+
+```json
+{
+  "city": "Colmar",
+  "department": "Haut-Rhin",
+  "positions": ["STRIKER", "RIGHT_WINGER"],
+  "division_code": "R2",
+  "description": "Notre club recherche un buteur pour la prochaine saison.",
+  "preferred_foot": "Deux pieds",
+  "salary": "Frais de déplacement remboursés"
+}
+```
+
+Obligatoires : ville (100 caractères), département, 1 à 14 postes distincts, division et description (5 000 caractères). Les codes sont validés et vérifiés dans les catalogues SQL.
+Facultatifs : `preferred_foot` (Droit, Gauche, Deux pieds, Indifférent ou null), `salary` (100 caractères), `age_range`, `experience_level`, `trial_possible` (booléen ou null), `additional_info` (2 000 caractères). Les choix exacts viennent de `/ads/options`.
+Le validateur existant conserve les six départements déjà autorisés ; le nouveau formulaire présente uniquement les deux départements alsaciens.
+
+`201` : `{id, title, created_at}` et en-tête Location `/ads/:id`. Le titre est généré depuis le nom du club. L’annonce et ses postes sont enregistrés dans une seule transaction, sans équipe obligatoire.
+`400 VALIDATION_ERROR` : erreurs françaises dans `fields` ; `401` : session requise ; `403` : compte/origine non autorisé ; `415` : JSON requis ; `413` : corps trop volumineux ; `503` : service indisponible. Le formulaire bloque les doubles clics pendant l’envoi et reste fermé après une publication réussie.
+
+## Modification de sa fiche : PATCH /profile/me
+
+Le corps peut contenir `username`, `photo_url`, `biography`, `phone`, `location`, les trois booléens de visibilité et, pour un joueur, un objet `profile` partiel :
+
+```json
+{
+  "biography": "Ma présentation personnelle.",
+  "profile": {
+    "positions": ["GOALKEEPER", "STRIKER"],
+    "preferred_foot": "BOTH",
+    "current_club": "Mon club",
+    "past_clubs": "Club A\nClub B",
+    "experience": "Trois saisons en régional.",
+    "level": "R2"
+  }
+}
+```
+
+`profile.positions` : tableau de 14 codes autorisés maximum, sans doublon (`[]` ou null pour effacer). `preferred_foot` : RIGHT, LEFT, BOTH ou null. `current_club` : 150 caractères ; `past_clubs` et `experience` : 2 000 ; `level` : 100. Les champs absents sont conservés.
+`photo_url` : adresse HTTPS sans identifiants, chemin local commençant par `/`, ou chaîne vide pour revenir à l’avatar par défaut ; 2 000 caractères maximum. Aucun téléversement de fichier.
+La biographie sert aussi de présentation personnelle : aucune nouvelle colonne.
+
+L’identifiant vient exclusivement de la session. Les champs non autorisés, dont `id`, `user_id`, rôle et mot de passe, sont refusés. Une fiche joueur ne peut pas être modifiée par un compte club. La mise à jour du compte et de la fiche est atomique ; un conflit ou une erreur annule tout.
+`200` : `{message, user, profile}` immédiatement actualisés ; `400 INVALID_FIELD` : `field` et `message` ; `409 USERNAME_TAKEN` : pseudo occupé ; `401/403` : accès refusé ; `503` : service indisponible.
+
+Pages : `/publier.html`, `/profile.html` et `/a-propos.html`. Les fonctions de messagerie, profils publics, calendriers, compositions et statistiques décrites dans À propos sont des projets futurs, pas des API disponibles.
+
+Vérifications locales : `npm test` (API et build), `npm run test:registration`, `npm run test:profile`, `npm run test:ads` et `npm run test:admin`. Les tests de profil/publication utilisent une base isolée, sans écriture sur Neon.

@@ -12,7 +12,8 @@
     "test": "python3 tests/integration.py",
     "test:sql": "python3 database/tests/run.py",
     "test:registration": "node --test backend/registration/tests/register.test.js",
-    "test:profile": "node --test tests/profile.test.js",
+    "test:profile": "node --test tests/profile.test.js tests/profile-edit.test.js",
+    "test:ads": "node --test tests/publish.test.js",
     "test:admin-users": "node --test tests/admin-users.test.js",
     "test:admin": "node --test tests/admin.test.js tests/admin-users.test.js tests/admin-crud.test.js"
   },

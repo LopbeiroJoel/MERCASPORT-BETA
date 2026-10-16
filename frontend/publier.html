@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publier une offre — MercaSport</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style-header.css">
+  <link rel="stylesheet" href="css/style-publier.css">
+</head>
+<body class="publish-page">
+  <header>
+    <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+    <button class="header-toggle" type="button" aria-expanded="false" aria-controls="site-navigation site-account-actions" aria-label="Ouvrir le menu" hidden>
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </button>
+    <nav id="site-navigation" aria-label="Navigation principale">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="offres.html">Offres</a></li>
+        <li><a href="publier.html" class="header-publish" aria-current="page"><span aria-hidden="true">＋</span> Poster une offre</a></li>
+        <li><a href="a-propos.html">À propos</a></li>
+      </ul>
+    </nav>
+    <div id="site-account-actions" role="group" aria-label="Accès au compte">
+      <a id="account-link" href="login.html" class="button-secondary">Se connecter</a>
+      <a id="register-link" href="register.html">S'inscrire</a>
+    </div>
+  </header>
+
+  <main class="publish-main">
+    <a class="publish-back" href="offres.html">← Retour aux offres</a>
+    <div class="publish-intro">
+      <p class="publish-eyebrow">ESPACE CLUB · RECRUTEMENT</p>
+      <h1>Votre prochain talent<br>commence ici.</h1>
+      <p>Un besoin, un projet, une place dans votre équipe. Présentez votre offre aux joueurs de la région.</p>
+    </div>
+
+    <p id="publish-status" class="publish-notice" role="status" aria-live="polite">Vérification de votre compte…</p>
+    <p id="publish-login" hidden><a href="login.html">Se connecter avec un compte club →</a></p>
+
+    <div id="publish-content" class="publish-layout" hidden>
+      <form id="publish-form" class="publish-form" novalidate>
+        <fieldset id="publish-fields">
+          <section class="publish-section" aria-labelledby="location-title">
+            <div class="publish-section-title"><span aria-hidden="true">01</span><div><h2 id="location-title">Votre terrain de jeu</h2><p>Où votre prochaine recrue jouera-t-elle ?</p></div></div>
+            <div class="publish-two-columns">
+              <div class="publish-field"><label for="city">Ville <span aria-hidden="true">*</span></label><input id="city" name="city" required maxlength="100" autocomplete="address-level2" placeholder="Ex. Colmar" aria-describedby="error-city"><p id="error-city" class="publish-error"></p></div>
+              <div class="publish-field"><label for="department">Département <span aria-hidden="true">*</span></label><select id="department" name="department" required aria-describedby="error-department"><option value="">Choisir un département</option><option>Bas-Rhin</option><option>Haut-Rhin</option></select><p id="error-department" class="publish-error"></p></div>
+            </div>
+          </section>
+
+          <section class="publish-section" aria-labelledby="player-title">
+            <div class="publish-section-title"><span aria-hidden="true">02</span><div><h2 id="player-title">La pièce manquante</h2><p>Indiquez les postes et le niveau de votre équipe.</p></div></div>
+            <fieldset class="publish-positions" id="positions-fieldset" aria-describedby="positions-help error-positions"><legend>Postes recherchés <span aria-hidden="true">*</span></legend><p id="positions-help">Plusieurs choix possibles.</p><div id="positions-list" class="publish-position-list"></div><p id="error-positions" class="publish-error"></p></fieldset>
+            <div class="publish-two-columns">
+              <div class="publish-field"><label for="division_code">Division <span aria-hidden="true">*</span></label><select id="division_code" name="division_code" required aria-describedby="error-division_code"><option value="">Choisir une division</option></select><p id="error-division_code" class="publish-error"></p></div>
+              <div class="publish-field"><label for="preferred_foot">Pied recherché <small>Facultatif</small></label><select id="preferred_foot" name="preferred_foot" aria-describedby="error-preferred_foot"><option value="">Sans préférence</option></select><p id="error-preferred_foot" class="publish-error"></p></div>
+            </div>
+          </section>
+
+          <section class="publish-section" aria-labelledby="project-title">
+            <div class="publish-section-title"><span aria-hidden="true">03</span><div><h2 id="project-title">Donnez envie de vous rejoindre</h2><p>Parlez de votre collectif et de vos ambitions.</p></div></div>
+            <div class="publish-field"><label for="description">Description de l’offre <span aria-hidden="true">*</span></label><textarea id="description" name="description" rows="7" required maxlength="5000" placeholder="Votre projet sportif, les entraînements, le profil recherché…" aria-describedby="description-help error-description"></textarea><div class="publish-field-footer"><small id="description-help">Les champs marqués * sont obligatoires.</small><small id="description-count">0 / 5 000</small></div><p id="error-description" class="publish-error"></p></div>
+            <div class="publish-field"><label for="salary">Rémunération ou avantages <small>Facultatif</small></label><input id="salary" name="salary" maxlength="100" placeholder="Ex. Frais de déplacement pris en charge" aria-describedby="error-salary"><p id="error-salary" class="publish-error"></p></div>
+            <details class="publish-extra"><summary>Préciser le profil recherché <small>Facultatif</small></summary><div class="publish-two-columns"><div class="publish-field"><label for="age_range">Tranche d’âge</label><select id="age_range" name="age_range" aria-describedby="error-age_range"><option value="">Non précisée</option></select><p id="error-age_range" class="publish-error"></p></div><div class="publish-field"><label for="experience_level">Expérience</label><select id="experience_level" name="experience_level" aria-describedby="error-experience_level"><option value="">Non précisée</option></select><p id="error-experience_level" class="publish-error"></p></div></div><div class="publish-field"><label for="trial_possible">Essai possible</label><select id="trial_possible" name="trial_possible" aria-describedby="error-trial_possible"><option value="">Non précisé</option><option value="true">Oui</option><option value="false">Non</option></select><p id="error-trial_possible" class="publish-error"></p></div><div class="publish-field"><label for="additional_info">Informations complémentaires</label><textarea id="additional_info" name="additional_info" rows="3" maxlength="2000" aria-describedby="error-additional_info"></textarea><p id="error-additional_info" class="publish-error"></p></div></details>
+          </section>
+          <div class="publish-submit-bar"><p>Votre offre sera visible dès sa publication.</p><button id="publish-button" type="submit">Publier mon offre <span aria-hidden="true">↗</span></button></div>
+        </fieldset>
+      </form>
+    </div>
+
+    <section id="publish-success" class="publish-success" aria-labelledby="success-title" hidden tabindex="-1"><span aria-hidden="true">✓</span><p class="publish-eyebrow">C’EST EN LIGNE</p><h2 id="success-title">Votre offre est publiée.</h2><p id="publish-success-text"></p><a href="offres.html">Voir les offres →</a><button id="publish-another" type="button">Publier une autre offre</button></section>
+  </main>
+  <script type="module" src="js/account.mjs"></script>
+  <script type="module" src="js/publier.mjs"></script>
+  <script type="module" src="js/header.mjs"></script>
+</body>
+</html>

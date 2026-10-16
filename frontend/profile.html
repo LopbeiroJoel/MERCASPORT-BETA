@@ -19,10 +19,12 @@
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="offres.html">Offres</a></li>
+        <li><a href="publier.html" class="header-publish"><span aria-hidden="true">＋</span> Poster une offre</a></li>
+        <li><a href="a-propos.html">À propos</a></li>
         <li><a href="profile.html" aria-current="page">Mon profil</a></li>
       </ul>
     </nav>
-    <div id="site-account-actions" role="group" aria-label="Actions du compte">
+    <div role="group" aria-label="Actions du compte">
       <a id="admin-link" href="admin.html" hidden>Panel admin</a>
       <button id="logout-button" type="button" hidden>Se déconnecter</button>
     </div>
@@ -35,10 +37,9 @@
     </div>
     <p id="profile-message" role="status" aria-live="polite">Chargement du profil…</p>
 
-    <!-- Le JavaScript révèle ce contenu uniquement après vérification de la session. -->
     <div id="profile-content" class="profile-layout" hidden>
       <aside class="profile-summary" aria-labelledby="profile-name">
-        <img class="profile-avatar" src="assets/default-avatar.svg" alt="Photo de profil par défaut" width="88" height="88">
+        <img id="profile-avatar" class="profile-avatar" referrerpolicy="no-referrer" src="assets/default-avatar.svg" alt="Photo de profil par défaut" width="88" height="88">
         <p id="profile-role" class="profile-role"></p>
         <h2 id="profile-name"></h2>
         <dl class="profile-account-details">
@@ -49,6 +50,7 @@
         </dl>
         <p class="profile-private-note">Cet espace est privé. Vos coordonnées restent visibles ici, même si vous choisissez de les masquer aux autres.</p>
         <a class="profile-offers-link" href="offres.html">Consulter les offres</a>
+        <a id="profile-publish-link" class="profile-offers-link" href="publier.html" hidden>Poster une offre</a>
       </aside>
 
       <div class="profile-panels">
@@ -60,21 +62,22 @@
           <form id="profile-form">
             <div class="profile-field">
               <label for="username">Pseudo</label>
-              <input id="username" required minlength="3" maxlength="50" autocomplete="username">
+              <input id="username" required minlength="3" maxlength="50" autocomplete="username" aria-describedby="username-error"><p id="username-error" class="profile-error"></p>
             </div>
+            <div class="profile-field"><label for="photo_url">Photo de profil <small>(adresse HTTPS)</small></label><input id="photo_url" maxlength="2000" inputmode="url" placeholder="https://…" aria-describedby="photo_url-help photo_url-error"><p class="profile-field-help" id="photo_url-help">Lien vers une image. L’envoi de fichiers n’est pas proposé.</p><p class="profile-error" id="photo_url-error"></p></div>
             <div class="profile-field">
               <label for="biography">Biographie</label>
-              <textarea id="biography" rows="5" maxlength="2000" placeholder="Votre parcours, vos ambitions, votre passion du football…" aria-describedby="biography-help"></textarea>
+              <textarea id="biography" rows="5" maxlength="2000" placeholder="Votre parcours, vos ambitions, votre passion du football…" aria-describedby="biography-help biography-error"></textarea><p id="biography-error" class="profile-error"></p>
               <p class="profile-field-help" id="biography-help">2 000 caractères maximum.</p>
             </div>
             <div class="profile-contact-fields">
               <div class="profile-field">
                 <label for="phone">Téléphone</label>
-                <input id="phone" type="tel" maxlength="30" autocomplete="tel" placeholder="Votre numéro de téléphone">
+                <input id="phone" type="tel" maxlength="30" autocomplete="tel" placeholder="Votre numéro de téléphone" aria-describedby="phone-error"><p id="phone-error" class="profile-error"></p>
               </div>
               <div class="profile-field">
                 <label for="location">Localisation</label>
-                <input id="location" maxlength="100" autocomplete="address-level2" placeholder="Votre ville">
+                <input id="location" maxlength="100" autocomplete="address-level2" placeholder="Votre ville" aria-describedby="location-error"><p id="location-error" class="profile-error"></p>
               </div>
             </div>
             <fieldset class="profile-visibility">
@@ -86,7 +89,7 @@
             </fieldset>
             <div class="profile-save-bar">
               <p>Les changements sont appliqués après enregistrement.</p>
-              <button id="save-button" type="submit">Enregistrer</button>
+              <div class="profile-form-actions"><button id="cancel-account-button" type="button" class="profile-button-secondary">Annuler</button><button id="save-button" type="submit">Enregistrer</button></div>
             </div>
           </form>
         </section>
@@ -94,9 +97,18 @@
         <section class="profile-panel profile-sheet-panel" aria-labelledby="sheet-title">
           <div class="profile-panel-heading">
             <h2 id="sheet-title">Ma fiche</h2>
-            <span class="profile-readonly">Lecture seule</span>
+            <button id="edit-player-button" type="button" aria-controls="player-form" aria-expanded="false" hidden disabled>Modifier ma fiche</button>
           </div>
-          <p class="profile-sheet-note">L’e-mail, la photo et les informations de cette fiche ne sont pas encore modifiables ici.</p>
+          <p id="sheet-note" class="profile-sheet-note">Votre parcours et vos préférences sur le terrain.</p>
+          <form id="player-form" hidden>
+            <fieldset id="player-positions" class="profile-position-fieldset" aria-describedby="player-positions-error"><legend>Mes postes préférés</legend><div id="player-position-list" class="profile-position-list"></div><p id="player-positions-error" class="profile-error"></p></fieldset>
+            <div class="profile-contact-fields"><div class="profile-field"><label for="player-preferred_foot">Pied préféré</label><select id="player-preferred_foot" aria-describedby="player-preferred_foot-error"><option value="">Non renseigné</option><option value="RIGHT">Droit</option><option value="LEFT">Gauche</option><option value="BOTH">Les deux</option></select><p id="player-preferred_foot-error" class="profile-error"></p></div><div class="profile-field"><label for="player-level">Niveau ou division</label><input id="player-level" list="player-levels" maxlength="100" placeholder="Ex. R2" aria-describedby="player-level-error"><datalist id="player-levels"></datalist><p id="player-level-error" class="profile-error"></p></div></div>
+            <div class="profile-field"><label for="player-current_club">Club actuel</label><input id="player-current_club" maxlength="150" aria-describedby="player-current_club-error"><p id="player-current_club-error" class="profile-error"></p></div>
+            <div class="profile-field"><label for="player-past_clubs">Anciens clubs</label><textarea id="player-past_clubs" rows="3" maxlength="2000" aria-describedby="player-past_clubs-error"></textarea><p id="player-past_clubs-error" class="profile-error"></p></div>
+            <div class="profile-field"><label for="player-experience">Expériences footballistiques</label><textarea id="player-experience" rows="4" maxlength="2000" aria-describedby="player-experience-error"></textarea><p id="player-experience-error" class="profile-error"></p></div>
+            <p class="profile-field-help">Votre présentation personnelle se trouve dans la biographie, au-dessus.</p>
+            <div class="profile-form-actions"><button id="cancel-player-button" type="button" class="profile-button-secondary">Annuler</button><button id="save-player-button" type="submit">Enregistrer ma fiche</button></div>
+          </form>
           <dl id="profile-sheet"></dl>
         </section>
       </div>
@@ -123,7 +135,6 @@
 
         <div class="footer-contact">
           <h2>Parlons football</h2>
-          <!-- Coordonnées de démonstration, à remplacer avant publication. -->
           <address>
             <p>12, allée du Stade<br>67000 Strasbourg, France</p>
             <p>bonjour@mercasport.example</p>

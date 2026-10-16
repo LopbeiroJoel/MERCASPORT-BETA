@@ -1,10 +1,8 @@
-/* Profil privé : styles propres à la page, basés sur la DA commune. */
 .profile-page>header,
 .profile-main {
   width: min(calc(100% - 2 * var(--container-padding)), var(--container-width));
 }
 
-/* Respecte les éléments cachés par l'authentification malgré les layouts flex/grid. */
 .profile-page [hidden] {
   display: none !important;
 }
@@ -391,3 +389,19 @@
     width: 100%;
   }
 }
+.profile-form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.profile-button-secondary { border: 1px solid var(--color-border); background: transparent; color: var(--color-text-secondary); }
+#profile-publish-link { margin-top: 12px; background: var(--primary-500); color: var(--neutral-950); border-color: var(--primary-500); }
+.profile-error { color: var(--danger); font-size: .75rem; margin: 0; }
+.profile-error:empty { display: none; }
+#player-form { display: grid; gap: 18px; padding-block: 20px; border-block: var(--border-default); }
+.profile-position-fieldset { min-width: 0; padding: 0; margin: 0; border: 0; }
+.profile-position-fieldset legend { font-size: .875rem; margin-bottom: 12px; }
+.profile-position-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.profile-position-list label { display: flex; align-items: center; gap: 8px; padding: 10px; border: var(--border-default); border-radius: 8px; font-size: .75rem; background: var(--color-surface-1); cursor: pointer; }
+.profile-position-list label:has(:checked) { border-color: var(--primary-500); color: var(--primary-200); }
+.profile-position-list input { width: 16px; height: 16px; padding: 0; margin: 0; accent-color: var(--primary-500); }
+.profile-position-list label:focus-within { outline: 2px solid var(--primary-400); outline-offset: 2px; }
+.profile-field select { width: 100%; font-size: .875rem; }
+#edit-player-button { margin-top: 12px; font-size: .8rem; }
+@media (max-width: 480px) { .profile-form-actions > button { flex: 1; } }

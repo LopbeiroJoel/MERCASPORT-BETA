@@ -1,7 +1,3 @@
-// REPERE ORAL - TESTS DES ROUTES PUBLIQUES ET DU BUILD.
-// Des appels HTTP verifient les vraies lignes SQL, les statuts et les reponses d'erreur.
-// Le front peut etre servi, mais ca ne veut pas dire que chaque configuration Vercel a ete testee en direct.
-
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -35,7 +31,7 @@ test('le front et les 28 annonces viennent du même serveur et du SQL', async ()
   assert.equal((await health.json()).status, 'OK');
   const page = await fetch(base);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /type="module" src="js\/app\.mjs"/);
+  assert.match(await page.text(), /src="js\/script\.js"/);
   const response = await fetch(`${base}/ads`);
   assert.equal(response.status, 200);
   ads = await response.json();
@@ -109,11 +105,11 @@ test('une panne PostgreSQL renvoie 503 sans masquer le problème avec de fausses
 test('la préparation Vercel ne publie que le front et garde les URL relatives', async () => {
   const root = path.resolve(__dirname, '..');
   require('../scripts/build');
-  for (const name of ['index.html', 'css/style.css', 'js/app.mjs']) {
+  for (const name of ['index.html', 'css/style.css', 'js/script.js', 'publier.html', 'a-propos.html', 'js/publier.mjs', 'js/about.mjs', 'css/style-publier.css', 'css/style-about.css']) {
     assert.equal(await fs.readFile(path.join(root, 'frontend', name), 'utf8'),
       await fs.readFile(path.join(root, 'public', name), 'utf8'));
   }
-  const script = await fs.readFile(path.join(root, 'public/js/app.mjs'), 'utf8');
+  const script = await fs.readFile(path.join(root, 'public/js/script.js'), 'utf8');
   assert.doesNotMatch(script, /localhost|ads\.json/);
   const published = await fs.readdir(path.join(root, 'public'));
   assert.ok(!published.includes('.env') && !published.includes('database') && !published.includes('backend'));

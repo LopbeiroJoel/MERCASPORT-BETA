@@ -3,7 +3,7 @@
 // req.params = morceau de chemin ; req.query = apres ? ; req.body = JSON envoye.
 // Une route HTTP n'est pas un fichier SQL : la fonction de la route appelle ensuite pool.query.
 // L'ordre compte : routeurs, routes publiques, fichiers statiques, 404, puis erreurs.
-// Le main actuel n'a pas POST /ads ni POST /ads/:id/applications : voir la fiche de navigation.
+// POST /ads permet aux clubs actifs de publier. Les candidatures utilisent POST /applications.
 
 // Express permet de définir les routes HTTP et les traitements communs aux requêtes.
 const express = require('express');
@@ -15,6 +15,7 @@ const { createLoginRouter } = require('./authentication/router');
 const { createLogoutRouter } = require('./authentication/logout-router');
 const { createProfileRouter } = require('./profile');
 const { createAdminRouter } = require('./admin/router');
+const { createAdsRouter } = require('./ads/router');
 
 // Fragment SQL partagé par la liste et le détail : évite de répéter les colonnes.
 // AS renomme un champ dans le résultat ; coalesce choisit la première valeur non NULL.
@@ -74,6 +75,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   app.use('/profile', createProfileRouter(pool, sessions));
   // Toutes les routes du panel passent par les permissions du routeur admin.
   app.use('/admin', createAdminRouter(pool, sessions));
+  app.use('/ads', createAdsRouter(pool, sessions));
 
   // Décode les corps application/json vers req.body et limite leur taille à 16 Ko.
   // Ne lit pas les formulaires classiques ; un JSON mal formé part vers le gestionnaire d'erreurs.
