@@ -55,20 +55,6 @@ header .auth-buttons {
     margin-left: auto;
 }
 
-@media (max-width: 768px) {
-    header {
-        padding: var(--space-3);
-        gap: var(--space-3);
-        flex-wrap: wrap;
-    }
-
-    header nav,
-    header .navigation {
-        order: 3;
-        flex-basis: 100%;
-    }
-}
-
 /* Navigation : zones cliquables sans fond, y compris au survol. */
 header nav a {
     display: inline-flex;
@@ -169,4 +155,186 @@ header>[role="group"]>a.account-connected:hover {
 
 header>[role="group"]>a[hidden] {
     display: none;
+}
+
+
+/* Dimensions communes : aucun élément du header ne doit élargir la page. */
+header>a {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+header nav,
+header nav ul,
+header>[role="group"] {
+    min-width: 0;
+}
+
+header nav ul {
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+header [hidden] {
+    display: none !important;
+}
+
+@media (max-width: 1024px) {
+    header {
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+    }
+
+    header nav ul {
+        gap: var(--space-2);
+    }
+
+    header>[role="group"] {
+        justify-content: flex-end;
+        gap: var(--space-2);
+    }
+}
+
+/* Menu burger : le JavaScript active cette présentation uniquement sur mobile. */
+.header-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    /* Si le JavaScript est indisponible, les liens restent accessibles. */
+    header:not(.header-ready) {
+        flex-wrap: wrap;
+        gap: var(--space-2);
+    }
+
+    header:not(.header-ready) nav {
+        flex-basis: 100%;
+        order: 3;
+    }
+
+    header.header-ready {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 44px;
+        align-items: center;
+        gap: 0 var(--space-3);
+        padding: var(--space-2) var(--space-3);
+        max-height: calc(100vh - 2 * var(--space-4));
+        max-height: calc(100dvh - 2 * var(--space-4));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    header.header-ready > a {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    header.header-ready > .header-toggle {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        grid-column: 2;
+        grid-row: 1;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 1px solid var(--primary-100);
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--primary-100);
+    }
+
+    header.header-ready > .header-toggle:hover {
+        background: var(--color-surface-hover);
+    }
+
+    .header-toggle span {
+        display: block;
+        flex-shrink: 0;
+        width: 20px;
+        height: 2px;
+        background: currentColor;
+        transition: transform var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .header-toggle[aria-expanded="true"] span:first-child {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .header-toggle[aria-expanded="true"] span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .header-toggle[aria-expanded="true"] span:last-child {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* Fermé : seul le logo et le burger sont visibles, les liens ne prennent pas le focus. */
+    header.header-ready > nav,
+    header.header-ready > [role="group"] {
+        display: none;
+        grid-column: 1 / -1;
+        min-width: 0;
+        width: 100%;
+    }
+
+    header.header-ready.is-menu-open > nav {
+        display: block;
+        grid-row: 2;
+        margin-top: var(--space-3);
+        padding-top: var(--space-3);
+        border-top: var(--border-default);
+    }
+
+    header.header-ready > nav ul {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-1);
+    }
+
+    header.header-ready > nav a {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-sm);
+        overflow-wrap: anywhere;
+    }
+
+    header.header-ready.is-menu-open > [role="group"] {
+        display: flex;
+        flex-direction: column;
+        grid-row: 3;
+        gap: var(--space-2);
+        margin-top: var(--space-3);
+        padding-block: var(--space-3) var(--space-2);
+        border-top: var(--border-default);
+    }
+
+    header.header-ready > [role="group"] > a,
+    header.header-ready > [role="group"] > button {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        margin: 0;
+        justify-content: center;
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--font-size-sm);
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        top: var(--space-2);
+        border-radius: var(--radius-md);
+    }
 }
