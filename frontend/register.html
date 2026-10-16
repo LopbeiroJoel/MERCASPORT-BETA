@@ -150,9 +150,49 @@
 
         <label for="city">Ville : </label>
         <input type="text" id="city" name="city" maxlength="100" required />
+        <fieldset>
+        <!-- Plusieurs divisions possibles : même name pour tout le groupe.
+             Les valeurs viennent de la table public.divisions (divisions.sql). -->
+        <fieldset>
+          <legend>Divisions (facultatif)</legend>
 
-        <label for="divisions">Divisions : </label>
-        <input type="text" id="divisions" name="divisions" maxlength="100" />
+          <!-- District -->
+          <input type="checkbox" id="division-d8" name="divisions" value="D8" />
+          <label for="division-d8">D8</label><br />
+          <input type="checkbox" id="division-d7" name="divisions" value="D7" />
+          <label for="division-d7">D7</label><br />
+          <input type="checkbox" id="division-d6" name="divisions" value="D6" />
+          <label for="division-d6">D6</label><br />
+          <input type="checkbox" id="division-d5" name="divisions" value="D5" />
+          <label for="division-d5">D5</label><br />
+          <input type="checkbox" id="division-d4" name="divisions" value="D4" />
+          <label for="division-d4">D4</label><br />
+          <input type="checkbox" id="division-d3" name="divisions" value="D3" />
+          <label for="division-d3">D3</label><br />
+          <input type="checkbox" id="division-d2" name="divisions" value="D2" />
+          <label for="division-d2">D2</label><br />
+          <input type="checkbox" id="division-d1" name="divisions" value="D1" />
+          <label for="division-d1">D1</label><br />
+
+          <!-- Régional -->
+          <input type="checkbox" id="division-r3" name="divisions" value="R3" />
+          <label for="division-r3">R3</label><br />
+          <input type="checkbox" id="division-r2" name="divisions" value="R2" />
+          <label for="division-r2">R2</label><br />
+          <input type="checkbox" id="division-r1" name="divisions" value="R1" />
+          <label for="division-r1">R1</label><br />
+
+          <!-- National -->
+          <input type="checkbox" id="division-n3" name="divisions" value="N3" />
+          <label for="division-n3">N3</label><br />
+          <input type="checkbox" id="division-n2" name="divisions" value="N2" />
+          <label for="division-n2">N2</label><br />
+          <input type="checkbox" id="division-n1" name="divisions" value="N1" />
+          <label for="division-n1">N1</label><br />
+        </fieldset>
+
+          <!-- D7, D6 ... D1, puis R3, R2, R1, puis N3, N2, N1 -->
+        </fieldset>
       </fieldset>
 
       <button type="submit" id="register-button">Créer mon compte</button>
