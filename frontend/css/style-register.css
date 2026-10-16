@@ -1,0 +1,133 @@
+
+/* ===== 2. LA FICHE ===== */
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(var(--header-height) + var(--space-8)) var(--space-4) var(--space-8);
+  /* en haut : on laisse la place au header, qui est fixe */
+}
+
+/* Le titre "Créer un compte" */
+main > h2 {
+  text-align: center;
+}
+
+/* La fiche : un fond un peu plus clair que la page, des coins arrondis */
+#register-form {
+  padding: var(--space-6);
+  border: var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+}
+
+
+/* ===== 3. LES CHAMPS ===== */
+
+/* Chaque label sur sa propre ligne, au-dessus de son champ */
+#register-form label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Les champs prennent toute la largeur, avec de l'espace en dessous */
+#register-form input,
+#register-form select {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--space-4);
+  background: var(--color-surface-1);
+}
+
+
+/* ===== 4. LES BLOCS (fieldset) ===== */
+
+/* On enlève la bordure grise par défaut et on sépare les blocs par une ligne fine */
+#register-form fieldset {
+  min-width: 0;
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: var(--border-default);
+}
+
+/* Le titre de chaque bloc ("Profil du joueur", "Postes"…) */
+#register-form legend {
+  padding-right: var(--space-2);
+  color: var(--color-action);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Un bloc à l'intérieur d'un autre (Postes, Divisions) : pas de ligne en plus */
+#register-form fieldset fieldset {
+  margin-bottom: var(--space-4);
+  padding-top: var(--space-2);
+  border-top: 0;
+}
+
+#register-form fieldset fieldset legend {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+
+/* ===== 5. LES CASES À COCHER ET LES BOUTONS RADIO =====
+   Pour eux, on annule les règles des champs ci-dessus :
+   la case et son texte restent sur la même ligne. */
+#register-form input[type="checkbox"],
+#register-form input[type="radio"] {
+  display: inline-block;
+  width: auto;
+  margin: 0 var(--space-2) var(--space-2) 0;
+  accent-color: var(--color-action);   /* la case cochée prend le vert du site */
+  vertical-align: -0.15em;             /* aligne la case sur le texte */
+}
+
+#register-form input[type="checkbox"] + label,
+#register-form input[type="radio"] + label {
+  display: inline;
+  font-weight: var(--font-weight-regular);
+  cursor: pointer;
+}
+
+/* Les postes et les divisions sur plusieurs colonnes, au lieu d'une longue liste.
+   :has(> input[type="checkbox"]) = "le fieldset qui contient directement des cases à cocher" */
+#register-form fieldset:has(> input[type="checkbox"]) {
+  columns: 2;
+}
+
+#club-fields fieldset:has(> input[type="checkbox"]) {
+  columns: 4;   /* les divisions sont courtes (D8, R3…) : 4 colonnes */
+}
+
+/* Le choix du rôle : Club et Joueur côte à côte */
+#register-form fieldset:has(> input[type="radio"]) br {
+  display: none;
+}
+
+#register-form fieldset:has(> input[type="radio"]) label {
+  margin-right: var(--space-6);
+}
+
+
+/* ===== 6. LE BOUTON ET LE MESSAGE ===== */
+#register-button {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+/* Le message d'erreur : un encadré rouge, visible seulement quand il contient du texte */
+#register-message {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-xs);
+  background: var(--danger-bg);
+  font-size: var(--font-size-sm);
+}
+
+#register-message:empty {
+  display: none;
+}
+
