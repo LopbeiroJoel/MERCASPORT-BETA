@@ -1,7 +1,8 @@
 const hero = document.querySelector('.hero');
 const svg = document.getElementById('hero-match');
+const stage = hero?.querySelector('.hero-stage');
 
-if (hero && svg) {
+if (hero && svg && stage) {
   const namespace = 'http://www.w3.org/2000/svg';
   const colors = ['#8fab7c', '#e9e9e5'];
   const formation = [[35,340],[200,115],[175,270],[175,410],[200,565],
@@ -85,10 +86,20 @@ if (hero && svg) {
       ]
     }
   ];
+  const scrollScene = {
+    label: 'Remontée du terrain au défilement', duration: 10000, goalAt: 9000,
+    ball: [[0,480,430],[800,480,430],[2000,620,210],[2700,620,210],[4100,760,450],[4700,760,450],[6200,880,270],[7200,945,305],[8200,980,355],[9000,1066,370],[10000,1066,370]],
+    movers: [
+      { team: 0, index: 6, path: [[0,468,430],[800,468,430],[2700,570,350],[4700,650,330],[6200,760,305]] },
+      { team: 0, index: 8, path: [[0,608,210],[2700,608,210],[4700,780,245],[6200,868,270],[7200,933,305],[8200,950,285]] },
+      { team: 0, index: 9, path: [[0,748,450],[4700,748,450],[6200,850,415],[7200,930,400],[8200,968,359],[9000,994,365]] },
+      { team: 1, index: 0, path: [[0,1015,340],[7200,1015,340],[8200,1000,315],[9000,1015,300]] }
+    ]
+  };
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const portrait = window.matchMedia('(max-width: 699px)');
+  const portrait = window.matchMedia('(max-width: 768px)');
   let sceneIndex = 0, animations = [], timer = 0, remaining = scenes[0].duration, startedAt = 0;
-  let visible = true, playing = false;
+  let visible = true, playing = false, scrollFrame = 0;
 
   function element(name, attributes, parent) {
     const node = document.createElementNS(namespace, name);
@@ -112,22 +123,50 @@ if (hero && svg) {
   const sprites = document.createElement('div');
   sprites.className = 'match-sprites';
   sprites.setAttribute('aria-hidden', 'true');
-  hero.append(sprites);
+  stage.append(sprites);
+  const scrollHint = document.createElement('p');
+  scrollHint.className = 'match-scroll-hint';
+  scrollHint.textContent = 'Faites défiler pour remonter le terrain ↓';
+  scrollHint.setAttribute('aria-hidden', 'true');
+  stage.append(scrollHint);
 
   function resize() {
-    svg.setAttribute('viewBox', portrait.matches ? '0 0 780 1150' : '0 0 1150 780');
-    world.setAttribute('transform', portrait.matches ? 'translate(730 50) rotate(90)' : 'translate(50 50)');
-    const viewWidth = portrait.matches ? 780 : 1150;
-    const viewHeight = portrait.matches ? 1150 : 780;
-    const scale = Math.min(hero.clientWidth / viewWidth, hero.clientHeight / viewHeight);
-    const left = (hero.clientWidth - viewWidth * scale) / 2;
-    const top = (hero.clientHeight - viewHeight * scale) / 2;
+    const mobile = portrait.matches;
+    svg.setAttribute('viewBox', mobile ? '0 0 780 700' : '0 0 1150 780');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    const rotation = mobile ? 'translate(50 1100) rotate(-90)' : 'translate(50 50)';
+    world.setAttribute('transform', rotation);
+    const viewWidth = mobile ? 780 : 1150;
+    const viewHeight = mobile ? 700 : 780;
+    const scale = Math.min(svg.clientWidth / viewWidth, svg.clientHeight / viewHeight);
+    const fieldRect = svg.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const left = fieldRect.left - stageRect.left + (svg.clientWidth - viewWidth * scale) / 2;
+    const top = fieldRect.top - stageRect.top + (svg.clientHeight - viewHeight * scale) / 2;
     sprites.style.transform = `translate(${left}px, ${top}px) scale(${scale}) ` +
-      (portrait.matches ? 'translate(730px, 50px) rotate(90deg)' : 'translate(50px, 50px)');
+      (mobile ? 'translate(50px, 1100px) rotate(-90deg)' : 'translate(50px, 50px)');
+    if (mobile) seekScroll();
+  }
+
+  function seekScroll() {
+    if (!portrait.matches) return;
+    const travel = Math.max(1, hero.offsetHeight - stage.offsetHeight);
+    const progress = reducedMotion.matches ? 1 : Math.max(0, Math.min(1, (window.scrollY - hero.offsetTop) / travel));
+    for (const animation of animations) {
+      animation.pause();
+      animation.currentTime = progress * scrollScene.duration;
+    }
+    svg.dataset.progress = progress.toFixed(3);
+    scrollHint.textContent = progress >= .9 ? 'But !' : 'Faites défiler pour remonter le terrain ↓';
+  }
+
+  function onScroll() {
+    if (!portrait.matches || reducedMotion.matches || !visible || document.hidden || scrollFrame) return;
+    scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; seekScroll(); });
   }
 
   function player(x, y, team) {
-    return element('circle', { cx: x, cy: y, r: 9, fill: colors[team], stroke: '#203b2b', 'stroke-width': 2 }, actors);
+    return element('circle', { cx: x, cy: y, r: portrait.matches ? 13 : 9, fill: colors[team], stroke: '#203b2b', 'stroke-width': 2 }, actors);
   }
 
   function animate(node, keyframes, length, delay = 0) {
@@ -147,6 +186,7 @@ if (hero && svg) {
     clearTimeout(timer);
     if (playing) remaining = Math.max(0, remaining - (performance.now() - startedAt));
     playing = false;
+    if (portrait.matches) { seekScroll(); return; }
     const run = visible && !document.hidden && !reducedMotion.matches;
     for (const animation of animations) {
       if (animation.currentTime >= animation.effect.getComputedTiming().endTime) continue;
@@ -170,7 +210,8 @@ if (hero && svg) {
     animations = [];
     actors.replaceChildren();
     sprites.replaceChildren();
-    const scene = scenes[sceneIndex];
+    const scene = portrait.matches ? scrollScene : scenes[sceneIndex];
+    svg.dataset.mode = portrait.matches ? 'scroll' : 'automatic';
     svg.dataset.scene = scene.label;
     svg.dataset.duration = scene.duration;
     const position = (x, y) => `translate3d(${x}px, ${y}px, 0)`;
@@ -200,12 +241,12 @@ if (hero && svg) {
 
     for (const move of scene.movers) {
       const [, x, y] = move.path[0];
-      const dot = sprite(x, y, colors[move.team], 9, move.team === 1 && move.index === 0 ? 'match-keeper' : 'match-player');
+      const dot = sprite(x, y, colors[move.team], portrait.matches ? 13 : 9, move.team === 1 && move.index === 0 ? 'match-keeper' : 'match-player');
       dot.dataset.player = `${move.team}:${move.index}`;
       follow(dot, move.path);
     }
     const [, x, y] = scene.ball[0];
-    follow(sprite(x, y, '#fff', 5, 'match-ball'), scene.ball);
+    follow(sprite(x, y, '#fff', portrait.matches ? 8 : 5, 'match-ball'), scene.ball);
 
     const last = scene.ball[scene.ball.length - 1];
     const previous = scene.ball[scene.ball.length - 2];
@@ -225,7 +266,7 @@ if (hero && svg) {
       ring.className = 'match-goal-ring';
       sprites.append(ring);
       const atGoal = position(last[1], last[2]);
-      animate(ring, [{ transform: atGoal + ' scale(.3)', opacity: 0 }, { transform: atGoal + ' scale(1)', opacity: .35, offset: .3 }, { transform: atGoal + ' scale(1.5)', opacity: 0 }], 700, scene.goalAt);
+      animate(ring, [{ transform: atGoal + ' scale(.3)', opacity: 0 }, { transform: atGoal + ' scale(1)', opacity: .35, offset: .3 }, { transform: atGoal + ' scale(1.5)', opacity: portrait.matches ? .28 : 0 }], 700, scene.goalAt);
     }
     updatePlayback();
   }
@@ -233,8 +274,15 @@ if (hero && svg) {
   resize();
   drawScene();
   hero.classList.add('match-ready');
-  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(hero);
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(stage);
   else window.addEventListener('resize', resize);
+  portrait.addEventListener('change', () => {
+    remaining = scenes[sceneIndex].duration;
+    playing = false;
+    resize();
+    drawScene();
+  });
+  window.addEventListener('scroll', onScroll, { passive: true });
   reducedMotion.addEventListener('change', updatePlayback);
   document.addEventListener('visibilitychange', updatePlayback);
   window.addEventListener('pagehide', () => { visible = false; updatePlayback(); });

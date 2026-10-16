@@ -105,7 +105,7 @@ test('une panne PostgreSQL renvoie 503 sans masquer le problème avec de fausses
 test('la préparation Vercel ne publie que le front et garde les URL relatives', async () => {
   const root = path.resolve(__dirname, '..');
   require('../scripts/build');
-  for (const name of ['index.html', 'css/style.css', 'js/script.js', 'publier.html', 'a-propos.html', 'js/publier.mjs', 'js/about.mjs', 'css/style-publier.css', 'css/style-about.css']) {
+  for (const name of ['index.html', 'css/style.css', 'js/script.js', 'publier.html', 'a-propos.html', 'js/publier.mjs', 'js/hero-match.mjs', 'css/style-publier.css', 'css/style-about.css']) {
     assert.equal(await fs.readFile(path.join(root, 'frontend', name), 'utf8'),
       await fs.readFile(path.join(root, 'public', name), 'utf8'));
   }
