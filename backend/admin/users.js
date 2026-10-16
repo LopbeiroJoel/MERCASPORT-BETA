@@ -1,3 +1,8 @@
+// REPERE ORAL - GERER LES COMPTES DEPUIS LE PANEL.
+// POST cree ; PATCH de statut change l'etat ; PUT de mot de passe remplace le mot de passe.
+// DELETE /admin/users/:id efface vraiment via deletion.js, il ne met plus DISABLED.
+// BANNED et DISABLED restent des statuts si je choisis explicitement ces actions.
+
 const express = require('express');
 const { deleteUser } = require('./deletion');
 const { validateRegistration } = require('../registration/validation');
@@ -9,6 +14,7 @@ const publicUser = 'id, username, email, role, status, is_verified, created_at';
 function createUsersRouter(pool) {
   const router = express.Router();
 
+  // POST /admin/users : creation joueur/club avec le meme validateur et le meme hachage que l'inscription.
   router.post('/users', async (req, res) => {
     const { errors, data } = validateRegistration(req.body);
     if (Object.keys(errors).length) fail(400, 'VALIDATION_ERROR', errors);
@@ -55,16 +61,19 @@ function createUsersRouter(pool) {
     res.json({ user });
   }
 
+  // Changer un statut et supprimer un compte sont deux choix separes ; cette route fait un UPDATE.
   router.patch('/users/:id/status', async (req, res) => {
     const value = body(req.body, ['status'], ['status']).status;
     if (!['PENDING', 'ACTIVE', 'BANNED', 'DISABLED'].includes(value)) fail(400, 'INVALID_STATUS');
     await setStatus(req, res, value);
   });
+  // DELETE /admin/users/:id : 204 apres la transaction de nettoyage complet ; 404 si le compte n'existe plus.
   router.delete('/users/:id', async (req, res) => {
     await transaction(pool, req.admin.userId, client => deleteUser(client, id(req.params.id), req.admin.userId));
     res.status(204).end();
   });
 
+  // Ce booleen est gere par l'admin. L'existence du champ ne prouve pas un envoi automatique de mail de verification.
   router.patch('/users/:id/verification', async (req, res) => {
     const userId = id(req.params.id);
     const input = body(req.body, ['is_verified'], ['is_verified']);
@@ -77,6 +86,7 @@ function createUsersRouter(pool) {
     });
     res.json({ user });
   });
+  // L'admin remplace le mot de passe : validation, nouveau hachage, sessions revoquees. Jamais du texte brut en SQL.
   router.put('/users/:id/password', async (req, res) => {
     const userId = id(req.params.id);
     const password = body(req.body, ['password'], ['password']).password;

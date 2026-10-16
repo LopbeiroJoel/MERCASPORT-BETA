@@ -1,3 +1,8 @@
+// REPERE ORAL - CONNEXION ET COMPTE DU BANDEAU (doc, section 10).
+// POST /auth/login verifie le mot de passe puis cree la session.
+// GET /auth/me dit simplement qui est connecte : id, pseudo, role.
+// Aucune route /auth/refresh ici : le token expire et la personne doit se reconnecter.
+
 const express = require('express');
 const { randomBytes } = require('node:crypto');
 const { createSqlRateLimiter } = require('./rate-limit');
@@ -13,6 +18,7 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
   const limiter = sessions ? createSqlRateLimiter(pool, sessions.rateKey, { maxAttempts, windowMs }) : null;
   let active = 0, dummy;
   // Retrouver le compte connecté grâce au cookie de session existant.
+  // GET /auth/me : pour le bandeau. Je demande a sessions.authenticate si le cookie est encore valable.
   router.get('/me', async (req, res) => {
     res.set('Cache-Control', 'no-store');
     if (!sessions) return res.status(503).json({ code: 'AUTH_NOT_CONFIGURED' });
@@ -32,6 +38,7 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
   });
 
 
+  // POST /auth/login : Origin, limite de tentatives, JSON, puis verification des identifiants.
   router.post('/login', async (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     if (!sessions) return res.status(503).json({ code: 'AUTH_NOT_CONFIGURED' });
@@ -66,6 +73,7 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
       active++; admitted = true;
       if (!dummy) dummy = hashPassword(randomBytes(32).toString('hex')).catch(error => { dummy = null; throw error; });
       const dummyHash = await dummy;
+      // Le @ choisit la colonne email ou username. Ce nom vient de ces deux choix fixes, pas d'un nom libre envoye.
       const field = identifier.includes('@') ? 'email' : 'username';
       const { rows } = await pool.query(`SELECT id,username,email,password_hash,role,is_verified,status,created_at
         FROM users WHERE lower(btrim(${field}))=$1 LIMIT 2`, [identifier]);
@@ -73,6 +81,7 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
       // Les anciens comptes utilisaient des roles en minuscules.
       if (user) user.role = user.role.toUpperCase();
       let valid;
+      // Un ancien compte peut avoir bcrypt ; les nouveaux ont Argon2id. Je ne remplace pas un ancien hash au hasard.
       const stored = user?.password_hash || dummyHash;
       if (/^\$2[aby]\$(0[4-9]|1[0-4])\$[./A-Za-z0-9]{53}$/.test(stored)) {
         // bcrypt only processes 72 bytes. Reject oversized input rather than silently truncating it.
@@ -85,7 +94,9 @@ function createLoginRouter(pool, { sessions, maxAttempts = 10, windowMs = 15 * 6
       // Les comptes bloques ne peuvent pas ouvrir une nouvelle session.
       if (!user || !valid || ['BANNED', 'DISABLED'].includes(user.status)) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Identifiant ou mot de passe incorrect.' });
       if (!['PLAYER', 'CLUB', 'ADMIN'].includes(user.role)) return res.status(401).json({ code: 'INVALID_CREDENTIALS' });
+      // Seulement apres un bon mot de passe : creation SQL de la session et cookie dans la reponse.
       await sessions.issue(user, res);
+      // Je retire le hash avant de renvoyer le compte au navigateur.
       const { password_hash, ...publicUser } = user;
       res.json({ user: publicUser });
     } catch {

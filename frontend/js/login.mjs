@@ -1,3 +1,7 @@
+// REPERE ORAL - LE FORMULAIRE APPELLE POST /auth/login.
+// preventDefault evite l'envoi HTML classique ; fetch envoie identifier/password en JSON.
+// Le serveur pose le cookie apres verification, puis j'ouvre le profil. Je ne stocke pas le token en localStorage.
+
 const form = document.getElementById('login-form');
 const button = document.getElementById('login-button');
 const message = document.getElementById('login-message');

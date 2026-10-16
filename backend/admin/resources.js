@@ -1,3 +1,8 @@
+// REPERE ORAL - CLUBS, EQUIPES, CANDIDATURES ET CATALOGUES.
+// La boucle declare les GET liste/detail pour cinq tables connues, pas une table libre envoyee par le client.
+// Pour positions/divisions, :id est un CODE (STRIKER, R3), pas un nombre.
+// Supprimer une ressource utilise DELETE ; si elle est encore utilisee, certaines suppressions sont refusees en 409.
+
 const express = require('express');
 const { validateUserUpdate } = require('./user-validation');
 const { playerPositions } = require('../registration/validation');
@@ -8,8 +13,10 @@ function createResourcesRouter(pool) {
   const router = express.Router();
 
   // Même lecture simple pour ces cinq tables métier, avec pagination.
+  // Les cinq noms sont ecrits dans le code : aucun SELECT sur une table choisie librement par le visiteur.
   for (const table of ['clubs', 'teams', 'applications', 'positions', 'divisions']) {
     const key = ['positions', 'divisions'].includes(table) ? 'code' : 'id';
+    // GET /admin/clubs, /teams, /applications, /positions ou /divisions : limit et offset gerent la pagination.
     router.get('/' + table, async (req, res) => {
       const limit = req.query.limit ?? '50';
       const offset = req.query.offset ?? '0';
@@ -21,6 +28,7 @@ function createResourcesRouter(pool) {
         ORDER BY ${key === 'code' ? 'sort_order' : 'id'} LIMIT $1 OFFSET $2`, [Number(limit), Number(offset)]);
       res.json({ [table]: result.rows });
     });
+    // GET d'un element : nombre pour club/equipe/candidature, code pour poste/division.
     router.get('/' + table + '/:id', async (req, res) => {
       const value = key === 'id' ? id(req.params.id) : req.params.id;
       if (key === 'code' && !/^[A-Z0-9_]{1,50}$/.test(value)) fail(400, 'INVALID_CODE');
@@ -30,6 +38,7 @@ function createResourcesRouter(pool) {
     });
   }
 
+  // Le nom/la ville du club sont synchronises avec club_profiles si un compte lui appartient.
   async function saveClub(req, res) {
     const editing = req.method === 'PATCH';
     const input = body(req.body, editing ? ['name', 'city', 'divisions'] : ['name', 'city', 'divisions', 'user_id'],
@@ -70,6 +79,7 @@ function createResourcesRouter(pool) {
     res.status(204).end();
   });
 
+  // Une equipe appartient a un club ; je verifie sa division et je ne deplace pas une equipe utilisee sans controle.
   async function saveTeam(req, res) {
     const editing = req.method === 'PATCH';
     const input = body(req.body, ['club_id', 'name', 'division', 'category'], editing ? [] : ['club_id', 'name', 'division']);
@@ -113,6 +123,7 @@ function createResourcesRouter(pool) {
     res.status(204).end();
   });
 
+  // Version admin de la candidature : l'admin peut choisir annonce/joueur, le visiteur public ne peut pas tout choisir.
   async function saveApplication(req, res) {
     const editing = req.method === 'PATCH';
     const input = body(req.body, ['ad_id', 'player_id', 'name', 'email', 'phone', 'message'],
@@ -144,6 +155,7 @@ function createResourcesRouter(pool) {
 
   // Les codes restent les 14 postes et 14 divisions convenus. Les libellés et l'ordre sont modifiables.
   for (const table of ['positions', 'divisions']) {
+    // Le code reste dans la liste convenue des 14 valeurs. Les labels/ordres se modifient sans inventer un code TOTO.
     async function saveCatalogue(req, res) {
       const editing = req.method === 'PATCH';
       const allowed = table === 'positions' ? ['label', 'sort_order'] : ['sort_order'];

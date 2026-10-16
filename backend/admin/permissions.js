@@ -1,3 +1,8 @@
+// REPERE ORAL - LA PORTE DU PANEL ADMIN (doc, section 12).
+// Etre connecte ne suffit pas : permission ADMIN active + compte ACTIVE en SQL.
+// Le lien Panel admin dans le HTML ne donne aucun droit. C'est cette verification qui compte.
+// Le role joueur/club et la permission admin sont deux choses separees.
+
 function requireAdmin(pool, sessions) {
   return async function (req, res, next) {
     res.set('Cache-Control', 'no-store');

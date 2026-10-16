@@ -1,3 +1,8 @@
+// REPERE ORAL - L'ADMIN PEUT EDITER LA FICHE D'UN COMPTE CIBLE.
+// Ici :id vient de l'URL parce que l'admin a le droit de choisir un compte.
+// C'est different de /profile/me, qui prend obligatoirement l'ID de la session.
+// Je synchronise aussi players/clubs pour que les anciennes relations restent utilisables.
+
 const express = require('express');
 const { validateRegistration } = require('../registration/validation');
 const { fail, id, body, text, transaction, update, insert, checkPositions } = require('./helpers');
@@ -8,6 +13,7 @@ const clubFields = ['name', 'city', 'divisions'];
 const playerExtras = { past_clubs: 2000, experience: 2000, level: 100 };
 const clubExtras = { description: 5000, general_info: 2000 };
 
+// Je lis le compte pour savoir s'il faut ouvrir player_profiles ou club_profiles.
 async function readProfile(client, userId, lock = false) {
   const account = await client.query(`SELECT id, upper(role) AS role, ${common.join(', ')}
     FROM public.users WHERE id = $1 ${lock ? 'FOR UPDATE' : ''}`, [userId]);
@@ -26,6 +32,7 @@ function createProfilesRouter(pool) {
     res.json({ user, profile });
   });
 
+  // POST cree, PATCH exige une fiche existante, PUT cree ou met a jour selon l'etat actuel.
   async function saveProfile(req, res) {
     const userId = id(req.params.id);
     const result = await transaction(pool, req.admin.userId, async client => {
@@ -87,6 +94,7 @@ function createProfilesRouter(pool) {
   router.put('/users/:id/profile', saveProfile);
   router.patch('/users/:id/profile', saveProfile);
 
+  // Ce DELETE retire la fiche, pas le compte users. Une candidature encore liee peut bloquer la suppression.
   router.delete('/users/:id/profile', async (req, res) => {
     await transaction(pool, req.admin.userId, async client => {
       const current = await readProfile(client, id(req.params.id), true);

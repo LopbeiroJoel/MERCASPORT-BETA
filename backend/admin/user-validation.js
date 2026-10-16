@@ -1,3 +1,7 @@
+// REPERE ORAL - MODIFIER PSEUDO OU EMAIL SANS OUVRIR TOUS LES CHAMPS.
+// Je nettoie et je verifie ces deux valeurs avant l'UPDATE du compte cible.
+// Le role et les permissions admin ne sont pas modifiables avec ce JSON.
+
 // Mêmes règles de pseudo et d'e-mail que l'inscription.
 function validateUserUpdate(body) {
   const data = {};

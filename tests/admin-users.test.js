@@ -1,3 +1,6 @@
+// REPERE ORAL - TESTS DE MODIFICATION DES COMPTES PAR L'ADMIN.
+// Pseudo/email, doublons, sessions et revocation de droits : je verifie aussi les refus, pas seulement le cas qui marche.
+
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');

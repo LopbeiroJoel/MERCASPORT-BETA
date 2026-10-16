@@ -1,3 +1,7 @@
+// REPERE ORAL - TESTS DE L'INSCRIPTION.
+// Je controle les champs, les roles acceptes, les doublons et le compte+profil crees ensemble.
+// Les donnees sont fictives et les mots de passe ici sont uniquement ceux des tests.
+
 const { test, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');

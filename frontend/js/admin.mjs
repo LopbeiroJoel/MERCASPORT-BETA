@@ -1,3 +1,8 @@
+// REPERE ORAL - LES BOUTONS DU PANEL APPELLENT LES ROUTES /admin.
+// Afficher/cacher un bouton aide l'utilisateur ; les vraies permissions restent dans le backend.
+// request gere le JSON et les erreurs ; une reponse 204 n'a pas de corps a decoder.
+// La confirmation demande si on veut vraiment agir avant le DELETE definitif.
+
 const panel = document.getElementById('panel');
 const message = document.getElementById('message');
 let admin;
@@ -25,6 +30,7 @@ const errors = {
   CONFIRMATION_REQUIRED: 'La confirmation du bannissement est obligatoire.'
 };
 
+// fetch ne rejette pas automatiquement une reponse 400/404 : je regarde response.ok.
 async function request(url, options = {}) {
   const response = await fetch(url, { ...options, credentials: 'same-origin' });
   const data = response.status === 204 ? null : await response.json();
@@ -36,6 +42,7 @@ async function request(url, options = {}) {
 }
 
 // textContent affiche les données sans les interpréter comme du HTML.
+// Une cellule affiche du texte avec textContent. Je ne colle pas le pseudo/email dans innerHTML.
 function cell(row, value) {
   const td = document.createElement('td');
   td.textContent = value == null || value === '' ? '—' : String(value);
@@ -47,6 +54,7 @@ function showError(error) {
   message.textContent = error.message || 'Impossible de joindre le serveur.';
 }
 
+// Le role de l'onglet part au serveur comme filtre, avant la limite de resultats.
 async function loadUsers() {
   const search = document.getElementById('users-search').value.trim();
   const role = selectedRole;
@@ -96,6 +104,7 @@ async function loadUsers() {
   }
 }
 
+// Je memorise l'action, mais je ne l'execute qu'apres le bouton de confirmation.
 function askConfirmation(text, action) {
   document.getElementById('confirmation-message').textContent = text;
   pendingAction = action;
@@ -136,6 +145,7 @@ async function runBan(user, button) {
   }
 }
 
+// Je charge la liste admin et je branche les boutons Modifier/Supprimer de chaque annonce.
 async function loadAds() {
   const search = document.getElementById('ads-search').value.trim();
   const data = await request('/admin/ads?search=' + encodeURIComponent(search));
@@ -166,6 +176,7 @@ function deleteAd(ad, button) {
   askConfirmation('Supprimer définitivement l’annonce et ses candidatures : ' + ad.id + ' : ' + ad.title + ' ?', () => runDelete(ad, button));
 }
 
+// Le bouton envoie DELETE /admin/ads/:id ; le SQL retire vraiment la ligne.
 async function runDelete(ad, button) {
   button.disabled = true;
   try {

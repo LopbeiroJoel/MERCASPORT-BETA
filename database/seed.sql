@@ -1,3 +1,7 @@
+-- REPERE ORAL - DONNEES FICTIVES POUR DEVELOPPER ET TESTER.
+-- Ce fichier fait des INSERT/UPDATE : ce n'est pas une lecture a lancer sur une base au hasard.
+-- Les exemples servent aux tests ; ils ne prouvent pas le nombre exact de vraies lignes dans Neon.
+
 -- DONNEES DE DEMONSTRATION LOCALES UNIQUEMENT.
 -- Mot de passe PUBLIC des NOUVEAUX comptes : MercaSportDemo!2026
 -- Hash bcrypt cout 12 ; aucun mot de passe clair stocke dans la base.

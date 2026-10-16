@@ -1,3 +1,7 @@
+// REPERE ORAL - BASE POSTGRESQL EMBARQUEE DES TESTS.
+// PGlite sert aux suites compte/profil/admin ; les migrations sont executees dans cette base jetable.
+// Ce Pool de test n'est pas celui de db.js et ne lit pas le .env de production.
+
 // PostgreSQL embarque jetable : aucun acces a Neon ni besoin de serveur local.
 function createTestPool({ migrations = [] } = {}) {
   const { PGlite } = require('@electric-sql/pglite');

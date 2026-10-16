@@ -1,3 +1,7 @@
+// REPERE ORAL - COMPTEUR PARTAGE DES ESSAIS DE CONNEXION.
+// La connexion appelle ce module pour l'IP puis l'identifiant du compte.
+// La cle est derivee avec un HMAC. SQL decide si la tentative reste sous la limite.
+
 // PostgreSQL counters shared by all instances. No email or IP is stored in clear.
 function createSqlRateLimiter(pool, digest, { maxAttempts = 10, windowMs = 900000 } = {}) {
   if (typeof digest !== 'function' || !Number.isInteger(maxAttempts) || maxAttempts < 1 ||

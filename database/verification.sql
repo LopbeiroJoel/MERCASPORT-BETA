@@ -1,3 +1,7 @@
+-- REPERE ORAL - LECTURES DE VERIFICATION DE LA BASE HISTORIQUE.
+-- Ces SELECT aident a voir les tables et leurs liens ; les migrations suivantes ajoutent d'autres champs.
+-- SELECT ne change pas les lignes. Un test SELECT 1 ne valide pas a lui seul tout le schema.
+
 -- Verifications executables directement dans PostgreSQL/pgAdmin.
 SELECT * FROM public.clubs ORDER BY id;
 SELECT * FROM public.teams ORDER BY club_id, division;

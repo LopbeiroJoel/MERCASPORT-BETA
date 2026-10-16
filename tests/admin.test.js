@@ -1,3 +1,7 @@
+// REPERE ORAL - TESTS DES PERMISSIONS ET ANCIENNES ACTIONS DU PANEL.
+// Un compte classique ne devient pas admin en envoyant une URL ou un role dans le navigateur.
+// Ces essais ne bannissent ni ne suppriment de vrais comptes Neon.
+
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');

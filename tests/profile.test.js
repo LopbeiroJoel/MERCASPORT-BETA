@@ -1,3 +1,7 @@
+// REPERE ORAL - TESTS DU COMPTE ET DU PROFIL.
+// Je teste la vraie API avec une base jetable : session, droits, sauvegarde, pseudo et doublons.
+// Un test qui dit 401 sans cookie verifie que la protection marche : ce n'est pas une panne du serveur.
+
 const { test, before, beforeEach, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');

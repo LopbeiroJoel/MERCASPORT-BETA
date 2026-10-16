@@ -1,3 +1,7 @@
+-- REPERE ORAL - ADAPTER LE TRIGGER DES CANDIDATURES AUX NOUVELLES ANNONCES.
+-- Une annonce sans equipe peut recevoir une candidature ; on exige quand meme qu'elle soit disponible.
+-- Si player_id est fourni, le compte lie doit etre un joueur. Sinon une candidature peut rester sans compte.
+
 -- Permettre les candidatures aux annonces de clubs sans équipe.
 -- Conserver le contrôle du profil joueur et refuser les annonces masquées.
 BEGIN;
@@ -19,6 +23,7 @@ BEGIN
     NEW.email := coalesce(NEW.email, player_email);
   END IF;
 
+  -- Je n'exige plus de JOIN vers une equipe. Je verifie l'annonce publiee et l'absence d'auteur bloque.
   PERFORM 1 FROM public.ads a
   WHERE a.id = NEW.ad_id AND a.status = 'PUBLISHED'
     AND NOT EXISTS (

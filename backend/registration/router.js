@@ -1,3 +1,8 @@
+// REPERE ORAL - INSCRIPTION : POST /auth/register (doc, section 9).
+// app.js ajoute /auth ; ici /register complete donc l'URL.
+// Je valide -> je hache -> je cree compte + profil dans la meme transaction -> 201.
+// Cette route ne connecte pas la personne : pas de cookie emis ici, pas de sessions.issue.
+
 const express = require('express');
 const { validateRegistration } = require('./validation');
 const { hashPassword } = require('./password');
@@ -20,6 +25,7 @@ function createRegistrationRouter(pool) {
     let client;
     let inTransaction = false;
     try {
+      // errors non vide = formulaire refuse. data = copie nettoyee des champs autorises.
       const { errors, data } = validateRegistration(req.body);
       if (Object.keys(errors).length) {
         return res.status(400).json({ code: 'VALIDATION_ERROR', error: 'Vérifier les informations.', fields: errors });
@@ -29,6 +35,7 @@ function createRegistrationRouter(pool) {
           code: 'REGISTER_RATE_LIMIT', error: 'Trop de tentatives. Réessayer dans 15 minutes.',
         });
       }
+      // Je regarde si le pseudo/email existe deja. L'index UNIQUE protegere aussi deux demandes simultanees.
       const duplicate = await pool.query(`SELECT EXISTS (
         SELECT 1 FROM public.users
         WHERE lower(btrim(email)) = $1 OR lower(btrim(username)) = lower($2)
@@ -36,10 +43,13 @@ function createRegistrationRouter(pool) {
       if (duplicate.rows[0].exists) return conflict(res);
 
       // Hash hors transaction : ne pas immobiliser une connexion PostgreSQL pendant le calcul.
+      // Je calcule le hachage avant de prendre une connexion pour la transaction : ce calcul coute du temps.
       const passwordHash = await hashPassword(data.password);
+      // Je garde UN client pour BEGIN, les INSERT, puis COMMIT/ROLLBACK. Je ne melange pas avec pool.query.
       client = await pool.connect();
       await client.query('BEGIN');
       inTransaction = true;
+      // Premier INSERT : users contient le compte. Le profil va reprendre son nouvel user.id comme cle etrangere.
       const account = await client.query(`INSERT INTO public.users
         (name, username, email, password_hash, role, is_verified)
         VALUES ($1, $1, $2, $3, $4, FALSE)
@@ -48,6 +58,8 @@ function createRegistrationRouter(pool) {
       const user = account.rows[0];
       const p = data.profile;
       let profile;
+      // PLAYER : fiche detaillee dans player_profiles, puis ligne players pour les anciennes relations.
+      // CLUB dans le else : meme idee avec club_profiles puis clubs.
       if (data.role === 'PLAYER') {
         // Un poste retiré du catalogue par l'admin ne peut plus être sélectionné.
         const references = await client.query(
@@ -72,10 +84,12 @@ function createRegistrationRouter(pool) {
         await client.query(`INSERT INTO public.clubs (user_id, name, city, divisions)
           VALUES ($1,$2,$3,$4) ON CONFLICT (user_id) DO NOTHING`, [user.id, p.name, p.city, p.divisions]);
       }
+      // Tout a reussi : je valide compte ET profil ensemble, puis seulement je renvoie 201.
       await client.query('COMMIT');
       inTransaction = false;
       return res.status(201).json({ message: 'Compte et profil créés.', user, profile: profile.rows[0] });
     } catch (error) {
+      // Si un INSERT echoue, je ne laisse pas un compte sans sa fiche : je reviens avant BEGIN.
       if (inTransaction && client) {
         try { await client.query('ROLLBACK'); } catch { /* Ne pas exposer les détails SQL. */ }
       }
@@ -98,6 +112,7 @@ function createRegistrationRouter(pool) {
         error: 'Inscription temporairement indisponible.',
       });
     } finally {
+      // Meme apres une erreur, je rends la connexion au Pool pour les prochaines requetes.
       if (client) client.release();
     }
   });

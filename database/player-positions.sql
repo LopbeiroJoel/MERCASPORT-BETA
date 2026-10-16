@@ -1,3 +1,8 @@
+-- REPERE ORAL - PASSER DU POSTE UNIQUE AUX POSTES MULTIPLES DU JOUEUR.
+-- positions est un TEXT[] : une liste SQL. [] cote JSON devient un tableau SQL vide.
+-- Je convertis les anciens libelles avant de verifier la nouvelle contrainte : pas de donnee jetee au hasard.
+-- Si un ancien libelle est inconnu, je bloque pour le corriger plutot que le supprimer.
+
 -- Phase 1 : ajouter et convertir sans casser le backend encore deploye.
 -- Apres le deploiement du nouveau code, executer player-positions-cleanup.sql.
 BEGIN;
@@ -8,6 +13,7 @@ UPDATE public.player_profiles SET positions = ARRAY[]::TEXT[] WHERE positions IS
 ALTER TABLE public.player_profiles ALTER COLUMN positions SET DEFAULT ARRAY[]::TEXT[];
 ALTER TABLE public.player_profiles ALTER COLUMN positions SET NOT NULL;
 
+-- Cette fonction repond vrai/faux pour le CHECK : tableau simple, codes connus, au plus 14 et aucun doublon.
 CREATE OR REPLACE FUNCTION public.valid_player_positions(p TEXT[])
 RETURNS BOOLEAN LANGUAGE sql IMMUTABLE AS $$
   SELECT COALESCE(

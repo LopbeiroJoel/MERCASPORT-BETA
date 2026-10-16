@@ -1,3 +1,8 @@
+-- REPERE ORAL - SESSIONS ET COMPTEURS POUR LA CONNEXION.
+-- auth_sessions garde l'ID de session, son compte, son expiration et sa revocation.
+-- Ce n'est pas une table de refresh tokens : cette fonction n'existe pas dans notre code.
+-- Le JWT est dans le cookie ; la session SQL permet de le refuser meme avant sa date d'expiration.
+
 -- PROF-01 / PROF-02 : prerequis de connexion et d'identification du profil.
 -- Executer apres registration.sql. Aucun compte ni profil n'est supprime.
 BEGIN;
@@ -5,12 +10,14 @@ SET LOCAL lock_timeout = '5s';
 
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'PENDING';
 
+-- id = UUID de session (jti du JWT). revoked_at NULL = pas revoquee, mais il faut encore verifier expires_at.
 CREATE TABLE IF NOT EXISTS public.auth_sessions (
   id UUID PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at TIMESTAMPTZ NOT NULL,
   revoked_at TIMESTAMPTZ,
+  -- La date d'expiration doit etre apres la creation ; le serveur controle aussi si elle est depassee maintenant.
   CHECK (expires_at > created_at)
 );
 CREATE INDEX IF NOT EXISTS auth_sessions_user_idx ON public.auth_sessions(user_id);

@@ -1,3 +1,10 @@
+// REPERE ORAL - LE PLAN DES ROUTES (doc, sections 4, 7 et 8).
+// Je lis ce fichier pour savoir quelle URL arrive dans quel module.
+// req.params = morceau de chemin ; req.query = apres ? ; req.body = JSON envoye.
+// Une route HTTP n'est pas un fichier SQL : la fonction de la route appelle ensuite pool.query.
+// L'ordre compte : routeurs, routes publiques, fichiers statiques, 404, puis erreurs.
+// Le main actuel n'a pas POST /ads ni POST /ads/:id/applications : voir la fiche de navigation.
+
 // Express permet de définir les routes HTTP et les traitements communs aux requêtes.
 const express = require('express');
 // Module intégré à Node : construit des chemins de fichiers adaptés au système.
@@ -19,6 +26,8 @@ const adColumns = `id, club_id, club_name AS club, team_id, team_name AS team,
   description, missions, created_at`;
 
 // Masquer les annonces supprimees et celles des comptes bloques.
+// Le public voit les annonces publiees dont l'auteur n'est pas bloque.
+// Ici je ne reserve pas la liste a un role PLAYER ou CLUB : meme un visiteur peut la lire.
 const visibleAdsFilter = `id IN (
   SELECT a.id FROM public.ads a
   LEFT JOIN public.users u ON u.id = a.author_id
@@ -57,10 +66,13 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
       console.error('Configuration de connexion invalide.');
     }
   }
+  // PREFIXES : /login dans ce routeur devient /auth/login ; /me devient /auth/me.
   app.use('/auth', createLoginRouter(pool, { sessions }));
   app.use('/auth', createLogoutRouter(sessions));
   app.use('/auth', createRegistrationRouter(pool));
+  // GET/PATCH /profile/me : lecture et modification du compte de la session.
   app.use('/profile', createProfileRouter(pool, sessions));
+  // Toutes les routes du panel passent par les permissions du routeur admin.
   app.use('/admin', createAdminRouter(pool, sessions));
 
   // Décode les corps application/json vers req.body et limite leur taille à 16 Ko.
@@ -70,6 +82,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   // Une route associe une méthode HTTP (GET) et un chemin (/health) à une fonction.
   // req contient la demande ; res permet de construire la réponse.
   // async permet d'utiliser await ; la fonction renvoie une Promise.
+  // TEST DE CONNEXION : SELECT 1 ne prouve pas que toutes les migrations ont ete appliquees.
   app.get('/health', async (req, res) => {
     // Test SQL minimal : vérifie que la base répond, sans vérifier toutes les tables.
     // await suspend cette fonction jusqu'au résultat ; il ne bloque pas tout le serveur.
@@ -80,6 +93,8 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   });
 
   // Liste des annonces : lecture dans PostgreSQL, puis réponse sous forme de tableau.
+  // LECTURE DE LISTE : la vue rassemble les tables et result.rows donne un tableau d'annonces.
+  // Liste vide = 200 avec [], pas 404.
   app.get('/ads', async (req, res) => {
     // pool.query emprunte une connexion, exécute le SQL puis rend la connexion au Pool.
     // ads_details est une vue SQL réunissant les annonces, leurs équipes et leurs clubs.
@@ -98,6 +113,8 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   });
 
   // :id est une partie variable de l'URL : /ads/7 donne req.params.id === '7'.
+  // LECTURE D'UN ELEMENT : /ads/7 donne le texte '7' dans req.params.id.
+  // 400 si l'ID est mal forme ; 404 si aucune annonce visible ne correspond.
   app.get('/ads/:id', async (req, res) => {
     // ! signifie NON : si l'ID est invalide, répondre avant d'interroger PostgreSQL.
     if (!validId(req.params.id)) {
@@ -117,6 +134,8 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   });
 
   // POST reçoit les informations nécessaires pour créer une candidature en base.
+  // CREATION D'UNE CANDIDATURE : ad_id arrive dans le JSON, pas dans l'URL actuelle.
+  // Le sujet demande /ads/:id/applications : notre route main fonctionne mais son chemin est different.
   app.post('/applications', async (req, res) => {
     // Vérifie le Content-Type annoncé par le client : ici on accepte du JSON.
     if (!req.is('application/json')) {
@@ -130,6 +149,8 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
       return res.status(400).json({ error: 'Candidature invalide.' });
     }
     // Déstructuration : extrait cinq propriétés de body dans cinq variables.
+    // Plus bas, INSERT ... SELECT cree la candidature seulement si l'annonce trouvee est disponible.
+    // $1...$5 separent les valeurs du SQL ; RETURNING redonne l'ID et la date crees.
     const { ad_id, name, email, phone, message } = body;
     // Vérifie ID, nom non vide, email et limites de longueur avant toute insertion.
     // trim retire les espaces aux extrémités ; typeof vérifie avant d'appeler les méthodes.
@@ -167,6 +188,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   // Même origine pour le HTML et l’API en local ; public/ sera servi par Vercel.
   // Sert aussi les fichiers du front ; __dirname désigne le dossier de ce fichier JS.
   // Une requête non traitée par une route peut ainsi recevoir un fichier HTML/CSS/JS.
+  // Si aucune API n'a repondu, je peux servir un HTML/CSS/JS du dossier frontend.
   app.use(express.static(path.join(__dirname, '../frontend')));
   // Aucun traitement précédent n'a répondu : 404 = route ou fichier introuvable.
   app.use((req, res) => res.status(404).json({ error: 'Route introuvable.' }));
@@ -174,6 +196,8 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   // Middleware d'erreurs : Express reconnaît ses quatre paramètres (error, req, res, next).
   // Avec Express 5, une Promise rejetée dans une route async arrive automatiquement ici.
   // On centralise les erreurs au lieu de répéter try/catch dans chaque route.
+  // Express reconnait ce gestionnaire avec ses quatre arguments. Il recoit aussi les erreurs async.
+  // Je renvoie un code utile, mais pas les secrets ou les details SQL au navigateur.
   app.use((error, req, res, next) => {
     // Si la réponse a déjà commencé, transmet l'erreur à Express via next(error).
     if (res.headersSent) return next(error);

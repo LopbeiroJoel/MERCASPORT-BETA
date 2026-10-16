@@ -1,3 +1,7 @@
+// REPERE ORAL - TESTS DES ROUTES PUBLIQUES ET DU BUILD.
+// Des appels HTTP verifient les vraies lignes SQL, les statuts et les reponses d'erreur.
+// Le front peut etre servi, mais ca ne veut pas dire que chaque configuration Vercel a ete testee en direct.
+
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');

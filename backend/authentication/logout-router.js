@@ -1,3 +1,7 @@
+// REPERE ORAL - DECONNEXION : POST /auth/logout.
+// Je revoque la session dans la base ET j'efface son cookie dans le navigateur.
+// 204 = ca a marche, sans JSON a lire dans la reponse.
+
 const express = require('express');
 function createLogoutRouter(sessions) {
   const router = express.Router();

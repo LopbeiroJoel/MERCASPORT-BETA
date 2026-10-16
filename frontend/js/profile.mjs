@@ -1,9 +1,15 @@
+// REPERE ORAL - LE FORMULAIRE DU PROFIL PARLE A /profile/me.
+// Je remplis les champs avec le GET puis j'envoie les changements avec PATCH.
+// Le serveur choisit le compte a partir de la session, pas a partir d'un champ cache du formulaire.
+// Ce script branche les infos ; l'habillage de la page est un travail du front de l'equipe.
+
 const message = document.getElementById('profile-message');
 const content = document.getElementById('profile-content');
 const form = document.getElementById('profile-form');
 const saveButton = document.getElementById('save-button');
 const logoutButton = document.getElementById('logout-button');
 
+// Les champs du formulaire recoivent les valeurs du compte renvoye par le serveur.
 function fillAccount(user) {
   document.getElementById('profile-name').textContent = user.username;
   document.getElementById('username').value = user.username;
@@ -17,6 +23,7 @@ function fillAccount(user) {
   }
 }
 
+// Je change les libelles selon PLAYER/CLUB et je construis la fiche en texte, sans injecter du HTML envoye par l'utilisateur.
 function fillSheet(profile, isPlayer) {
   const labels = isPlayer
     ? { first_name: 'Prénom', last_name: 'Nom', birth_date: 'Date de naissance',
@@ -44,6 +51,7 @@ function fillSheet(profile, isPlayer) {
 }
 
 // Afficher le lien uniquement après vérification des droits par le serveur.
+// Le lien est visible seulement si /admin/me confirme les permissions ; le backend verifie encore au clic.
 async function loadAdminAccess() {
   const link = document.getElementById('admin-link');
   link.hidden = true;
@@ -59,6 +67,7 @@ async function loadAdminAccess() {
   }
 }
 
+// GET charge le profil. 401 renvoie vers login ; une panne affiche une erreur lisible.
 async function loadProfile() {
   const isAdmin = await loadAdminAccess();
   try {
@@ -90,10 +99,12 @@ async function loadProfile() {
   }
 }
 
+// Je garde la page ouverte avec preventDefault, puis je fais PATCH en JSON.
 form.addEventListener('submit', async event => {
   event.preventDefault();
   saveButton.disabled = true;
   message.textContent = 'Enregistrement…';
+  // Ce JSON contient les nouvelles valeurs, pas l'ID de la personne a modifier.
   const body = { username: document.getElementById('username').value };
   for (const field of ['biography', 'phone', 'location']) body[field] = document.getElementById(field).value;
   for (const field of ['email', 'phone', 'location']) body[field + '_visible'] = document.getElementById(field + '-visible').checked;
@@ -117,6 +128,7 @@ form.addEventListener('submit', async event => {
   }
 });
 
+// Le logout appelle aussi le serveur : juste changer de page ne revoquerait pas la session SQL.
 logoutButton.addEventListener('click', async () => {
   logoutButton.disabled = true;
   try {

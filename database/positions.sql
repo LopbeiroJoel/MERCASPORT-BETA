@@ -1,3 +1,8 @@
+-- REPERE ORAL - CATALOGUE DES 14 POSTES.
+-- code = valeur stable envoyee a l'API ; label = texte francais affiche ; sort_order = ordre des choix.
+-- STRIKER correspond a Buteur. Je ne remets pas SECOND_STRIKER ou CENTRE_FORWARD.
+-- ON CONFLICT DO NOTHING evite de recreer un code qui existe deja ; ca ne remet pas ses valeurs a zero.
+
 -- Liste des postes : code pour le backend, label pour le formulaire.
 -- Aucun profil joueur ni aucune annonce n'est modifie.
 BEGIN;

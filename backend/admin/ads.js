@@ -1,3 +1,8 @@
+// REPERE ORAL - CREER, LIRE, MODIFIER ET SUPPRIMER LES ANNONCES COTE ADMIN.
+// Le chemin complet est /admin/ads, pas le POST /ads public du sujet.
+// A la creation l'admin choisit l'auteur ; modifier l'annonce ne transfere pas son auteur.
+// Le validateur des annonces et les contraintes SQL controlent les valeurs et les relations.
+
 const express = require('express');
 const { deleteAd } = require('./deletion');
 const { validateAd } = require('../ads/validation');
@@ -5,6 +10,7 @@ const { fail, id, body, text, transaction, insert, update } = require('./helpers
 
 function createAdminAdsRouter(pool) {
   const router = express.Router();
+  // GET /admin/ads/:id : la vue fournit les infos liees ; ads ajoute le statut interne du panel.
   router.get('/ads/:id', async (req, res) => {
     const result = await pool.query(`SELECT d.*, a.status, a.deleted_at
       FROM public.ads_details d JOIN public.ads a ON a.id = d.id WHERE d.id = $1`, [id(req.params.id)]);
@@ -12,6 +18,7 @@ function createAdminAdsRouter(pool) {
     res.json({ ad: result.rows[0] });
   });
 
+  // POST exige les champs de creation ; PATCH passe partial=true pour ne verifier que ce qui change.
   async function saveAd(req, res) {
     const editing = req.method === 'PATCH';
     // L'admin peut choisir l'auteur à la création, pas transférer une annonce existante.
@@ -26,6 +33,7 @@ function createAdminAdsRouter(pool) {
       fail(400, 'VALIDATION_ERROR', validation.errors);
     }
     const data = validation.data;
+    // Je separe les postes : les champs simples vont dans ads, les codes vont dans ad_positions.
     const positions = data.positions;
     delete data.positions;
     const ad = await transaction(pool, req.admin.userId, async client => {
@@ -64,8 +72,10 @@ function createAdminAdsRouter(pool) {
     });
     res.status(editing ? 200 : 201).json({ ad });
   }
+  // Meme fonction saveAd : POST cree une ligne (201), PATCH modifie les champs envoyes (200).
   router.post('/ads', saveAd);
   router.patch('/ads/:id', saveAd);
+  // DELETE /admin/ads/:id appelle la suppression definitive partagee, puis repond 204.
   router.delete('/ads/:id', async (req, res) => {
     await transaction(pool, req.admin.userId, client => deleteAd(client, id(req.params.id)));
     res.status(204).end();

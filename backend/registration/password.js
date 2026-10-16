@@ -1,7 +1,13 @@
+// REPERE ORAL - MOT DE PASSE : JE GARDE UN HACHAGE, PAS LE TEXTE (doc, section 15).
+// Argon2id + sel aleatoire pour les nouveaux comptes. Un hachage ne se dechiffre pas.
+// Verifier = recalculer a partir du mot de passe saisi et comparer les resultats.
+// La connexion gere aussi bcrypt dans authentication/router.js, malgre l'ancien commentaire plus bas.
+
 const { randomBytes, scrypt, timingSafeEqual } = require('node:crypto');
 const { promisify } = require('node:util');
 const { argon2id } = require('hash-wasm');
 const derive = promisify(scrypt);
+// 65536 KiB = 64 MiB de memoire ; 3 passages ; un seul flux de calcul ; 32 octets de resultat.
 const argonParameters = { memorySize: 65536, iterations: 3, parallelism: 1, hashLength: 32 };
 const legacyParameters = { N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024 };
 let activeHashes = 0;
@@ -15,6 +21,7 @@ async function hashPassword(password) {
   }
   activeHashes++;
   try {
+    // Sel aleatoire : deux personnes avec le meme mot de passe n'auront pas le meme hachage stocke.
     const salt = randomBytes(16);
     return await argon2id({ password, salt, ...argonParameters, outputType: 'encoded' });
   } finally {
@@ -24,6 +31,7 @@ async function hashPassword(password) {
 
 // Compare Argon2id et le format scrypt de la première version du module.
 // Les comptes bcrypt existants sont conservés : leur vérification reste à brancher pour la connexion.
+// Je reconnais le format stocke avant de refaire le calcul. timingSafeEqual compare les octets.
 async function verifyPassword(password, storedHash) {
   if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 512
     || typeof storedHash !== 'string') return false;

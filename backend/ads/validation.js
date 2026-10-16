@@ -1,3 +1,8 @@
+// REPERE ORAL - REGLES D'UNE ANNONCE DE RECRUTEMENT.
+// Ce validateur est utilise par les routes admin presentes sur main.
+// Le routeur complet des clubs existe sur la branche locale annonces, pas dans ce dossier sur main.
+// partial=true signifie PATCH : verifier seulement les champs fournis, pas exiger tout le formulaire.
+
 const allowedPositions = [
   'GOALKEEPER', 'CENTRE_BACK', 'RIGHT_BACK', 'LEFT_BACK',
   'RIGHT_WING_BACK', 'LEFT_WING_BACK', 'DEFENSIVE_MIDFIELDER',

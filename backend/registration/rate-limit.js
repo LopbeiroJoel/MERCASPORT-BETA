@@ -1,3 +1,8 @@
+// REPERE ORAL - EVITER LES INSCRIPTIONS EN BOUCLE.
+// Le compteur est dans PostgreSQL, donc plusieurs instances voient les memes tentatives.
+// Je stocke une empreinte de l'adresse, pas l'adresse en clair dans cette table.
+// Un SHA-256 n'est pas une promesse d'anonymat : une adresse connue peut etre rehashée.
+
 const { createHash } = require('node:crypto');
 const { isIP } = require('node:net');
 

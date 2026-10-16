@@ -1,3 +1,7 @@
+// REPERE ORAL - PREPARER LE FRONT POUR VERCEL.
+// Je copie frontend/ vers public/. C'est une sortie generee, pas un deuxieme front a modifier.
+// Ce script n'execute aucun SQL et ne copie pas le .env : un push ne migre donc pas Neon.
+
 const fs = require('node:fs');
 const path = require('node:path');
 

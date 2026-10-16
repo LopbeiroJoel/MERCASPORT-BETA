@@ -1,3 +1,9 @@
+-- REPERE ORAL - LES EVOLUTIONS DES ANNONCES APRES LE SCHEMA DE DEPART.
+-- Ici une equipe devient facultative ; l'auteur et le club doivent quand meme etre coherents.
+-- ads garde les champs simples. ad_positions relie une annonce a plusieurs codes de postes.
+-- La vue est refaite avec LEFT JOIN pour garder aussi les annonces sans equipe.
+-- C'est cette migration qui explique pourquoi schema.sql seul ne decrit plus tout le modele actuel.
+
 -- ANNONCE-02 : annonces de recrutement avec plusieurs postes.
 -- Conserver les annonces et les relations existantes.
 
@@ -42,6 +48,8 @@ ALTER TABLE public.ads
   ADD COLUMN IF NOT EXISTS additional_info TEXT;
 
 -- Relier chaque annonce à un ou plusieurs postes.
+-- Relation plusieurs-a-plusieurs : une annonce peut avoir plusieurs postes, et un poste servir a plusieurs annonces.
+-- La paire ad_id + position_code est unique. Ce n'est pas la meme structure que le TEXT[] du profil joueur.
 CREATE TABLE IF NOT EXISTS public.ad_positions (
   ad_id INTEGER NOT NULL
     REFERENCES public.ads(id) ON DELETE CASCADE,
@@ -54,6 +62,7 @@ CREATE TABLE IF NOT EXISTS public.ad_positions (
 
 -- Une annonce peut appartenir directement à un club.
 ALTER TABLE public.ads
+  -- C'est ici que l'annonce sans equipe devient possible ; le schema de depart la refusait.
   ALTER COLUMN team_id DROP NOT NULL;
 
 -- Récupérer les divisions connues des anciennes annonces.
@@ -65,6 +74,7 @@ WHERE a.team_id = t.id
   AND a.division_code IS NULL;
 
 -- Vérifier que le club ou l'équipe appartient à l'auteur.
+-- Je remplace l'ancienne fonction : l'auteur joueur/club doit etre coherent meme sans team_id.
 CREATE OR REPLACE FUNCTION public.check_ad_club()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -179,6 +189,7 @@ ON CONFLICT (ad_id, position_code) DO NOTHING;
 
 -- Rassembler les informations utilisées par les lectures d'annonces.
 -- Conserver l'ordre des anciennes colonnes de la vue.
+-- Version actuelle de la vue : je garde les anciennes colonnes et j'ajoute les nouvelles infos pour ne pas casser les lectures.
 CREATE OR REPLACE VIEW public.ads_details AS
 SELECT
   a.id,
@@ -219,6 +230,7 @@ SELECT
   a.additional_info
 
 FROM public.ads a
+-- LEFT JOIN garde aussi l'annonce qui n'a pas d'equipe ; INNER JOIN aurait fait disparaitre cette ligne.
 LEFT JOIN public.teams t ON t.id = a.team_id
 LEFT JOIN public.clubs c
   ON c.id = COALESCE(a.club_id, t.club_id)

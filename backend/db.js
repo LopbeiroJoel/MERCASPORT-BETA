@@ -1,9 +1,16 @@
+// REPERE ORAL - CONNEXION A LA BASE (doc, section 5).
+// pg parle a PostgreSQL ; Neon heberge PostgreSQL ; Vercel fait tourner le serveur.
+// DATABASE_URL vient du .env local ou des variables privees Vercel. Aucun secret a montrer ici.
+// Le compte PostgreSQL de cette URL n'est pas le joueur ou le club qui se connecte au site.
+// Pool = connexions reutilisables. Une route recoit ce Pool, elle ne connait pas le mot de passe en dur.
+
 // pg est le connecteur Node/PostgreSQL ; Pool gère des connexions réutilisables.
 const { Pool } = require('pg');
 
 // DATABASE_URL pour la base hébergée, DB_* pour les configurations locales existantes.
 // process.env lit la configuration injectée au lancement, sans écrire les secrets dans le code.
 // Condition ? A : B : utilise l'URL complète si elle existe, sinon les variables DB_*.
+// Si DATABASE_URL existe, je prends l'URL Neon complete. Sinon je garde la configuration locale DB_*.
 const config = process.env.DATABASE_URL
   ? { connectionString: process.env.DATABASE_URL }
   : {
@@ -18,6 +25,8 @@ const config = process.env.DATABASE_URL
     };
 
 // Crée un Pool partagé ; les connexions sont ouvertes selon les besoins des requêtes.
+// max: 5 vaut pour ce processus. Plusieurs instances Vercel peuvent avoir chacune leur Pool.
+// 5000 ms = 5 secondes ; statement_timeout vaut 10 secondes pour une instruction SQL.
 const pool = new Pool({
   // ... copie les propriétés de config dans cet objet de configuration.
   ...config,
@@ -34,6 +43,7 @@ const pool = new Pool({
 // Écoute les erreurs des connexions inactives ; les erreurs des requêtes passent par leurs Promises.
 pool.on('error', () => console.error('Connexion PostgreSQL interrompue.'));
 // Sur Vercel uniquement, associe le Pool au cycle de vie de l'environnement hébergé.
+// Ce branchement aide Vercel a gerer les connexions ; il ne cree pas les tables a ma place.
 if (process.env.VERCEL) {
   const { attachDatabasePool } = require('@vercel/functions');
   attachDatabasePool(pool);

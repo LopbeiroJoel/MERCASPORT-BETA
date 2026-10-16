@@ -1,3 +1,7 @@
+-- REPERE ORAL - CATALOGUE DES 14 DIVISIONS.
+-- D8 a D1, R3 a R1, N3 a N1. Le code est une cle, sort_order sert a les afficher dans cet ordre.
+-- La table ne change pas toute seule les divisions deja saisies dans teams ou les profils.
+
 -- Liste de reference des divisions disponibles pour MercaSport.
 -- Ne modifie pas les divisions des equipes ou des clubs existants.
 BEGIN;

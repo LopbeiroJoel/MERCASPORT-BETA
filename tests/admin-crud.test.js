@@ -1,3 +1,7 @@
+// REPERE ORAL - TESTS DES ACTIONS ADMIN SUR LES RESSOURCES.
+// Je verifie succes, references SQL, permissions et suppression definitive.
+// Les scenarios de panne controlent qu'un ROLLBACK remet aussi les dependances deja retirees.
+
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');

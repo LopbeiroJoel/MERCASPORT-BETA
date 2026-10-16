@@ -1,3 +1,8 @@
+// REPERE ORAL - MON PROFIL : GET ET PATCH /profile/me (doc, section 11).
+// GET lit mon compte puis ma fiche joueur ou club. PATCH modifie seulement les champs autorises.
+// L'ID vient de la session : envoyer l'ID de quelqu'un d'autre ne permet pas de modifier son compte.
+// Les choix de visibilite concernent l'affichage public ; ici le proprietaire voit ses propres infos.
+
 const express = require('express');
 const { validateRegistration } = require('./registration/validation');
 
@@ -5,6 +10,7 @@ function createProfileRouter(pool, sessions) {
   const router = express.Router();
 
   // Lire les informations du compte connecté.
+  // GET /profile/me : je lis users puis la bonne fiche, avec l'ID de la session.
   router.get('/me', async (req, res) => {
     res.set('Cache-Control', 'no-store');
 
@@ -70,6 +76,7 @@ function createProfileRouter(pool, sessions) {
   });
 
   // Modifier les informations communes du compte connecté.
+  // PATCH /profile/me : les champs non envoyes restent comme avant.
   router.patch('/me', express.json({ limit: '8kb' }), async (req, res) => {
     res.set('Cache-Control', 'no-store');
 
@@ -102,6 +109,7 @@ function createProfileRouter(pool, sessions) {
         return res.status(400).json({ code: 'INVALID_BODY' });
       }
 
+      // LISTE FERMEE : pas de role, pas d'ID d'une autre personne, pas de password_hash.
       const allowedFields = [
         'username',
         'biography',
@@ -128,6 +136,7 @@ function createProfileRouter(pool, sessions) {
       }
 
       // Réutiliser les mêmes règles de pseudo qu'à l'inscription.
+      // Le meme validateur que l'inscription controle le nouveau pseudo. Je recupere seulement sa regle username.
       if (Object.hasOwn(body, 'username')) {
         const { data, errors } = validateRegistration({ username: body.username });
         if (errors.username) {
@@ -186,11 +195,13 @@ function createProfileRouter(pool, sessions) {
 
       const values = fields.map(field => body[field]);
 
+      // Je fabrique SET avec des colonnes deja autorisees. Les valeurs restent dans le tableau values.
       const assignments = fields.map(
         (field, index) => `${field} = $${index + 1}`
       );
 
       // L'identifiant vient de la session, jamais du formulaire.
+      // C'est LA ligne a montrer pour la securite du compte cible : l'ID vient de la session.
       values.push(identity.userId);
 
       const result = await pool.query(
@@ -215,6 +226,7 @@ function createProfileRouter(pool, sessions) {
         }
       });
     } catch (error) {
+      // L'index UNIQUE a refuse un doublon de pseudo : 409, pas une sauvegarde partielle.
       if (error.code === '23505') {
         return res.status(409).json({ code: 'USERNAME_TAKEN', message: 'Ce pseudo est déjà utilisé.' });
       }

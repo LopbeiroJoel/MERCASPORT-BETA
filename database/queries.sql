@@ -1,3 +1,8 @@
+-- REPERE ORAL - EXEMPLES DE REQUETES, PAS DES ROUTES HTTP.
+-- Je lance une requete a la fois. $1/$2 sont lies par pg ; dans l'editeur Neon il faut fournir des valeurs autrement.
+-- Certaines jointures ci-dessous sont historiques et exigent une equipe ; la vue actuelle des annonces utilise des LEFT JOIN.
+-- Les lectures de coordonnees des candidats doivent rester reservees aux personnes autorisees.
+
 -- Requetes SQL utiles : aucune route ou implementation backend dans ce fichier.
 -- Executer les requetes parametrees separement avec des valeurs liees ($1...).
 

@@ -1,9 +1,16 @@
+-- REPERE ORAL - LES DROITS DU PANEL ET SES ANCIENS CHAMPS DE MODERATION.
+-- admin_permissions est separe du role joueur/club et doit etre actif.
+-- Les colonnes status/deleted_at existent encore pour compatibilite.
+-- Aujourd'hui les boutons Supprimer appellent deletion.js et font de vrais DELETE, pas un simple UPDATE DELETED.
+-- Le bannissement reste un UPDATE BANNED ; l'historique lie est retire lors d'une suppression definitive.
+
 -- Tables et champs nécessaires au panel administrateur.
 BEGIN;
 
 SET LOCAL lock_timeout = '5s';
 
 -- Droits administratifs, séparés du rôle joueur ou club.
+-- user_id pointe vers le compte ; is_active dit si son droit fonctionne. Le role ADMIN seul dans l'ecran ne suffit pas.
 CREATE TABLE IF NOT EXISTS public.admin_permissions (
   user_id INTEGER PRIMARY KEY REFERENCES public.users(id),
   role VARCHAR(20) NOT NULL
@@ -34,6 +41,7 @@ ALTER TABLE public.ads
   ADD COLUMN IF NOT EXISTS deletion_reason TEXT;
 
 -- Historique des sanctions et des changements de droits.
+-- Ce journal historique a des cles etrangeres : deletion.js retire les lignes liees avant de supprimer la cible.
 CREATE TABLE IF NOT EXISTS public.admin_actions (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 

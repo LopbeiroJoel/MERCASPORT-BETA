@@ -1,3 +1,9 @@
+// REPERE ORAL - TOUTES LES URL DU PANEL COMMENCENT PAR /admin.
+// app.js ajoute le prefixe, puis requireAdmin protege les routes installees ici.
+// Lire /admin/me donne du JSON ; ouvrir /admin.html donne la page avec les boutons.
+// Les modules en bas ajoutent le CRUD comptes, profils, clubs, equipes, annonces et candidatures.
+// Les anciennes URL /ban et /delete restent compatibles ; les nouvelles routes utilisent les verbes HTTP.
+
 const express = require('express');
 const { transaction } = require('./helpers');
 const { deleteAd } = require('./deletion');
@@ -14,12 +20,14 @@ function createAdminRouter(pool, sessions) {
   // Toutes les routes exigent des droits ADMIN actifs.
   router.use(requireAdmin(pool, sessions));
 
+  // GET /admin/me : req.admin a deja ete rempli par requireAdmin. Ce JSON prouve les droits pour le lien du profil.
   router.get('/me', (req, res) => {
     res.json({
       admin: req.admin
     });
   });
 
+  // GET /admin/administrators : comptes qui ont une ligne de droits, y compris pour proteger leurs boutons.
   router.get('/administrators', async (req, res) => {
     try {
       const { rows } = await pool.query(
@@ -39,6 +47,7 @@ function createAdminRouter(pool, sessions) {
       });
     }
   });
+// GET /admin/users : search cherche id/pseudo/email/club ; role filtre PLAYER ou CLUB avant LIMIT 50.
 router.get('/users', async (req, res) => {
   const role = req.query.role ?? '';
   if (typeof role !== 'string' || !['', 'PLAYER', 'CLUB'].includes(role)) {
@@ -83,6 +92,7 @@ router.get('/users', async (req, res) => {
     });
   }
 });
+// GET /admin/ads : recherche du panel, differente du GET /ads public qui masque les annonces indisponibles.
 router.get('/ads', async (req, res) => {
   const search = req.query.search ?? '';
 
@@ -128,6 +138,8 @@ router.get('/ads', async (req, res) => {
   }
 });
 router.post(
+  // POST /admin/users/:id/ban : ancienne URL avec une action. Je garde la compatibilite du bouton.
+  // Bannir garde le compte en SQL, met BANNED et revoque les sessions ; ce n'est pas DELETE.
   '/users/:id/ban',
 
   // Protéger l'action et demander une confirmation explicite.
@@ -271,6 +283,7 @@ router.post(
   }
 );
   // Ancienne URL conservée, avec la même suppression définitive que DELETE /ads/:id.
+  // Ancien chemin avec confirm=true ; il fait maintenant la meme suppression definitive que DELETE /admin/ads/:id.
   router.post('/ads/:id/delete', (req, res, next) => {
     if (!sessions.allowsOrigin(req)) return res.status(403).json({ code: 'ORIGIN_DENIED' });
     if (!req.is('application/json')) return res.status(415).json({ code: 'JSON_REQUIRED' });
@@ -288,6 +301,7 @@ router.post(
     res.json({ ad: { id: adId } });
   });
 
+// GET /admin/users/:id : je lis un compte cible sans renvoyer son password_hash.
 router.get('/users/:id', async (req, res) => {
   const userId = Number(req.params.id);
 
@@ -327,6 +341,7 @@ router.get('/users/:id', async (req, res) => {
 });
 
   // Modifier uniquement le pseudo et l'e-mail, jamais le rôle ou les droits.
+  // PATCH /admin/users/:id : pseudo/email seulement. Un changement d'email annule la verification et revoque les sessions.
   router.patch('/users/:id', (req, res, next) => {
     if (!sessions.allowsOrigin(req)) return res.status(403).json({ code: 'ORIGIN_DENIED' });
     if (!req.is('application/json')) return res.status(415).json({ code: 'JSON_REQUIRED' });

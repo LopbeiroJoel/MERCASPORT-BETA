@@ -1,3 +1,8 @@
+// REPERE ORAL - LES REGLES DU FORMULAIRE, MAIS COTE SERVEUR.
+// Le HTML peut etre contourne : je verifie aussi chaque donnee ici.
+// errors contient les messages par champ ; data contient les valeurs nettoyees que je peux enregistrer.
+// Ce fichier n'ecrit pas en base : le routeur s'en charge seulement si errors est vide.
+
 const count = value => [...value].length;
 const plainObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const playerPositions = [
@@ -27,12 +32,15 @@ function validateRegistration(body) {
     errors.email = 'E-mail invalide (adresse ASCII, 254 caractères maximum).';
   } else data.email = email;
 
+  // trim retire les espaces aux bouts ; NFC uniformise l'ecriture Unicode des caracteres.
   const username = typeof body.username === 'string' ? body.username.trim().normalize('NFC') : '';
   if (count(username) < 3 || count(username) > 50
     || !/^[\p{L}\p{N} ._'’-]+$/u.test(username)) {
     errors.username = 'Pseudo de 3 à 50 caractères : lettres, chiffres, espaces, point, tiret, apostrophe ou underscore.';
   } else data.username = username;
 
+  // Je ne fais pas trim sur le mot de passe enregistre : ses espaces peuvent etre volontaires.
+  // La regle actuelle est 15 a 128 caracteres, pas un petit mot de passe de test de 6 caracteres.
   if (typeof body.password !== 'string' || count(body.password) < 15
     || count(body.password) > 128 || Buffer.byteLength(body.password, 'utf8') > 512
     || !body.password.trim() || /[\u0000-\u001f\u007f]/.test(body.password)) {
@@ -69,6 +77,7 @@ function validateRegistration(body) {
   } else if (body.role === 'PLAYER') {
     text('first_name', 100, true);
     text('last_name', 100, true);
+    // Le joueur peut n'avoir aucun poste : absent/null -> []. Sinon au plus 14 codes, sans doublon.
     const positions = profile.positions;
     if (positions == null) {
       output.positions = [];
@@ -98,6 +107,7 @@ function validateRegistration(body) {
       } else output.birth_date = birth;
     } else output.birth_date = null;
   }
+  // Je renvoie les valeurs validees ; ce fichier ne fait aucun INSERT.
   data.profile = output;
   return { errors, data };
 }
