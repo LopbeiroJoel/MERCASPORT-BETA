@@ -12,14 +12,17 @@
 <body class="profile-page">
   <header>
     <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
-    <nav aria-label="Navigation principale">
+    <button class="header-toggle" type="button" aria-expanded="false" aria-controls="site-navigation site-account-actions" aria-label="Ouvrir le menu" hidden>
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </button>
+    <nav id="site-navigation" aria-label="Navigation principale">
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="offres.html">Offres</a></li>
         <li><a href="profile.html" aria-current="page">Mon profil</a></li>
       </ul>
     </nav>
-    <div role="group" aria-label="Actions du compte">
+    <div id="site-account-actions" role="group" aria-label="Actions du compte">
       <a id="admin-link" href="admin.html" hidden>Panel admin</a>
       <button id="logout-button" type="button" hidden>Se déconnecter</button>
     </div>
@@ -137,5 +140,6 @@
     </div>
   </footer>
   <script type="module" src="js/profile.mjs"></script>
+  <script type="module" src="js/header.mjs"></script>
 </body>
 </html>

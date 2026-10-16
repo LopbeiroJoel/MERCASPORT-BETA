@@ -14,7 +14,10 @@
     <!-- Emplacement du logo : le nom sert de repère tant que l'image n'est pas disponible. -->
     <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
 
-    <nav aria-label="Navigation principale">       <!-- liens vers les rubriques du site -->
+    <button class="header-toggle" type="button" aria-expanded="false" aria-controls="site-navigation site-account-actions" aria-label="Ouvrir le menu" hidden>
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </button>
+    <nav id="site-navigation" aria-label="Navigation principale">       <!-- liens vers les rubriques du site -->
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="offres.html">Offres</a></li>
@@ -23,7 +26,7 @@
       </ul>
     </nav>
 
-    <div role="group" aria-label="Accès au compte"> <!-- actions séparées de la navigation centrale -->
+    <div id="site-account-actions" role="group" aria-label="Accès au compte"> <!-- actions séparées de la navigation centrale -->
       <a href="login.html" class="button-secondary" aria-current="page">Se connecter</a>
       <a href="register.html" class="primary-button">S'inscrire</a>
     </div>
@@ -98,5 +101,6 @@
     </div>
   </footer>
   <script type="module" src="js/login.mjs"></script>
+  <script type="module" src="js/header.mjs"></script>
 </body>
 </html>
