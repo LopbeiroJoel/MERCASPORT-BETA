@@ -4,7 +4,7 @@
 .about-eyebrow { margin: 0 0 24px; color: var(--primary-400) !important; font-size: .7rem !important; letter-spacing: .12em; }
 .about-opening { max-width: 740px; padding-bottom: 64px; }
 .about-opening h1 { margin: 0 0 28px; font-size: clamp(2.4rem, 5.5vw, 4.4rem); line-height: 1.12; }
-.about-opening h1 span { color: var(--accent-500); }
+.about-opening h1 span { font-family: var(--font-display); font-weight: var(--font-weight-display); letter-spacing: normal; color: var(--accent-500); }
 .about-opening .about-lead { margin: 0 0 28px; color: var(--color-text-primary); font-size: clamp(1.05rem, 2vw, 1.25rem); line-height: 1.65; }
 .about-opening > p:not(.about-lead):not(.about-eyebrow) { max-width: 67ch; }
 .about-text-link { display: inline-block; margin-top: 12px; font-size: .85rem; font-weight: 500; text-underline-offset: 5px; }
