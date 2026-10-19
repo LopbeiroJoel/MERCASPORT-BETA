@@ -150,7 +150,7 @@ Le gratuit n’est pas illimité : les quotas de calcul/stockage Neon et de fonc
 
 ## Conservation et suppression
 
-La suppression définitive d’un compte ou d’une annonce continue de passer par les routes admin existantes. Les nouvelles dépendances utilisent CASCADE ou SET NULL selon leur sens. Supprimer une annonce conserve les conversations, en retirant leur contexte d’annonce/candidature ; supprimer un joueur/club retire les discussions liées et leurs messages. Archiver une discussion masque l’identité concernée ; ce n’est pas un DELETE.
+La suppression définitive d’un compte ou d’une annonce continue de passer par les routes admin existantes. Les clés de dédoublonnage des signalements restent stables si leur message est effacé. Les nouvelles dépendances utilisent CASCADE ou SET NULL selon leur sens. Supprimer une annonce conserve les conversations, en retirant leur contexte d’annonce/candidature ; supprimer un joueur/club retire les discussions liées et leurs messages. Archiver une discussion masque l’identité concernée ; ce n’est pas un DELETE.
 
 Politique technique proposée : messages et audit 365 jours, notifications lues 90 jours ou anciennes de 365 jours, signalements résolus 365 jours. Les messages liés à un signalement OPEN ne sont pas purgés. Valider cette durée et l’information des utilisateurs avant ouverture au public.
 
@@ -159,7 +159,7 @@ Politique technique proposée : messages et audit 365 jours, notifications lues 
 ## Déploiement et retour arrière
 
 1. Sauvegarder la base avec `pg_dump` dans un dossier privé hors Git ; vérifier que l’archive peut être lue et que la restauration a été testée sur une base isolée.
-2. Sur une base existante déjà à jour, appliquer **uniquement** `database/migrations/20261019-messaging-up.sql`. Le fichier ouvre et valide sa propre transaction et attend au maximum 5 secondes pour un verrou. Ne pas rejouer `schema.sql`, `seed.sql` ou toutes les anciennes migrations sur Neon.
+2. Sur une base existante déjà à jour, appliquer `database/migrations/20261019-messaging-up.sql` puis `database/migrations/20261019-messaging-reports.sql`. Le fichier ouvre et valide sa propre transaction et attend au maximum 5 secondes pour un verrou. Ne pas rejouer `schema.sql`, `seed.sql` ou toutes les anciennes migrations sur Neon.
 3. Comparer les nombres et données des comptes, clubs, fiches, annonces et candidatures avant/après. La migration crée les références et les membres propriétaires, sans inventer de comptes.
 4. Garder DATABASE_URL, AUTH_SECRET, APP_ORIGIN dans les variables privées existantes ; APP_ORIGIN doit être l’origine HTTPS exacte du site. MESSAGING_DATABASE_URL est facultative. Ne jamais publier ces valeurs.
 5. `npm ci`, `npm run build` puis déployer. Le build copie seulement `frontend/` vers `public/` ; il ne migre jamais la base.

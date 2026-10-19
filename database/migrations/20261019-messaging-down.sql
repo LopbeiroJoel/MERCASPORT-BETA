@@ -29,5 +29,6 @@ ALTER TABLE applications DROP COLUMN player_user_id,DROP COLUMN club_id,DROP COL
 ALTER TABLE player_profiles DROP COLUMN sport_code,DROP COLUMN availability_code,DROP COLUMN sport_city,DROP COLUMN sport_stats,DROP COLUMN sport_season,DROP COLUMN is_public,DROP COLUMN sport_profile_version;
 DROP FUNCTION messaging_ad_limits(),messaging_lock_ad(),messaging_lock_profile(),messaging_profile_limits(),messaging_valid_stats(JSONB),messaging_two_participants(),messaging_participant_check(),messaging_message_check(),messaging_application_history(),messaging_manages_club(INTEGER,INTEGER);
 DROP TABLE sports,availability_options,mobility_options,sport_categories,project_types,recruitment_types,recruitment_conditions,announcement_types,announcement_statuses,application_statuses,notification_types,report_reasons,report_statuses,sport_qualities,preferred_feet;
+DROP FUNCTION IF EXISTS messaging_report_context();
 DELETE FROM module_migrations WHERE version='20261019-messaging';
 COMMIT;

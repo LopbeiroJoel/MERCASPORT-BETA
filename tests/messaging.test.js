@@ -8,7 +8,7 @@ const { createSessionService } = require('../backend/authentication/session');
 const { createTestPool } = require('../backend/registration/tests/pool');
 const pool = createTestPool({
   migrations: ['profile.sql', 'profile-fields.sql'],
-  afterMigrations: ['migrations/20261019-messaging-up.sql']
+  afterMigrations: ['migrations/20261019-messaging-up.sql', 'migrations/20261019-messaging-reports.sql']
 });
 const secret = '0123456789abcdef'.repeat(4),
   origin = 'https://mercasport.test';
@@ -524,6 +524,11 @@ test('historique paginé sans recouvrement et suppression admin conservant les c
     (await pool.query('SELECT 1 FROM users WHERE id=$1', [otherClub.id])).rows.length,
     0
   );
+  for (let index = 0; index < 2; index++) {
+    const reply = await call('/conversations/' + conversation + '/messages', club, 'POST', { message_body: 'Message signalé ' + index, client_nonce: randomUUID() });
+    assert.equal(reply.status, 201);
+    assert.equal((await call('/reports', player, 'POST', {conversation_id: conversation, message_id: reply.data.message.id, reason_code: 'SPAM'})).status, 201);
+  }
   await transaction(pool, admin.id, (c) => deleteUser(c, club.id, admin.id));
   assert.equal(
     (await pool.query('SELECT 1 FROM conversations WHERE club_id=$1', [club.clubId])).rows.length,
