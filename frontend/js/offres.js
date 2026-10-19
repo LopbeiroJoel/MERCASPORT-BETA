@@ -277,6 +277,7 @@ function showDetail(ad) {
   addLine("Missions", ad.missions);
   addLine("Description", ad.description);
 
+  const recruitmentLink=document.createElement('a'); recruitmentLink.href='mercato.html?ad='+encodeURIComponent(ad.id); recruitmentLink.textContent='Contacter / Postuler avec mon compte'; content.appendChild(recruitmentLink);
   detail.showModal();                            // on ouvre la modale
 }
 

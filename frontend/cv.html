@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CV sportif · MercaSport</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/style-header.css" />
+    <link rel="stylesheet" href="css/style-footer.css" />
+    <link rel="stylesheet" href="css/style-recruitment.css" />
+  </head>
+  <body class="recruitment-page" data-owned="false">
+    <header>
+      <!-- en-tête : logo, navigation, accès au compte -->
+      <!-- Emplacement du logo : le nom sert de repère tant que l'image n'est pas disponible. -->
+      <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+
+      <button
+        class="header-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-navigation site-account-actions"
+        aria-label="Ouvrir le menu"
+        hidden
+      >
+        <span aria-hidden="true"></span><span aria-hidden="true"></span
+        ><span aria-hidden="true"></span>
+      </button>
+      <nav id="site-navigation" aria-label="Navigation principale">
+        <!-- liens vers les rubriques du site -->
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="offres.html">Offres</a></li>
+          <li>
+            <a href="publier.html" class="header-publish"
+              ><span aria-hidden="true">＋</span> Poster une offre</a
+            >
+          </li>
+          <li><a href="a-propos.html">À propos</a></li>
+          <!-- <li><a href="actualites.html">Actualités</a></li>
+        <li><a href="contact.html">Contact</a></li> -->
+        </ul>
+      </nav>
+
+      <div id="site-account-actions" role="group" aria-label="Accès au compte">
+        <!-- actions séparées de la navigation centrale -->
+        <a id="account-link" href="login.html" class="button-secondary">Se connecter</a>
+        <a id="register-link" href="register.html" class="primary-button">S'inscrire</a>
+      </div>
+    </header>
+
+    <main class="m-main">
+      <div class="m-intro">
+        <h1>CV sportif</h1>
+        <p>Votre parcours, complété à votre rythme.</p>
+      </div>
+      <nav class="m-nav" aria-label="Mon recrutement">
+        <a href="mercato.html">Mercato</a><a href="mes-annonces.html">Mes annonces</a
+        ><a href="messages.html">Messages</a><a href="candidatures.html">Candidatures</a
+        ><a href="cv.html">Mon CV sportif</a>
+      </nav>
+      <p id="module-status" class="m-status" role="status" aria-live="polite">Chargement…</p>
+      <div id="module-content" class="m-cv" hidden>
+        <div id="cv-preview"></div>
+        <form id="cv-form" hidden>
+          <div id="cv-fields"></div>
+          <label class="m-inline-check"
+            ><input id="cv-public" type="checkbox" />Rendre ma fiche sportive visible aux
+            utilisateurs connectés</label
+          >
+          <p class="m-help">
+            Vous pouvez garder cette case décochée et partager votre CV uniquement dans les
+            conversations de votre choix. Les coordonnées restent soumises aux réglages de votre
+            profil.
+          </p>
+          <button id="save-cv">Enregistrer ma fiche sportive</button>
+        </form>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-main">
+          <div class="footer-brand">
+            <a class="footer-logo" href="index.html" aria-label="Mercasport — Accueil"
+              >Mercasport</a
+            >
+            <p>Le mercato du football amateur.</p>
+            <p>
+              Des clubs, des joueurs et une même passion. Trouvez l’équipe dans laquelle écrire la
+              suite de votre parcours.
+            </p>
+          </div>
+
+          <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
+            <h2 id="footer-navigation-title">Sur le terrain</h2>
+            <ul>
+              <li><a href="#ads-list">Découvrir les offres</a></li>
+              <li><a href="register.html">Créer un compte</a></li>
+              <li><a href="login.html">Se connecter</a></li>
+            </ul>
+          </nav>
+
+          <div class="footer-contact">
+            <h2>Parlons football</h2>
+            <!-- Coordonnées de démonstration, à remplacer avant publication. -->
+            <address>
+              <p>12, allée du Stade<br />67000 Strasbourg, France</p>
+              <p>bonjour@mercasport.example</p>
+              <p>Du lundi au vendredi<br />9 h – 18 h</p>
+            </address>
+            <p class="footer-demo-note">Coordonnées fictives pour cette démonstration.</p>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Mercasport. Tous droits réservés.</p>
+          <p>Le football commence par une rencontre.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="js/account.mjs"></script>
+    <script type="module" src="js/header.mjs"></script>
+    <script type="module" src="js/cv.mjs"></script>
+  </body>
+</html>

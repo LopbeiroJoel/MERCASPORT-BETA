@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
-  "engines": { "node": "22.x" },
-  "workspaces": ["backend"],
+  "engines": {
+    "node": "22.x"
+  },
+  "workspaces": [
+    "backend"
+  ],
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "build": "node scripts/build.js",
@@ -15,8 +19,16 @@
     "test:profile": "node --test tests/profile.test.js tests/profile-edit.test.js",
     "test:ads": "node --test tests/publish.test.js",
     "test:admin-users": "node --test tests/admin-users.test.js",
-    "test:admin": "node --test tests/admin.test.js tests/admin-users.test.js tests/admin-crud.test.js"
+    "test:admin": "node --test tests/admin.test.js tests/admin-users.test.js tests/admin-crud.test.js",
+    "test:messaging": "node --test tests/messaging.test.js",
+    "test:messaging:live": "python3 tests/messaging-live.py",
+    "messaging:cleanup": "node --env-file-if-exists=.env scripts/messaging-cleanup.js",
+    "check:messaging": "node scripts/check-messaging.js"
   },
-  "dependencies": { "express": "^5.2.1" },
-  "devDependencies": { "@electric-sql/pglite": "0.5.8" }
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8"
+  }
 }

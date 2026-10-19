@@ -13,6 +13,7 @@ async function loadAccount() {
   link.classList.remove('account-connected');
   link.removeAttribute('title');
   register.hidden = false;
+  const oldMessages=document.getElementById('header-messages');if(oldMessages)oldMessages.hidden=true;
   try {
     // credentials envoie les cookies au meme site ; cache no-store evite une ancienne identite en cache.
     const response = await fetch('/auth/me', { credentials: 'same-origin', cache: 'no-store' });
@@ -25,6 +26,10 @@ async function loadAccount() {
     link.title = 'Voir le profil de ' + user.username;
     link.classList.add('account-connected');
     register.hidden = true;
+    let messages=document.getElementById('header-messages');
+    if(!messages){messages=document.createElement('a');messages.id='header-messages';messages.href='messages.html';messages.textContent='Messages';link.parentElement.append(messages);}
+    messages.hidden=false;
+
   } catch {
     // En cas de panne, garder les liens de connexion et d'inscription.
   }

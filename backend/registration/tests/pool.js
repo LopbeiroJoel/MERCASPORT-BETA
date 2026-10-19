@@ -3,13 +3,13 @@
 // Ce Pool de test n'est pas celui de db.js et ne lit pas le .env de production.
 
 // PostgreSQL embarque jetable : aucun acces a Neon ni besoin de serveur local.
-function createTestPool({ migrations = [] } = {}) {
+function createTestPool({ migrations = [], afterMigrations = [] } = {}) {
   const { PGlite } = require('@electric-sql/pglite');
   const fs = require('node:fs/promises');
   const path = require('node:path');
   const db = new PGlite();
   const ready = (async () => {
-    for (const name of ['schema.sql', 'seed.sql', 'registration.sql', 'registration.sql', 'player-positions.sql', 'admin.sql', ...migrations, 'positions.sql', 'divisions.sql', 'ads-recruitment.sql', 'ads-applications.sql']) {
+    for (const name of ['schema.sql', 'seed.sql', 'registration.sql', 'registration.sql', 'player-positions.sql', 'admin.sql', ...migrations, 'positions.sql', 'divisions.sql', 'ads-recruitment.sql', 'ads-applications.sql', ...afterMigrations]) {
       await db.exec(await fs.readFile(path.join(__dirname, '../../../database', name), 'utf8'));
     }
   })();

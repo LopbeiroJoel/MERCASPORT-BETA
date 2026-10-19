@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Messages · MercaSport</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/style-header.css" />
+    <link rel="stylesheet" href="css/style-footer.css" />
+    <link rel="stylesheet" href="css/style-recruitment.css" />
+  </head>
+  <body class="recruitment-page" data-owned="false">
+    <header>
+      <!-- en-tête : logo, navigation, accès au compte -->
+      <!-- Emplacement du logo : le nom sert de repère tant que l'image n'est pas disponible. -->
+      <a href="index.html" aria-label="Mercasport — Accueil">Mercasport</a>
+
+      <button
+        class="header-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-navigation site-account-actions"
+        aria-label="Ouvrir le menu"
+        hidden
+      >
+        <span aria-hidden="true"></span><span aria-hidden="true"></span
+        ><span aria-hidden="true"></span>
+      </button>
+      <nav id="site-navigation" aria-label="Navigation principale">
+        <!-- liens vers les rubriques du site -->
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="offres.html">Offres</a></li>
+          <li>
+            <a href="publier.html" class="header-publish"
+              ><span aria-hidden="true">＋</span> Poster une offre</a
+            >
+          </li>
+          <li><a href="a-propos.html">À propos</a></li>
+          <!-- <li><a href="actualites.html">Actualités</a></li>
+        <li><a href="contact.html">Contact</a></li> -->
+        </ul>
+      </nav>
+
+      <div id="site-account-actions" role="group" aria-label="Accès au compte">
+        <!-- actions séparées de la navigation centrale -->
+        <a id="account-link" href="login.html" class="button-secondary">Se connecter</a>
+        <a id="register-link" href="register.html" class="primary-button">S'inscrire</a>
+      </div>
+    </header>
+
+    <main class="m-main">
+      <div class="m-intro">
+        <h1>Messages</h1>
+        <p>Une discussion pour trouver votre prochaine équipe.</p>
+      </div>
+      <nav class="m-nav" aria-label="Mon recrutement">
+        <a href="mercato.html">Mercato</a><a href="mes-annonces.html">Mes annonces</a
+        ><a href="messages.html">Messages</a><a href="candidatures.html">Candidatures</a
+        ><a href="cv.html">Mon CV sportif</a>
+      </nav>
+      <p id="module-status" class="m-status" role="status" aria-live="polite">Chargement…</p>
+      <div id="module-content" hidden>
+        <div class="m-actions">
+          <button id="new-contact">Nouveau contact</button
+          ><button id="show-notifications">
+            Notifications <span id="notification-count" class="m-badge"></span></button
+          ><button id="show-blocks">Comptes bloqués</button
+          ><button id="refresh-conversations">Actualiser</button
+          ><label class="m-inline-check"
+            ><input id="live-toggle" type="checkbox" checked />En direct</label
+          ><span id="live-status" class="m-small" role="status"></span>
+        </div>
+        <div id="chat-layout" class="m-chat-layout">
+          <aside class="m-inbox" aria-label="Conversations">
+            <label class="m-field"
+              >Filtrer<select id="inbox-filter">
+                <option value="all">Toutes</option>
+                <option value="unread">Non lues</option>
+                <option value="players">Joueurs</option>
+                <option value="clubs">Clubs</option>
+                <option value="applications">Candidatures</option>
+                <option value="archived">Archivées</option>
+              </select></label
+            >
+            <div id="conversation-list"></div>
+            <button id="more-conversations" hidden>Conversations suivantes</button>
+          </aside>
+          <section class="m-thread" aria-label="Discussion">
+            <div class="m-chat-top">
+              <button id="back-inbox" class="m-mobile-back">← Conversations</button>
+              <h2 id="chat-title">Choisissez une conversation</h2>
+              <p id="chat-role" class="m-small"></p>
+              <div id="conversation-actions" class="m-actions"></div>
+              <label id="share-cv-label" class="m-inline-check" hidden
+                ><input id="share-cv" type="checkbox" />Partager ma fiche sportive avec ce
+                club</label
+              >
+              <p id="blocked-note" class="m-help" hidden>
+                Échanges bloqués. Vous pouvez gérer vos blocages en haut de page.
+              </p>
+            </div>
+            <button id="older-messages" hidden>Charger les messages précédents</button>
+            <div
+              id="message-history"
+              class="m-history"
+              aria-label="Historique des messages"
+              aria-live="polite"
+            ></div>
+            <p id="chat-feedback" class="m-status" role="status" aria-live="polite"></p>
+            <form id="message-form" class="m-compose">
+              <label class="m-field" style="flex: 1; margin: 0"
+                >Votre message<textarea
+                  id="message-text"
+                  maxlength="4000"
+                  rows="2"
+                  required
+                  placeholder="Écrire un message…"
+                ></textarea></label
+              ><button id="send-message">Envoyer</button>
+            </form>
+          </section>
+          <aside id="profile-panel" class="m-side" aria-label="Profil de l’interlocuteur">
+            <p>Le profil sportif apparaîtra ici.</p>
+          </aside>
+        </div>
+      </div>
+      <dialog id="contact-dialog" class="m-dialog">
+        <button type="button" data-close aria-label="Fermer">Fermer</button>
+        <h2>Nouveau contact</h2>
+        <p>Recherchez le nom d’un club ou le pseudo d’un joueur. Aucun CV n’est obligatoire.</p>
+        <form id="contact-form">
+          <label id="contact-club-label" class="m-field" hidden
+            >J’agis au nom de<select id="contact-club"></select></label
+          ><label class="m-field"
+            >Rechercher<input
+              id="contact-search"
+              minlength="2"
+              maxlength="100"
+              required
+              autocomplete="off" /></label
+          ><button id="find-contacts">Rechercher</button>
+        </form>
+        <div id="contact-results"></div>
+      </dialog>
+      <dialog id="report-dialog" class="m-dialog">
+        <button type="button" data-close aria-label="Fermer">Fermer</button>
+        <h2 id="report-title">Signaler</h2>
+        <form id="report-form">
+          <div id="report-fields"></div>
+          <p>Seul le message signalé est transmis à la modération.</p>
+          <button id="submit-report">Envoyer le signalement</button>
+        </form>
+      </dialog>
+      <dialog id="notification-dialog" class="m-dialog">
+        <button type="button" data-close aria-label="Fermer">Fermer</button>
+        <h2>Notifications</h2>
+        <div id="notification-list" class="m-notices"></div>
+      </dialog>
+      <dialog id="block-dialog" class="m-dialog">
+        <button type="button" data-close aria-label="Fermer">Fermer</button>
+        <h2>Comptes bloqués</h2>
+        <div id="block-list"></div>
+      </dialog>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-main">
+          <div class="footer-brand">
+            <a class="footer-logo" href="index.html" aria-label="Mercasport — Accueil"
+              >Mercasport</a
+            >
+            <p>Le mercato du football amateur.</p>
+            <p>
+              Des clubs, des joueurs et une même passion. Trouvez l’équipe dans laquelle écrire la
+              suite de votre parcours.
+            </p>
+          </div>
+
+          <nav class="footer-navigation" aria-labelledby="footer-navigation-title">
+            <h2 id="footer-navigation-title">Sur le terrain</h2>
+            <ul>
+              <li><a href="#ads-list">Découvrir les offres</a></li>
+              <li><a href="register.html">Créer un compte</a></li>
+              <li><a href="login.html">Se connecter</a></li>
+            </ul>
+          </nav>
+
+          <div class="footer-contact">
+            <h2>Parlons football</h2>
+            <!-- Coordonnées de démonstration, à remplacer avant publication. -->
+            <address>
+              <p>12, allée du Stade<br />67000 Strasbourg, France</p>
+              <p>bonjour@mercasport.example</p>
+              <p>Du lundi au vendredi<br />9 h – 18 h</p>
+            </address>
+            <p class="footer-demo-note">Coordonnées fictives pour cette démonstration.</p>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Mercasport. Tous droits réservés.</p>
+          <p>Le football commence par une rencontre.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="js/account.mjs"></script>
+    <script type="module" src="js/header.mjs"></script>
+    <script type="module" src="js/messages.mjs"></script>
+  </body>
+</html>

@@ -147,3 +147,10 @@ Configurer en prive `DATABASE_URL`, `AUTH_SECRET` (64 caracteres hexadecimaux) e
 Puis lancer `npm ci` et `npm start`. Aucun mot de passe de test n'est stocke dans Git.
 Verification : `npm run test:registration`, `npm run test:profile` et `npm run build`.
 Les preferences de visibilite sont sauvegardees ; aucune route de profil public n'est ajoutee.
+
+
+## Messagerie et recrutement
+
+Le module ajoute Mercato, Mes annonces, Messages, Candidatures et CV sportif, en réutilisant les comptes, profils, annonces et sessions. Voir [architecture, API, sécurité, migration et déploiement](backend/docs/messaging.md). Aucun fournisseur de chat payant n’est nécessaire. Le direct peut être désactivé depuis Messages.
+
+Tests isolés : `npm run test:messaging` puis `npm run test:messaging:live` (PostgreSQL natif). Les tests de recette n’utilisent jamais Neon. La migration dédiée doit être exécutée séparément du build.

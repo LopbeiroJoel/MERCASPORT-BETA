@@ -1,3 +1,9 @@
+// Accès au mercato : les offres et leurs formulaires restent disponibles.
+const navigation = document.querySelector('#site-navigation ul');
+if(navigation&&!navigation.querySelector('a[href="mercato.html"]')) {
+ const item=document.createElement('li'),a=document.createElement('a');
+ a.href='mercato.html';a.textContent='Mercato';item.append(a);navigation.append(item);
+}
 // Navigation mobile partagée : disclosure, sans modifier les liens ni l'authentification.
 const header = document.querySelector('body > header');
 const toggle = header?.querySelector('.header-toggle');

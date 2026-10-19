@@ -16,6 +16,9 @@ const { createLogoutRouter } = require('./authentication/logout-router');
 const { createProfileRouter } = require('./profile');
 const { createAdminRouter } = require('./admin/router');
 const { createAdsRouter } = require('./ads/router');
+const { createMessagingRouter } = require('./messaging/router');
+const { createRecruitmentRouter } = require('./recruitment/router');
+const { createRecruitmentAdminRouter } = require('./recruitment/admin');
 
 // Fragment SQL partagé par la liste et le détail : évite de répéter les colonnes.
 // AS renomme un champ dans le résultat ; coalesce choisit la première valeur non NULL.
@@ -33,6 +36,8 @@ const visibleAdsFilter = `id IN (
   SELECT a.id FROM public.ads a
   LEFT JOIN public.users u ON u.id = a.author_id
   WHERE a.status = 'PUBLISHED'
+    AND ((to_jsonb(a)->>'expires_at') IS NULL OR (to_jsonb(a)->>'expires_at')::timestamptz>now())
+    AND coalesce(to_jsonb(a)->>'announcement_type','CLUB_SEARCH')='CLUB_SEARCH'
     AND COALESCE(u.status, '') NOT IN ('BANNED', 'DISABLED')
 )`;
 
@@ -74,6 +79,9 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   // GET/PATCH /profile/me : lecture et modification du compte de la session.
   app.use('/profile', createProfileRouter(pool, sessions));
   // Toutes les routes du panel passent par les permissions du routeur admin.
+  app.use(createRecruitmentRouter(pool, sessions));
+  app.use(createMessagingRouter(pool, sessions));
+  app.use('/admin', createRecruitmentAdminRouter(pool, sessions));
   app.use('/admin', createAdminRouter(pool, sessions));
   app.use('/ads', createAdsRouter(pool, sessions));
 
