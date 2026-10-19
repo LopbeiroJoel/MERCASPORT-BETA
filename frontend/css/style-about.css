@@ -19,11 +19,11 @@
 .about-next details p, .about-next li { color: var(--color-text-secondary); font-size: .85rem; line-height: 1.8; }
 .about-next ul { padding-left: 20px; }
 .about-next li + li { margin-top: 10px; }
-.founders-intro { display: grid; grid-template-columns: .75fr 1.5fr; gap: 60px; margin-bottom: 36px; }
+.founders-intro { max-width: 740px; margin-bottom: 0; }
 .founders-story p { margin: 0 0 18px; }
 .founders-story p:last-child { margin-bottom: 0; }
 .founders-story strong { font-weight: 500; color: var(--color-text-primary); }
-.founders-portraits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; max-width: 660px; margin: 40px auto 0; }
+.founders-portraits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; max-width: 600px; margin: 0 0 36px; }
 .founder { min-width: 0; margin: 0; text-align: center; }
 .founder-photo { position: relative; width: 100px; max-width: 100%; margin-inline: auto; aspect-ratio: 1; overflow: hidden; border-radius: 6px; background: var(--color-surface-1); }
 .founder-photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter .2s ease; }
@@ -33,7 +33,7 @@
 .about-main :is(a, summary):focus-visible { outline: 2px solid var(--primary-400); outline-offset: 5px; }
 @media (hover: hover) { .founder:hover img { filter: brightness(1.04); } }
 @media (min-width: 769px) and (max-width: 1100px) { .about-main { padding-top: 210px; } }
-@media (max-width: 768px) { .about-main { padding-top: 120px; }.about-use-columns, .founders-intro { grid-template-columns: 1fr; gap: 24px; }.about-opening { padding-bottom: 36px; }.about-use, .about-next, .about-founders { padding-block: 36px; }.founders-intro { margin-bottom: 28px; } }
+@media (max-width: 768px) { .about-main { padding-top: 120px; }.about-use-columns { grid-template-columns: 1fr; gap: 24px; }.about-opening { padding-bottom: 36px; }.about-use, .about-next, .about-founders { padding-block: 36px; } }
 @media (max-width: 600px) { .about-main { width: calc(100% - 40px); padding-bottom: 40px; }.founder-photo { width: 80px; }.founders-portraits { gap: 14px; }.founder figcaption { font-size: .75rem; } }
 @media (max-width: 359px) { .founders-portraits { grid-template-columns: 1fr; gap: 26px; } }
 @media (prefers-reduced-motion: reduce) { .founder-photo img { transition: none; } }

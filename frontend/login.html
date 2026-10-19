@@ -38,7 +38,7 @@
     <div class="connexion-layout">
       <section class="connexion-card" aria-labelledby="connexion-title">
         <h1 id="connexion-title">Connexion</h1>
-        <p class="connexion-description">Heureux de vous retrouver. Connectez-vous à votre compte Mercasport.</p>
+        <p class="connexion-description">Utilisez votre e-mail ou votre pseudo, puis votre mot de passe.</p>
 
         <!-- Identifiants et attributs conservés pour le JavaScript de connexion existant. -->
         <form id="login-form">
@@ -58,10 +58,10 @@
       </section>
 
       <aside class="connexion-story" aria-labelledby="connexion-story-title">
-        <h2 id="connexion-story-title">De retour sur le terrain.</h2>
-        <p>Retrouvez votre profil et les clubs qui recrutent. Votre prochaine équipe vous attend peut-être déjà.</p>
-        <div class="connexion-visual" aria-hidden="true"></div>
-        <a href="offres.html">Découvrir les offres avant de se connecter</a>
+        <h2 id="connexion-story-title">De retour<br>sur le terrain.</h2>
+        <div class="connexion-accent" aria-hidden="true"><span></span></div>
+        <p>Connectez-vous pour retrouver votre profil. Vous pouvez aussi consulter les offres sans compte.</p>
+        <a href="offres.html">Voir les offres <span aria-hidden="true">→</span></a>
       </aside>
     </div>
   </main>
@@ -103,6 +103,7 @@
     </div>
   </footer>
   <script type="module" src="js/login.mjs"></script>
+  <script type="module" src="js/login-accent.mjs"></script>
   <script type="module" src="js/header.mjs"></script>
 </body>
 </html>
