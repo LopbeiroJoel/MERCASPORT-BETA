@@ -1,338 +1,313 @@
-// ===== 1. LES ÉLÉMENTS =====
-const list = document.getElementById("offers-list");
-const count = document.getElementById("offers-count");
-const searchInput = document.getElementById("filter-search");
-const locationInput = document.getElementById("filter-location-search");
-const companyInput = document.getElementById("filter-company");
+import {
+  api,
+  options,
+  identity,
+  node,
+  link,
+  button,
+  profileView,
+  label
+} from './recruitment-ui.mjs';
 
-// L'URL fait le lien entre la recherche de l'accueil et les filtres de cette page.
-const searchParams = new URLSearchParams(window.location.search);
-searchInput.value = searchParams.get("keywords") ?? "";
-locationInput.value = searchParams.get("location") ?? "";
-companyInput.value = searchParams.get("company") ?? "";
-const positionFilter = document.getElementById("filter-position");
-const divisionFilter = document.getElementById("filter-division");
-const locationFilter = document.getElementById("filter-location");
-const detail = document.getElementById("ads-detail");     // la <dialog>
-const content = document.getElementById("ads-content");    // la <div> qu'on remplit
-const closeBtn = document.getElementById("x-detail");   // la croix
-const applyForm = document.getElementById("apply-form");
-const applyMessage = document.getElementById("apply-message");
-const applyButton = document.getElementById("apply-submit");
-// ===== ORDRES D'AFFICHAGE DES FILTRES =====
-const POSITION_ORDER = [
-  "Gardien",
-  "Défenseur central", "Latéral droit", "Latéral gauche", "Piston droit", "Piston gauche",
-  "Milieu défensif", "Milieu central", "Milieu offensif", "Milieu droit", "Milieu gauche",
-  "Ailier droit", "Ailier gauche", "Avant-centre", "Buteur",
-];
+const list = document.getElementById('offers-list');
+const count = document.getElementById('offers-count');
+const form = document.getElementById('filters');
+const detail = document.getElementById('ads-detail');
+const content = document.getElementById('ads-content');
+const applyForm = document.getElementById('apply-form');
+const status = document.getElementById('apply-message');
+const search = new URLSearchParams(location.search);
+const fields = {
+  keywords: document.getElementById('filter-search'),
+  location: document.getElementById('filter-location-search'),
+  company: document.getElementById('filter-company')
+};
+let me,
+  catalog,
+  ads = [],
+  cursor,
+  current,
+  pending = false;
+const normalized = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+const checked = (name) =>
+  [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((box) => box.value);
+const isClub = () => me?.user.role === 'CLUB';
 
-const DIVISION_ORDER = [
-  "D8", "D7", "D6", "D5", "D4", "D3", "D2", "D1",
-  "R3", "R2", "R1",
-  "N3", "N2", "N1",
-];
-
-// Ajoute "Libellé : valeur" dans la modale, seulement si la valeur existe
-function addLine(label, value) {
-  if (!value) return;                      // pas de valeur → on n'ajoute rien
-  const p = document.createElement("p");
-  const heading = document.createElement("strong");
-  heading.textContent = label;
-  p.append(heading, document.createTextNode(value));
-  p.className = "offer-detail-field";
-  content.appendChild(p);
+function line(title, value) {
+  if (!value || (Array.isArray(value) && !value.length)) return;
+  const row = node('p', null, 'offer-detail-field');
+  row.append(
+    node('strong', title),
+    document.createTextNode(Array.isArray(value) ? value.join(', ') : value)
+  );
+  content.append(row);
 }
-
-let currentAdId = null;   // l'id de l'offre affichée dans la modale (null = aucune)
-let allAds = [];   // toutes les offres reçues du serveur, gardées pour le filtrage
-
-// ===== 2. AFFICHER UNE LISTE D'OFFRES =====
-function renderAds(ads) {
-  list.innerHTML = "";                         // on vide la liste avant de la remplir
-  count.textContent = ads.length + (ads.length === 1 ? " offre" : " offres");
-  if (!ads.length) {
-    const message = document.createElement("li");
-    message.className = "offers-empty";
-    message.textContent = "Aucune offre ne correspond à votre recherche. Modifiez les filtres ou réinitialisez-les.";
-    list.appendChild(message);
-  }
-
-  ads.forEach((ad) => {
-    const li = document.createElement("li");          // la carte
-    li.className = "job-card";
-    const badges = document.createElement("div");
-    badges.className = "job-card-badges";
-    for (const value of [ad.position, ad.division].filter(Boolean)) {
-      const badge = document.createElement("span");
-      badge.textContent = value;
-      badges.appendChild(badge);
-    }
-
-    const title = document.createElement("h3");
-    title.textContent = ad.title;
-
-    const club = document.createElement("p");
-    club.textContent = ad.club || "Club non précisé";
-    club.className = "job-card-club";
-
-    const location = document.createElement("p");
-    location.textContent = ad.location || "Localisation non précisée";
-    location.className = "job-card-location";
-
-    const description = document.createElement("p");
-    description.textContent = ad.short_description || ad.description || "";
-    description.className = "job-card-summary";
-
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Voir les détails";
-    button.addEventListener("click", () => {
-      showDetail(ad);
-    });
-    li.appendChild(badges);
-    li.appendChild(club);
-    li.appendChild(title);
-    li.appendChild(location);
-    li.appendChild(description);
-    li.appendChild(button);    
-    list.appendChild(li);                              // la carte est ajoutée à la liste
-  });
-}
-// ===== 3. CHARGER LES OFFRES =====
-async function loadAds() {
-  try {
-    const response = await fetch("/ads");
-    if (!response.ok) {
-      throw new Error("Erreur " + response.status);
-    }
-    allAds = await response.json();
-    if (!Array.isArray(allAds)) throw new Error("Réponse API invalide");
-    buildCheckboxes(positionFilter, "position", POSITION_ORDER);
-    buildCheckboxes(divisionFilter, "division", DIVISION_ORDER);
-    buildCheckboxes(locationFilter, "location");
-    // Les cases existent seulement après le chargement des annonces.
-    for (const [field, parameter] of [["position", "position"], ["division", "division"], ["location", "city"]]) {
-      const selected = searchParams.getAll(parameter);
-      for (const box of document.querySelectorAll(`input[name="${field}"][type="checkbox"]`)) {
-        box.checked = selected.includes(box.value);
-      }
-    }
-    applyFilters(); // Affiche directement les résultats, sans passer par toutes les offres.
-  } catch (error) {
-    console.error(error);
-    count.textContent = "Impossible de charger les offres. Veuillez réessayer plus tard.";
-  } finally {
-    list.setAttribute("aria-busy", "false");
-  }
-}
-
-// ===== 4. CRÉER LES CASES À COCHER D'UN FILTRE =====
-
-// Trie values selon l'ordre de la liste order, sans tenir compte des majuscules ni des accents.
-// Une valeur absente de order est placée à la fin, par ordre alphabétique.
-function sortByOrder(values, order) {
-  const normalizedOrder = order.map(normalizeText);   // ["gardien", "defenseur central", ...]
-
-  function rank(value) {
-    const index = normalizedOrder.indexOf(normalizeText(value));
-    return index === -1 ? order.length : index;       // -1 = introuvable → à la fin
-  }
-
-  return values.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
-}
-
-// Crée une case à cocher par valeur différente trouvée dans les offres.
-// fieldset : le <fieldset> où ajouter les cases
-// field    : le nom de la propriété dans les offres ("position", "division" ou "location")
-// order    : (facultatif) la liste qui donne l'ordre d'affichage
-
-function buildCheckboxes(fieldset, field, order) {
-  let values = [...new Set(allAds.map((ad) => ad[field]))].filter(Boolean);
-
-  if (order) {
-    values = sortByOrder(values, order);   // ordre personnalisé (postes, divisions)
-  } else {
-    values.sort();                         // sinon, ordre alphabétique (villes)
-  }
-
-  values.forEach((value) => {
-    const label = document.createElement("label");
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.name = field;
-    checkbox.value = value;
-
-    label.appendChild(checkbox);
-    label.append(" " + value);    // le texte affiché à côté de la case
-    fieldset.appendChild(label);
-  });
-}
-
-// ===== 5. LES VALEURS COCHÉES D'UN FILTRE =====
-// renvoie par exemple ["R3", "R2"], ou [] si rien n'est coché
-function getChecked(field) {
-  const checkedBoxes = document.querySelectorAll('input[name="' + field + '"]:checked');
-  return Array.from(checkedBoxes).map((box) => box.value);
-}
-
-// ===== RENDRE UN TEXTE COMPARABLE =====
-// "Défenseur Central" → "defenseur central"
-function normalizeText(value) {
-  return (value ?? "")
-    .trim()
-    .toLowerCase()                          // "Défenseur Central" → "défenseur central"
-    .normalize("NFD")                       // sépare chaque lettre de son accent : "é" → "e" + "´"
-    .replace(/[\u0300-\u036f]/g, "");       // supprime les accents isolés → "defenseur central"
-}
-// ===== 6. FILTRER ET RÉAFFICHER =====
-function applyFilters() {
-  const search = normalizeText(searchInput.value);
-  const locationSearch = normalizeText(locationInput.value);
-  const companySearch = normalizeText(companyInput.value);
-  const positions = getChecked("position");
-  const divisions = getChecked("division");
-  const locations = getChecked("location");
-
-  const filtered = allAds.filter((ad) => {
-    // 1. La recherche : le titre OU le club contient le texte tapé
-    const text = normalizeText((ad.title || "") + " " + (ad.club || "") + " " + (ad.position || ""));
-    const words = search.split(" ").filter(Boolean);              // "gardien strasbourg" → ["gardien", "strasbourg"]
-    const matchSearch = words.every((word) => text.includes(word)); // chaque mot doit être présent
-
-    // 2. Le poste : aucune case cochée, OU le poste de l'annonce fait partie des cases cochées
-    const matchPosition = positions.length === 0 || positions.includes(ad.position);
-
-    // 3. La division : même logique
-    const matchDivision = divisions.length === 0 || divisions.includes(ad.division);
-
-    // 4. La ville : même logique
-    const matchLocation = locations.length === 0 || locations.includes(ad.location);
-
-    // Les trois champs se combinent avec les cases à cocher, sans modifier allAds.
-    const matchLocationSearch = normalizeText(ad.location).includes(locationSearch);
-    const matchCompany = normalizeText(ad.club).includes(companySearch);
-    return matchSearch && matchPosition && matchDivision && matchLocation && matchLocationSearch && matchCompany;
-  });
-
-  renderAds(filtered);
-}
-
-// Mémorise les filtres dans l'adresse sans recharger la page.
-// "city" sert aux cases Ville, pour ne pas confondre avec le champ texte "location".
-function updateSearchUrl() {
-  const url = new URL(window.location.href);
-  for (const [name, input] of [["keywords", searchInput], ["location", locationInput], ["company", companyInput]]) {
-    const value = input.value.trim();
-    if (value) url.searchParams.set(name, value);
-    else url.searchParams.delete(name);
-  }
-  for (const [field, parameter] of [["position", "position"], ["division", "division"], ["location", "city"]]) {
-    url.searchParams.delete(parameter);
-    for (const value of getChecked(field)) url.searchParams.append(parameter, value);
-  }
-  window.history.replaceState(null, "", url);
-}
-
-// ===== 7. QUAND ÇA SE DÉCLENCHE =====
-const filtersForm = document.getElementById("filters");
-
-function refreshSearch() {
-  applyFilters();
-  updateSearchUrl();
-}
-
-filtersForm.addEventListener("input", refreshSearch);
-filtersForm.addEventListener("submit", (event) => {
-  event.preventDefault(); // Entrée applique les filtres sans recharger la page.
-  refreshSearch();
-});
-filtersForm.addEventListener("reset", () => {
-  // Attend que le navigateur ait réellement vidé les champs et décoché les cases.
-  setTimeout(refreshSearch);
-});
-
-// ===== 8. AFFICHER LE DÉTAIL D'UNE OFFRE =====
-function showDetail(ad) {
-  currentAdId = ad.id;                 // on retient l'offre ouverte
-  applyForm.reset();                   // on vide le formulaire
-  applyMessage.textContent = "";     // on efface l'ancien message
-
-  content.innerHTML = "";                  // on vide le contenu de l'offre précédente
-
-  const title = document.createElement("h2");
-  title.id = "offer-detail-title";
-  title.textContent = ad.title;
-  content.appendChild(title);
-
-  addLine("Club", ad.club);
-  addLine("Ville", ad.location);
-  addLine("Poste", ad.position);
-  addLine("Division", ad.division);
-  addLine("Contrat", ad.contract);
-  addLine("Rythme", ad.work_time);
-  addLine("Rémunération", ad.salary);
-  addLine("Profil recherché", ad.requirements);
-  addLine("Missions", ad.missions);
-  addLine("Description", ad.description);
-
-  const recruitmentLink=document.createElement('a'); recruitmentLink.href='mercato.html?ad='+encodeURIComponent(ad.id); recruitmentLink.textContent='Contacter / Postuler avec mon compte'; content.appendChild(recruitmentLink);
-  detail.showModal();                            // on ouvre la modale
-}
-
-closeBtn.addEventListener("click", () => {
-  detail.close();
-});
-
-detail.addEventListener("click", (event) => {
-  if (event.target === detail) {
-    detail.close();
-  }
-});
-
-// ===== Téléphone : on ne garde que les chiffres (et un + au début) =====
-const phoneInput = document.getElementById("apply-phone");
-
-phoneInput.addEventListener("input", () => {
-  phoneInput.value = phoneInput.value.replace(/[^0-9+]/g, "");
-});
-
-// ===== 9. ENVOYER UNE CANDIDATURE =====
-applyForm.addEventListener("submit", async (event) => {
-  event.preventDefault();                                   // pas de rechargement de la page
-
-  const data = {
-    ad_id: currentAdId,                                  // l'offre ouverte
-    name: document.getElementById("apply-name").value.trim(),
-    email: document.getElementById("apply-email").value.trim(),
-    phone: phoneInput.value || null, 
-    message: document.getElementById("apply-text").value.trim() || null,
+function prepare(ad) {
+  return {
+    ...ad,
+    club: ad.author_name,
+    location: ad.city || ad.location,
+    division: ad.division_code,
+    position_labels: ad.positions.map((code) => label('positions', code)),
+    short_description: ad.short_description || ad.description?.slice(0, 220)
   };
-
-  applyButton.disabled = true;                    // bloque le bouton pendant l'envoi
-  applyMessage.textContent = "Envoi en cours…";
-
+}
+function render() {
+  const selected = {
+    position: checked('position'),
+    division: checked('division'),
+    city: checked('location')
+  };
+  const words = normalized(fields.keywords.value).split(/\s+/).filter(Boolean);
+  const visible = ads.filter(
+    (ad) =>
+      words.every((word) =>
+        normalized([ad.title, ad.club, ...ad.position_labels].join(' ')).includes(word)
+      ) &&
+      normalized(ad.location).includes(normalized(fields.location.value)) &&
+      normalized(ad.club).includes(normalized(fields.company.value)) &&
+      (!selected.position.length ||
+        ad.position_labels.some((p) => selected.position.includes(p))) &&
+      (!selected.division.length || selected.division.includes(ad.division)) &&
+      (!selected.city.length || selected.city.includes(ad.location))
+  );
+  list.replaceChildren();
+  count.textContent = visible.length + (visible.length === 1 ? ' annonce' : ' annonces');
+  if (!visible.length)
+    list.append(
+      node(
+        'li',
+        isClub()
+          ? 'Aucune annonce de joueur ne correspond à votre recherche.'
+          : 'Aucune annonce de club ne correspond à votre recherche.',
+        'offers-empty'
+      )
+    );
+  for (const ad of visible) {
+    const card = node('li', null, 'job-card'),
+      badges = node('div', null, 'job-card-badges');
+    [...ad.position_labels, ad.division]
+      .filter(Boolean)
+      .forEach((v) => badges.append(node('span', v)));
+    card.append(
+      badges,
+      node('p', ad.club, 'job-card-club'),
+      node('h3', ad.title),
+      node('p', ad.location || 'Localisation non précisée', 'job-card-location'),
+      node('p', ad.short_description || '', 'job-card-summary'),
+      button('Voir les détails', () => open(ad.id))
+    );
+    list.append(card);
+  }
+}
+function boxes() {
+  for (const [id, key, parameter, values] of [
+    ['filter-position', 'position', 'position', catalog.positions.map((p) => p.label)],
+    ['filter-division', 'division', 'division', catalog.divisions.map((d) => d.code)],
+    [
+      'filter-location',
+      'location',
+      'city',
+      [...new Set(ads.map((a) => a.location).filter(Boolean))].sort()
+    ]
+  ]) {
+    const target = document.getElementById(id);
+    const selected = target.querySelector('input') ? checked(key) : search.getAll(parameter);
+    target.querySelectorAll('label').forEach((n) => n.remove());
+    for (const value of values) {
+      const row = node('label'),
+        check = node('input');
+      check.type = 'checkbox';
+      check.name = key;
+      check.value = value;
+      check.checked = selected.includes(value);
+      row.append(check, document.createTextNode(' ' + value));
+      target.append(row);
+    }
+  }
+}
+async function load(more = false) {
+  const data = await api('/ads?view=offers' + (more && cursor ? '&before=' + cursor : ''));
+  ads = more ? [...ads, ...data.items.map(prepare)] : data.items.map(prepare);
+  cursor = data.next;
+  document.getElementById('offers-more').hidden = !cursor;
+  boxes();
+  render();
+  list.setAttribute('aria-busy', 'false');
+}
+async function contact() {
+  const body = { announcement_id: current.id };
+  if (isClub()) body.as_club_id = Number(document.getElementById('contact-as-club').value);
+  const result = await api('/conversations', 'POST', body);
+  location.href = 'messages.html?conversation=' + result.id;
+}
+async function open(id) {
+  current = prepare(await api('/ads/' + id + '?view=offers'));
+  content.replaceChildren();
+  const title = node('h2', current.title);
+  title.id = 'offer-detail-title';
+  content.append(title);
+  line(isClub() ? 'Joueur' : 'Club', current.club);
+  line('Ville', current.location);
+  line('Postes', current.position_labels);
+  line('Division', current.division);
+  line(
+    'Disponibilité',
+    current.availability_code ? label('availability', current.availability_code) : null
+  );
+  line('Contrat', current.contract);
+  line('Rythme', current.work_time);
+  line('Rémunération', current.salary);
+  line('Profil recherché', current.requirements);
+  line('Missions', current.missions);
+  line('Informations complémentaires', current.additional_info);
+  line('Description', current.description);
+  line(
+    'Qualités',
+    current.qualities.map((q) => label('qualities', q))
+  );
+  applyForm.reset();
+  status.textContent = '';
+  const actions = document.getElementById('offer-actions');
+  actions.replaceChildren();
+  document.getElementById('apply-title').textContent = isClub()
+    ? 'Échangez avec ce joueur.'
+    : 'Rejoignez l’équipe.';
+  document.getElementById('apply-intro').textContent = isClub()
+    ? 'Prenez contact avec le joueur pour présenter votre club.'
+    : 'Présentez-vous au club et partagez votre envie de jouer.';
+  applyForm.hidden = isClub();
+  if (me) {
+    actions.append(
+      button(isClub() ? 'Voir le CV sportif' : 'Voir le profil du club', async () => {
+        const data = await api(
+          isClub()
+            ? '/profiles/' + current.author_id
+            : '/clubs/' + current.club_id + '/public-profile'
+        );
+        const box = document.getElementById('offer-profile-content');
+        box.replaceChildren(profileView(data));
+        document.getElementById('offer-profile-dialog').showModal();
+      })
+    );
+    if (isClub()) {
+      const choice = node('label', 'Au nom de votre club'),
+        select = node('select');
+      select.id = 'contact-as-club';
+      me.clubs.forEach((club) => {
+        const option = node('option', club.name);
+        option.value = club.id;
+        select.append(option);
+      });
+      choice.append(select);
+      actions.append(choice);
+    }
+    actions.append(button(isClub() ? 'Contacter le joueur' : 'Contacter le club', contact));
+  } else actions.append(link('Se connecter pour échanger', 'login.html'));
+  detail.showModal();
+}
+function remember() {
+  const url = new URL(location.href);
+  for (const [key, control] of Object.entries(fields)) {
+    const value = control.value.trim();
+    if (value) url.searchParams.set(key, value);
+    else url.searchParams.delete(key);
+  }
+  for (const [field, param] of [
+    ['position', 'position'],
+    ['division', 'division'],
+    ['location', 'city']
+  ]) {
+    url.searchParams.delete(param);
+    checked(field).forEach((value) => url.searchParams.append(param, value));
+  }
+  history.replaceState(null, '', url);
+}
+async function submit(event) {
+  event.preventDefault();
+  if (pending || !current) return;
+  pending = true;
+  const submit = document.getElementById('apply-submit');
+  submit.disabled = true;
+  status.textContent = 'Envoi en cours…';
   try {
-    const response = await fetch("/applications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await response.json();
-
-    if (response.ok) {
-      applyMessage.textContent = "Candidature envoyée ! Le club reviendra vers vous.";
-      applyForm.reset();                         // on vide le formulaire après succès
+    if (me) {
+      const result = await api('/ads/' + current.id + '/applications', 'POST', {
+        message: document.getElementById('apply-text').value,
+        share_profile: document.getElementById('apply-share-cv').checked
+      });
+      location.href = 'messages.html?conversation=' + result.conversation_id;
     } else {
-      applyMessage.textContent = result.error;   // message du serveur
+      await api('/applications', 'POST', {
+        ad_id: current.id,
+        name: document.getElementById('apply-name').value.trim(),
+        email: document.getElementById('apply-email').value.trim(),
+        phone: document.getElementById('apply-phone').value.trim() || null,
+        message: document.getElementById('apply-text').value.trim() || null
+      });
+      status.textContent = 'Candidature envoyée !';
+      applyForm.reset();
     }
   } catch (error) {
-    console.error(error);
-    applyMessage.textContent = "Impossible de joindre le serveur. Réessayez plus tard.";
+    status.textContent = error.message;
   } finally {
-    applyButton.disabled = false;                  // on réactive le bouton
+    pending = false;
+    submit.disabled = false;
   }
+}
+async function init() {
+  [catalog, me] = await Promise.all([options(), identity(false)]);
+  for (const [name, control] of Object.entries(fields)) control.value = search.get(name) || '';
+  if (isClub()) {
+    document.querySelector('.offers-intro h1').textContent = 'Trouvez vos prochains joueurs.';
+    document.querySelector('.offers-intro p').textContent =
+      'Découvrez les joueurs à la recherche d’un club.';
+    document.querySelector('label[for="filter-company"]').textContent = 'Joueur';
+    fields.company.placeholder = 'Pseudo du joueur';
+    document.getElementById('results-title').textContent = 'Joueurs disponibles';
+  } else document.getElementById('results-title').textContent = 'Clubs qui recrutent';
+  if (me && !isClub()) {
+    for (const id of ['apply-name', 'apply-email', 'apply-phone']) {
+      const control = document.getElementById(id);
+      control.hidden = true;
+      control.required = false;
+      document.querySelector(`label[for="${id}"]`).hidden = true;
+    }
+    document.getElementById('apply-share-label').hidden = false;
+  }
+  document.getElementById('x-detail').onclick = () => detail.close();
+  detail.onclick = (e) => {
+    if (e.target === detail) detail.close();
+  };
+  document.getElementById('offer-profile-close').onclick = () =>
+    document.getElementById('offer-profile-dialog').close();
+  form.addEventListener('input', () => {
+    render();
+    remember();
+  });
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    render();
+    remember();
+  };
+  form.onreset = () =>
+    setTimeout(() => {
+      render();
+      remember();
+    });
+  applyForm.onsubmit = submit;
+  document.getElementById('offers-more').onclick = () =>
+    load(true).catch((e) => (count.textContent = e.message));
+  await load();
+  const id = search.get('ad');
+  if (id) await open(id);
+}
+init().catch((error) => {
+  count.textContent = error.message;
+  list.setAttribute('aria-busy', 'false');
 });
-
-loadAds();

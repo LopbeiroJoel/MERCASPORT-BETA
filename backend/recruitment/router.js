@@ -18,7 +18,7 @@ function createRecruitmentRouter(pool, sessions) {
   router.get(
     '/ads',
     wrap(async (req, res, next) => {
-      if (req.query.view !== 'market') return next();
+      if (!['market', 'offers'].includes(req.query.view)) return next();
       const identity = sessions ? await sessions.authenticate(req) : null;
       res.set('Cache-Control', 'no-store').json(await ads.list(pool, req.query, identity));
     })
@@ -26,9 +26,15 @@ function createRecruitmentRouter(pool, sessions) {
   router.get(
     '/ads/:id',
     wrap(async (req, res, next) => {
-      if (req.query.view !== 'market') return next();
+      if (!['market', 'offers'].includes(req.query.view)) return next();
       const identity = sessions ? await sessions.authenticate(req) : null;
-      res.set('Cache-Control', 'no-store').json(await ads.detail(pool, req.params.id, identity));
+      const ad = await ads.detail(pool, req.params.id, identity);
+      if (
+        req.query.view === 'offers' &&
+        ad.announcement_type !== (identity?.role === 'CLUB' ? 'PLAYER_SEARCH' : 'CLUB_SEARCH')
+      )
+        fail(404, 'AD_NOT_FOUND');
+      res.set('Cache-Control', 'no-store').json(ad);
     })
   );
   // L'ancien formulaire de publication reste compatible : seuls les nouveaux contrats sont pris ici.

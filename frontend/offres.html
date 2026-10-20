@@ -24,7 +24,7 @@
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="offres.html" aria-current="page">Offres</a></li>
-        <li><a href="publier.html" class="header-publish"><span aria-hidden="true">＋</span> Poster une offre</a></li>
+        <li><a href="publier.html" class="header-publish"><span aria-hidden="true">＋</span> Poster une annonce</a></li>
         <li><a href="a-propos.html">À propos</a></li>
         <!-- <li><a href="actualites.html">Actualités</a></li>
         <li><a href="contact.html">Contact</a></li> -->
@@ -85,6 +85,7 @@
           <p id="offers-count" role="status">Chargement…</p>
         </div>
         <ul id="offers-list" aria-label="Offres de recrutement" aria-busy="true"></ul>
+        <button type="button" id="offers-more" hidden>Charger d’autres annonces</button>
       </section>
     </div>
   </main>
@@ -96,7 +97,7 @@
         <div id="ads-content"></div>
         <section class="offers-application" aria-labelledby="apply-title">
         <h3 id="apply-title">Rejoignez l’équipe.</h3>
-        <p>Présentez-vous au club et partagez votre envie de jouer.</p>
+        <p id="apply-intro">Présentez-vous au club et partagez votre envie de jouer.</p>
         <form id="apply-form">
             <label for="apply-name">Nom :</label>
             <input type="text" id="apply-name" name="name" maxlength="200" autocomplete="name" required>
@@ -108,13 +109,14 @@
                 title="Uniquement des chiffres (un + est accepté au début), 6 à 15 chiffres">
             <label for="apply-text">Message :</label>
             <textarea id="apply-text" name="text" rows="4" maxlength="2000"></textarea>
-            <button type="submit" id="apply-submit">Envoyer ma candidature</button>
+            <label id="apply-share-label" hidden><input type="checkbox" id="apply-share-cv"> Partager mon CV sportif avec ce club</label><button type="submit" id="apply-submit">Envoyer ma candidature</button>
         </form>
-        <p role="status" id="apply-message"></p>
+        <div id="offer-actions" class="offers-actions"></div><p role="status" id="apply-message"></p>
         </section>
         </div>
     </div>
   </dialog>
+  <dialog id="offer-profile-dialog" class="offers-profile-dialog"><button id="offer-profile-close" type="button">Fermer</button><div id="offer-profile-content"></div></dialog>
   <footer class="site-footer">
     <div class="footer-content">
       <div class="footer-main">

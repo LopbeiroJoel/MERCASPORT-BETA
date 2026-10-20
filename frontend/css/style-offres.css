@@ -391,3 +391,5 @@
     grid-template-columns: 1fr;
   }
 }
+
+.offers-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}.offers-actions label{display:flex;flex-direction:column;gap:8px;width:100%}.offers-actions select{max-width:100%;padding:10px;background:#102019;color:white;border:1px solid #34523e;border-radius:6px}.offers-profile-dialog{max-width:min(720px,94vw);max-height:85dvh;padding:28px;background:#0b1b11;color:#f0fff4;border:1px solid #42604b;border-radius:12px}.offers-profile-dialog::backdrop{background:#000a}.offers-profile-dialog dt{color:#9bbaa5;margin-top:14px}.offers-profile-dialog dd{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}#apply-share-label{display:flex;gap:9px;align-items:center}#apply-share-label[hidden]{display:none}#apply-share-cv{width:18px;height:18px;flex-shrink:0}#offers-more{margin-top:20px;padding:12px 20px}

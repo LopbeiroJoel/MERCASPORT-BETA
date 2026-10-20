@@ -32,7 +32,7 @@ async function options(client) {
   ).rows;
   return result;
 }
-const columns = `a.id,a.author_id,a.club_id,a.title,a.description,a.city,a.announcement_type,a.sport_code,a.availability_code,a.mobility_code,a.category_code,a.recruitment_type_code,a.primary_position,a.division_code,a.preferred_foot,a.created_at,a.updated_at,a.expires_at,
+const columns = `a.id,a.author_id,a.club_id,a.title,a.description,a.city,a.announcement_type,a.sport_code,a.availability_code,a.mobility_code,a.category_code,a.recruitment_type_code,a.primary_position,coalesce(a.division_code,(SELECT t.division FROM teams t WHERE t.id=a.team_id)) AS division_code,a.preferred_foot,a.created_at,a.updated_at,a.expires_at,a.short_description,a.location,a.contract,a.work_time,a.salary,a.requirements,a.missions,a.additional_info,
  CASE WHEN a.status='PUBLISHED' AND a.expires_at<=now() THEN 'EXPIRED' ELSE a.status END AS status,
  coalesce(c.name,u.username) AS author_name,u.photo_url AS avatar,
  ARRAY(SELECT position_code FROM ad_positions WHERE ad_id=a.id ORDER BY position_code=a.primary_position DESC,position_code) AS positions,
@@ -44,6 +44,11 @@ async function list(client, query, identity) {
   if (owned && !identity) fail(401, 'AUTH_REQUIRED');
   if (query.type && !['PLAYER_SEARCH', 'CLUB_SEARCH'].includes(query.type))
     fail(400, 'INVALID_TYPE');
+  const type = owned
+    ? query.type || null
+    : identity?.role === 'CLUB'
+      ? 'PLAYER_SEARCH'
+      : 'CLUB_SEARCH';
   const before = query.before ? id(query.before) : 2147483647;
   const rows = (
     await client.query(
@@ -53,14 +58,14 @@ async function list(client, query, identity) {
  AND (NOT $2::boolean OR a.author_id=$3 OR messaging_manages_club($3,a.club_id))
  AND ($4::text IS NULL OR a.announcement_type=$4) AND ($5::text IS NULL OR a.sport_code=$5)
  AND ($6::text IS NULL OR EXISTS(SELECT 1 FROM ad_positions p WHERE p.ad_id=a.id AND p.position_code=$6))
- AND ($7::text IS NULL OR a.division_code=$7) AND ($8::text IS NULL OR a.city ILIKE '%'||$8||'%')
+ AND ($7::text IS NULL OR coalesce(a.division_code,(SELECT t.division FROM teams t WHERE t.id=a.team_id))=$7) AND ($8::text IS NULL OR a.city ILIKE '%'||$8||'%')
  AND ($9::text IS NULL OR a.availability_code=$9)
  ORDER BY a.id DESC LIMIT 31`,
       [
         before,
         owned,
         identity?.userId || null,
-        query.type || null,
+        type,
         query.sport || null,
         query.position || null,
         query.level || null,

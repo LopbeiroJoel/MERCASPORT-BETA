@@ -12,7 +12,7 @@ Les anciennes annonces gardent leurs données et leurs limites. `recruitment_ver
 
 - Un joueur peut rechercher un club dans Messages → Nouveau contact, sans fiche sportive ni annonce.
 - Un représentant peut rechercher un pseudo joueur, choisir son club et écrire directement.
-- Dans Mercato, un joueur peut postuler à une offre club ou simplement contacter le club. Le club peut contacter l’auteur d’une annonce joueur.
+- Dans Offres, un joueur peut postuler à une offre club ou simplement contacter le club. Le club peut contacter l’auteur d’une annonce joueur.
 - Une candidature réutilise une conversation par contexte d’annonce et crée un historique de statut. Une candidature retirée peut être renvoyée sans créer une deuxième ligne.
 - Le CV reste privé par défaut. Le joueur peut le publier pour les utilisateurs connectés ou le partager uniquement avec un club depuis une conversation. Les coordonnées suivent toujours les réglages `email_visible`, `phone_visible`, `location_visible` du compte.
 
@@ -174,3 +174,10 @@ Le fichier `20261019-messaging-down.sql` restaure les anciennes fonctions et con
 Les tests historiques restent séparés et doivent être lancés avec `--test-concurrency=1` sur une machine peu dotée en mémoire. La recette navigateur utilise uniquement les comptes synthétiques du serveur de test. Aucun mot de passe de démonstration ni donnée de production n’est nécessaire.
 
 Fichiers à lire : `backend/messaging/` (identités, conversations, profils, direct, contrôles), `backend/recruitment/` (annonces, candidatures, modération), `frontend/js/recruitment-ui.mjs` et les modules de pages, `frontend/css/style-recruitment.css`, `database/migrations/20261019-messaging-*.sql`.
+
+
+## Navigation simplifiée (20 octobre 2026)
+
+La page Mercato est supprimée. Offres affiche uniquement les annonces des joueurs pour un compte CLUB et celles des clubs pour un compte PLAYER. Le serveur choisit le type ; un paramètre de filtre ne permet pas de changer ce flux. Les visiteurs voient les annonces des clubs. Le profil et Mes annonces restent les espaces pour consulter ses propres publications.
+
+Le bouton Poster une annonce conserve le formulaire club existant et propose le parcours joueur sur la même page. Aucun compte, message ou annonce n’est supprimé par ce changement. Les anciens liens `mercato.html?ad=...` redirigent vers `offres.html?ad=...`. Le contrat API `view=market` est gardé comme alias technique ; la page publique utilise `view=offers`.

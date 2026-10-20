@@ -8,7 +8,10 @@ const { createSessionService } = require('../backend/authentication/session');
 const { createTestPool } = require('../backend/registration/tests/pool');
 const pool = createTestPool({
   migrations: ['profile.sql', 'profile-fields.sql'],
-  afterMigrations: ['migrations/20261019-messaging-up.sql', 'migrations/20261019-messaging-reports.sql']
+  afterMigrations: [
+    'migrations/20261019-messaging-up.sql',
+    'migrations/20261019-messaging-reports.sql'
+  ]
 });
 const secret = '0123456789abcdef'.repeat(4),
   origin = 'https://mercasport.test';
@@ -260,6 +263,43 @@ test('annonces joueur et club : tous les détails facultatifs, filtres SQL et dr
   assert.equal((await call('/ads/' + ad + '?view=market', null)).status, 404);
   assert.equal((await call('/ads/' + ad + '/renew', club, 'POST', {})).status, 200);
 });
+test('Offres remplace Mercato : flux opposé au rôle, détails et ancienne URL', async () => {
+  const playerAd = (
+    await pool.query(
+      "SELECT id FROM ads WHERE announcement_type='PLAYER_SEARCH' AND author_id=$1 ORDER BY id DESC LIMIT 1",
+      [player.id]
+    )
+  ).rows[0].id;
+  const clubs = (await call('/ads?view=offers', player)).data.items;
+  const players = (await call('/ads?view=offers', club)).data.items;
+  assert.ok(clubs.some((a) => a.id === ad));
+  assert.ok(clubs.every((a) => a.announcement_type === 'CLUB_SEARCH'));
+  assert.ok(players.some((a) => a.id === playerAd));
+  assert.ok(players.every((a) => a.announcement_type === 'PLAYER_SEARCH'));
+  assert.ok(
+    (await call('/ads?view=offers&type=CLUB_SEARCH', club)).data.items.every(
+      (a) => a.announcement_type === 'PLAYER_SEARCH'
+    )
+  );
+  assert.ok(
+    (await call('/ads?view=market&type=PLAYER_SEARCH', player)).data.items.every(
+      (a) => a.announcement_type === 'CLUB_SEARCH'
+    )
+  );
+  assert.equal((await call('/ads/' + playerAd + '?view=offers', club)).status, 200);
+  assert.equal((await call('/ads/' + ad + '?view=offers', club)).status, 404);
+  assert.equal((await call('/ads/' + playerAd + '?view=offers', player)).status, 404);
+  assert.ok((await call('/ads', club)).data.some((a) => a.id === playerAd));
+  assert.ok(!(await call('/ads', club)).data.some((a) => a.id === ad));
+  assert.equal((await call('/ads/' + playerAd, club)).status, 200);
+  assert.ok((await call('/ads?view=market&owned=1', club)).data.items.some((a) => a.id === ad));
+  const old = await fetch(base + '/mercato.html?ad=' + ad, { redirect: 'manual' });
+  assert.equal(old.status, 302);
+  assert.equal(old.headers.get('location'), '/offres.html?ad=' + ad);
+  const page = await fetch(base + '/offres.html');
+  assert.ok(!(await page.text()).includes('mercato.html'));
+});
+
 test('candidature sans CV, absence de doublon et essai accepté uniquement par le joueur', async () => {
   const first = await call('/ads/' + ad + '/applications', player, 'POST', {
     message: 'Je suis intéressé.',
@@ -525,9 +565,21 @@ test('historique paginé sans recouvrement et suppression admin conservant les c
     0
   );
   for (let index = 0; index < 2; index++) {
-    const reply = await call('/conversations/' + conversation + '/messages', club, 'POST', { message_body: 'Message signalé ' + index, client_nonce: randomUUID() });
+    const reply = await call('/conversations/' + conversation + '/messages', club, 'POST', {
+      message_body: 'Message signalé ' + index,
+      client_nonce: randomUUID()
+    });
     assert.equal(reply.status, 201);
-    assert.equal((await call('/reports', player, 'POST', {conversation_id: conversation, message_id: reply.data.message.id, reason_code: 'SPAM'})).status, 201);
+    assert.equal(
+      (
+        await call('/reports', player, 'POST', {
+          conversation_id: conversation,
+          message_id: reply.data.message.id,
+          reason_code: 'SPAM'
+        })
+      ).status,
+      201
+    );
   }
   await transaction(pool, admin.id, (c) => deleteUser(c, club.id, admin.id));
   assert.equal(

@@ -147,7 +147,7 @@ async function open(id) {
     })
   );
   if (current.announcement_id)
-    actions.append(link('Voir l’annonce', 'mercato.html?ad=' + current.announcement_id));
+    actions.append(link('Voir l’annonce', 'offres.html?ad=' + current.announcement_id));
   if (current.application)
     actions.append(
       link(

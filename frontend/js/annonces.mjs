@@ -346,7 +346,7 @@ async function init() {
   $('#module-content').hidden = false;
   notice('');
   $('#new-ad').hidden = !me || (!me.clubs.length && me.user.role !== 'PLAYER');
-  $('#new-ad').onclick = () => run($('#new-ad'), () => editor());
+
   const picker = $('#acting-club');
   if (me?.clubs.length) {
     me.clubs.forEach((c) => {

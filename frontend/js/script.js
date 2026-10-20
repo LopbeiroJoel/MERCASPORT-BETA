@@ -111,8 +111,8 @@ async function loadAds() {
           content.appendChild(fullDescription);
 
           const recruitmentLink=document.createElement('a');
-          recruitmentLink.href='mercato.html?ad='+encodeURIComponent(data.id);
-          recruitmentLink.textContent='Contacter le club / Postuler';content.appendChild(recruitmentLink);
+          recruitmentLink.href='offres.html?ad='+encodeURIComponent(data.id);
+          recruitmentLink.textContent='Voir l’annonce / Contacter';content.appendChild(recruitmentLink);
           detail.showModal();                           // ouvre la modale, une fois le contenu prêt
         } catch (error) {
           console.error(error);                         // message pour le développeur

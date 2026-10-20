@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Publier une offre — MercaSport</title>
+  <title>Poster une annonce — MercaSport</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/style-header.css">
   <link rel="stylesheet" href="css/style-publier.css">
@@ -18,7 +18,7 @@
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="offres.html">Offres</a></li>
-        <li><a href="publier.html" class="header-publish" aria-current="page"><span aria-hidden="true">＋</span> Poster une offre</a></li>
+        <li><a href="publier.html" class="header-publish" aria-current="page"><span aria-hidden="true">＋</span> Poster une annonce</a></li>
         <li><a href="a-propos.html">À propos</a></li>
       </ul>
     </nav>
@@ -37,7 +37,7 @@
     </div>
 
     <p id="publish-status" class="publish-notice" role="status" aria-live="polite">Vérification de votre compte…</p>
-    <p id="publish-login" hidden><a href="login.html">Se connecter avec un compte club →</a></p>
+    <p id="publish-login" hidden><a href="login.html">Se connecter →</a></p>
 
     <div id="publish-content" class="publish-layout" hidden>
       <form id="publish-form" class="publish-form" novalidate>
@@ -65,12 +65,12 @@
             <div class="publish-field"><label for="salary">Rémunération ou avantages <small>Facultatif</small></label><input id="salary" name="salary" maxlength="100" placeholder="Ex. Frais de déplacement pris en charge" aria-describedby="error-salary"><p id="error-salary" class="publish-error"></p></div>
             <details class="publish-extra"><summary>Préciser le profil recherché <small>Facultatif</small></summary><div class="publish-two-columns"><div class="publish-field"><label for="age_range">Tranche d’âge</label><select id="age_range" name="age_range" aria-describedby="error-age_range"><option value="">Non précisée</option></select><p id="error-age_range" class="publish-error"></p></div><div class="publish-field"><label for="experience_level">Expérience</label><select id="experience_level" name="experience_level" aria-describedby="error-experience_level"><option value="">Non précisée</option></select><p id="error-experience_level" class="publish-error"></p></div></div><div class="publish-field"><label for="trial_possible">Essai possible</label><select id="trial_possible" name="trial_possible" aria-describedby="error-trial_possible"><option value="">Non précisé</option><option value="true">Oui</option><option value="false">Non</option></select><p id="error-trial_possible" class="publish-error"></p></div><div class="publish-field"><label for="additional_info">Informations complémentaires</label><textarea id="additional_info" name="additional_info" rows="3" maxlength="2000" aria-describedby="error-additional_info"></textarea><p id="error-additional_info" class="publish-error"></p></div></details>
           </section>
-          <div class="publish-submit-bar"><p>Votre offre sera visible dès sa publication.</p><button id="publish-button" type="submit">Publier mon offre <span aria-hidden="true">↗</span></button></div>
+          <div class="publish-submit-bar"><p>Votre offre sera visible dès sa publication.</p><button id="publish-button" type="submit">Publier mon annonce <span aria-hidden="true">↗</span></button></div>
         </fieldset>
       </form>
     </div>
 
-    <section id="publish-success" class="publish-success" aria-labelledby="success-title" hidden tabindex="-1"><span aria-hidden="true">✓</span><p class="publish-eyebrow">C’EST EN LIGNE</p><h2 id="success-title">Votre offre est publiée.</h2><p id="publish-success-text"></p><a href="offres.html">Voir les offres →</a><button id="publish-another" type="button">Publier une autre offre</button></section>
+    <section id="publish-success" class="publish-success" aria-labelledby="success-title" hidden tabindex="-1"><span aria-hidden="true">✓</span><p class="publish-eyebrow">C’EST EN LIGNE</p><h2 id="success-title">Votre offre est publiée.</h2><p id="publish-success-text"></p><a href="offres.html">Voir les offres →</a><button id="publish-another" type="button">Publier une autre annonce</button></section>
   </main>
   <script type="module" src="js/account.mjs"></script>
   <script type="module" src="js/publier.mjs"></script>

@@ -24,7 +24,7 @@ const { createRecruitmentAdminRouter } = require('./recruitment/admin');
 // AS renomme un champ dans le résultat ; coalesce choisit la première valeur non NULL.
 // Les accents graves créent une chaîne multiligne ; ${adColumns} l'insère dans le SQL.
 // Ce fragment est défini par le développeur, pas fourni par l'utilisateur.
-const adColumns = `id, club_id, club_name AS club, team_id, team_name AS team,
+const adColumns = `id, club_id, coalesce(club_name,to_jsonb(ads_details)->>'author_name') AS club, team_id, team_name AS team,
   division, title, short_description, position, preferred_foot, requirements,
   contract, work_time, salary, coalesce(location, city) AS location,
   description, missions, created_at`;
@@ -106,6 +106,8 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   // LECTURE DE LISTE : la vue rassemble les tables et result.rows donne un tableau d'annonces.
   // Liste vide = 200 avec [], pas 404.
   app.get('/ads', async (req, res) => {
+    const identity = sessions ? await sessions.authenticate(req) : null;
+    const feedFilter = identity?.role === 'CLUB' ? visibleAdsFilter.replace("='CLUB_SEARCH'","='PLAYER_SEARCH'") : visibleAdsFilter;
     // pool.query emprunte une connexion, exécute le SQL puis rend la connexion au Pool.
     // ads_details est une vue SQL réunissant les annonces, leurs équipes et leurs clubs.
     // DESC trie du plus récent au plus ancien ; l'ID départage les dates identiques.
@@ -115,7 +117,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
     // $1 à $5 correspondent dans l'ordre aux cinq valeurs du tableau.
     // RETURNING renvoie l'ID et la date générés par la base pour la nouvelle candidature.
     const result = await pool.query(`SELECT ${adColumns} FROM public.ads_details
-      WHERE ${visibleAdsFilter}
+      WHERE ${feedFilter}
       ORDER BY created_at DESC, id DESC`);
     // result est le résultat pg ; result.rows est le tableau des lignes (objets JavaScript).
     // Même sans annonce, on renvoie 200 et [] : une liste vide reste une réponse valide.
@@ -126,6 +128,8 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   // LECTURE D'UN ELEMENT : /ads/7 donne le texte '7' dans req.params.id.
   // 400 si l'ID est mal forme ; 404 si aucune annonce visible ne correspond.
   app.get('/ads/:id', async (req, res) => {
+    const identity = sessions ? await sessions.authenticate(req) : null;
+    const feedFilter = identity?.role === 'CLUB' ? visibleAdsFilter.replace("='CLUB_SEARCH'","='PLAYER_SEARCH'") : visibleAdsFilter;
     // ! signifie NON : si l'ID est invalide, répondre avant d'interroger PostgreSQL.
     if (!validId(req.params.id)) {
       // 400 = demande invalide. return arrête la fonction pour éviter une deuxième réponse.
@@ -134,7 +138,7 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
     // $1 est un paramètre SQL : sa valeur vient du premier élément du tableau séparé.
     // pg transmet SQL et valeurs séparément : l'ID ne devient pas du code SQL.
     const result = await pool.query(
-      `SELECT ${adColumns} FROM public.ads_details WHERE id = $1 AND ${visibleAdsFilter}`, [Number(req.params.id)]);
+      `SELECT ${adColumns} FROM public.ads_details WHERE id = $1 AND ${feedFilter}`, [Number(req.params.id)]);
     // length est le nombre de lignes ; !0 vaut true : aucun résultat trouvé.
     if (!result.rows.length) {
       return res.status(404).json({ error: 'Annonce introuvable.' });
@@ -199,6 +203,11 @@ function configureApp(app, pool, { authSecret = process.env.AUTH_SECRET, appOrig
   // Sert aussi les fichiers du front ; __dirname désigne le dossier de ce fichier JS.
   // Une requête non traitée par une route peut ainsi recevoir un fichier HTML/CSS/JS.
   // Si aucune API n'a repondu, je peux servir un HTML/CSS/JS du dossier frontend.
+  app.get('/mercato.html', (req,res) => {
+    const target = new URLSearchParams();
+    if(validId(req.query.ad)) target.set('ad',req.query.ad);
+    res.redirect(302,'/offres.html'+(target.size?'?'+target:''));
+  });
   app.use(express.static(path.join(__dirname, '../frontend')));
   // Aucun traitement précédent n'a répondu : 404 = route ou fichier introuvable.
   app.use((req, res) => res.status(404).json({ error: 'Route introuvable.' }));
