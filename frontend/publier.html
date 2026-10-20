@@ -76,5 +76,19 @@
   <script type="module" src="js/account.mjs"></script>
   <script type="module" src="js/publier.mjs"></script>
   <script type="module" src="js/header.mjs"></script>
+
+  <template id="player-ad-photo-template">
+    <section class="publish-section player-ad-photo" aria-labelledby="player-photo-title">
+      <h2 id="player-photo-title">Votre photo <small>(facultatif)</small></h2>
+      <div class="player-ad-photo-row">
+        <div class="player-ad-photo-placeholder" aria-hidden="true"><span>＋</span><span>Votre photo</span></div>
+        <div><label class="player-ad-photo-button" for="player-photo-input">Ajouter une photo</label>
+          <input id="player-photo-input" type="file" accept="image/jpeg,image/png,image/webp" disabled aria-describedby="player-photo-help">
+          <p id="player-photo-help">L’ajout de photo sera bientôt disponible.</p>
+        </div>
+      </div>
+    </section>
+  </template>
+
 </body>
 </html>

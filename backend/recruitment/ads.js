@@ -184,7 +184,7 @@ async function save(client, identity, input, adId) {
     data.preferred_foot = foot?.label || null;
   }
   const arrays = {
-    positions: ['positions', 'code', type === 'CLUB_SEARCH' ? 3 : 2],
+    positions: ['positions', 'code', type === 'CLUB_SEARCH' ? 3 : null],
     qualities: ['sport_qualities', 'code', type === 'PLAYER_SEARCH' ? 20 : 5],
     project_types: ['project_types', 'code', 3],
     conditions: ['recruitment_conditions', 'code', 3]
@@ -194,11 +194,15 @@ async function save(client, identity, input, adId) {
       const values = input[key];
       if (
         !Array.isArray(values) ||
-        values.length > limit ||
+        (limit !== null && values.length > limit) ||
         new Set(values).size !== values.length ||
         values.some((v) => typeof v !== 'string' || v.length > 50)
       )
-        fail(400, 'SELECTION_LIMIT', `Sélection invalide : ${key}, maximum ${limit}.`);
+        fail(
+          400,
+          'SELECTION_LIMIT',
+          `Sélection invalide : ${key}${limit === null ? '' : `, maximum ${limit}`}.`
+        );
       if (
         ((key === 'project_types' && type === 'CLUB_SEARCH') ||
           (key === 'conditions' && type === 'PLAYER_SEARCH')) &&

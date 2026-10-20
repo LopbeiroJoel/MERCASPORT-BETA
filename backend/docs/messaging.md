@@ -72,7 +72,7 @@ Références supplémentaires : `sports`, `availability_options`, `mobility_opti
 - Clé étrangère composée `(sender_participant_id, conversation_id)` ; trigger SQL vérifiant l’acteur, les comptes actifs et les blocages.
 - Texte non vide, 4 000 caractères maximum ; UUID client unique par participant pour les reprises d’envoi sans doublon.
 - Verrous de lignes et verrous consultatifs transactionnels pour la création de conversation et de candidature ; aucune écriture partielle en cas d’échec.
-- Triggers différés sur les sélections, avec verrou du parent : annonce joueur 2 postes, club 3 postes ; joueur 5 qualités par catégorie (20 au total), club 5 qualités au total ; 3 projets ou conditions ; CV 1 poste principal + 3 secondaires et 5 qualités par catégorie.
+- Triggers différés sur les sélections, avec verrou du parent : annonce joueur : tous les postes du catalogue, club 3 postes ; joueur 5 qualités par catégorie (20 au total), club 5 qualités au total ; 3 projets ou conditions ; CV 1 poste principal + 3 secondaires et 5 qualités par catégorie.
 - Les anciennes fiches de plus de quatre postes ne sont pas tronquées. La nouvelle limite s’applique lors de leur modification dans le nouveau formulaire.
 - Historique des candidatures enregistré par un trigger pour chaque changement ; l’acteur vient de la transaction serveur.
 - Index pour les listes, les destinataires, les non-lus et les historiques. Pagination par curseur : 30 éléments par réponse, jamais tout l’historique d’un coup.
@@ -123,7 +123,7 @@ Exemple nouvelle annonce : `{"announcement_type":"CLUB_SEARCH","club_id":3,"stat
 
 Sur `publier.html`, un compte PLAYER utilise `POST /ads`. Son propriétaire peut la modifier avec `PATCH /ads/:id` depuis Mes annonces. Le serveur utilise l’identité de session, jamais un identifiant de joueur envoyé par le navigateur.
 
-Pour `announcement_type: "PLAYER_SEARCH"` et `status: "PUBLISHED"`, sont obligatoires : `title`, `description`, `positions` (1 à 2 codes du catalogue), `division_code`, `city`, `mobility_code`, `availability_code`, `project_types` (1 à 3 codes), et `player_details.current_club`, `player_details.past_clubs`, `player_details.experience`. Un joueur sans parcours peut écrire « Aucun club », « Aucun ancien club », « Débutant ». Ces informations ne sont jamais inventées automatiquement.
+Pour `announcement_type: "PLAYER_SEARCH"` et `status: "PUBLISHED"`, sont obligatoires : `title`, `description`, `positions` (au moins un code, tous les postes du catalogue peuvent être cochés), `division_code`, `city`, `mobility_code`, `availability_code`, `project_types` (1 à 3 codes), et `player_details.current_club`, `player_details.past_clubs`. Un joueur sans parcours peut écrire « Aucun club », « Aucun ancien club ». Ces informations ne sont jamais inventées automatiquement.
 
 Facultatifs : `preferred_foot_code` (`RIGHT`, `LEFT`, `BOTH`), `player_details.age` (entier 5–100), `player_details.height_cm` (entier 80–250), `player_details.sport_season` (`2026/2027`), `player_details.sport_stats` (objet contenant `appearances`, `goals`, `assists`, entiers 0–99999), `qualities` (5 codes maximum **par catégorie**, 20 au total). Les valeurs facultatives peuvent être absentes ou nulles ; les tableaux peuvent être vides. Les champs d’un PATCH absents gardent leur valeur.
 
@@ -143,13 +143,12 @@ Les choix viennent de `GET /recruitment/options`. Exemple minimal :
   "project_types": ["LEISURE"],
   "player_details": {
     "current_club": "Aucun club",
-    "past_clubs": "Aucun ancien club",
-    "experience": "Débutant"
+    "past_clubs": "Aucun ancien club"
   }
 }
 ```
 
-Un brouillon `DRAFT` peut être incomplet ; sa publication et son renouvellement exigent les champs obligatoires. Une erreur de champ obligatoire renvoie `400` avec `code: "VALIDATION_ERROR"` et `fields`, par exemple `{"player_details.experience":"Ce champ est obligatoire…"}`. Les références inconnues, doublons et dépassements sont aussi refusés.
+Un brouillon `DRAFT` peut être incomplet ; sa publication et son renouvellement exigent les champs obligatoires. Une erreur de champ obligatoire renvoie `400` avec `code: "VALIDATION_ERROR"` et `fields`, par exemple `{"player_details.current_club":"Ce champ est obligatoire…"}`. Les références inconnues, doublons et dépassements sont aussi refusés.
 
 `ads.player_details` contient un instantané public validé, pas un second CV. Le bouton « Proposer les informations de mon CV » lit seulement le CV du joueur connecté et remplit les champs vides. Il faut vérifier ces valeurs avant publication ; changer l’annonce ne change pas le CV. Les coordonnées privées et la date de naissance complète ne sont pas copiées. Les détails validés de l’annonce sont visibles dans Offres pour les clubs et dans Mes annonces pour son auteur.
 
@@ -194,7 +193,7 @@ Politique technique proposée : messages et audit 365 jours, notifications lues 
 ## Déploiement et retour arrière
 
 1. Sauvegarder la base avec `pg_dump` dans un dossier privé hors Git ; vérifier que l’archive peut être lue et que la restauration a été testée sur une base isolée.
-2. Sur une base existante déjà à jour, appliquer `database/migrations/20261019-messaging-up.sql` puis `database/migrations/20261019-messaging-reports.sql`, puis `database/migrations/20261020-player-ad-fields-up.sql`. Sur une base ayant déjà les deux premières, exécuter seulement la dernière. Le fichier ouvre et valide sa propre transaction et attend au maximum 5 secondes pour un verrou. Ne pas rejouer `schema.sql`, `seed.sql` ou toutes les anciennes migrations sur Neon.
+2. Sur une base existante déjà à jour, appliquer `database/migrations/20261019-messaging-up.sql` puis `database/migrations/20261019-messaging-reports.sql`, puis `database/migrations/20261020-player-ad-fields-up.sql`, puis `database/migrations/20261020-player-ad-options.sql`. Appliquer seulement les migrations encore absentes de la base, dans cet ordre. Le fichier ouvre et valide sa propre transaction et attend au maximum 5 secondes pour un verrou. Ne pas rejouer `schema.sql`, `seed.sql` ou toutes les anciennes migrations sur Neon.
 3. Comparer les nombres et données des comptes, clubs, fiches, annonces et candidatures avant/après. La migration crée les références et les membres propriétaires, sans inventer de comptes.
 4. Garder DATABASE_URL, AUTH_SECRET, APP_ORIGIN dans les variables privées existantes ; APP_ORIGIN doit être l’origine HTTPS exacte du site. MESSAGING_DATABASE_URL est facultative. Ne jamais publier ces valeurs.
 5. `npm ci`, `npm run build` puis déployer. Le build copie seulement `frontend/` vers `public/` ; il ne migre jamais la base.
@@ -216,3 +215,10 @@ Fichiers à lire : `backend/messaging/` (identités, conversations, profils, dir
 La page Mercato est supprimée. Offres affiche uniquement les annonces des joueurs pour un compte CLUB et celles des clubs pour un compte PLAYER. Le serveur choisit le type ; un paramètre de filtre ne permet pas de changer ce flux. Les visiteurs voient les annonces des clubs. Le profil et Mes annonces restent les espaces pour consulter ses propres publications.
 
 Le bouton Poster une annonce conserve le formulaire club existant et propose le parcours joueur sur la même page. Aucun compte, message ou annonce n’est supprimé par ce changement. Les anciens liens `mercato.html?ad=...` redirigent vers `offres.html?ad=...`. Le contrat API `view=market` est gardé comme alias technique ; la page publique utilise `view=offers`.
+
+
+### Ajustements du formulaire joueur — 20 octobre
+
+Les exemples du titre, de la description et des clubs sont des placeholders : ils disparaissent pendant la saisie et ne sont jamais enregistrés comme valeurs. « Expérience » est retiré du formulaire et de son affichage ; les anciennes données restent conservées pour compatibilité. Tous les postes du catalogue sont sélectionnables, sans limite de deux. Le catalogue propose 48 qualités (12 par catégorie), avec 5 choix par catégorie.
+
+L’emplacement photo est préparé dans un template HTML commun aux pages de publication et de modification. Le champ fichier reste désactivé et aucune photo n’est envoyée ou stockée à cette étape.

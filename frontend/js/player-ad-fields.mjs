@@ -35,7 +35,15 @@ export function mountPlayerFields(container, catalog, ad = {}) {
     name,
     title,
     value,
-    { required = false, type = 'text', max = 150, options, min, maxNumber } = {}
+    {
+      required = false,
+      type = 'text',
+      max = 150,
+      options,
+      min,
+      maxNumber,
+      placeholder = ''
+    } = {}
   ) {
     const box = node('div', null, 'publish-field'),
       caption = node('label', title + (required ? ' *' : ' (facultatif)')),
@@ -57,6 +65,7 @@ export function mountPlayerFields(container, catalog, ad = {}) {
       else input.rows = 4;
       input.maxLength = max;
     }
+    input.placeholder = placeholder;
     input.required = required;
     if (min !== undefined) input.min = min;
     if (maxNumber !== undefined) input.max = maxNumber;
@@ -84,11 +93,16 @@ export function mountPlayerFields(container, catalog, ad = {}) {
     errors[name] = error;
   }
   const search = section('Votre recherche de club');
-  control(search, 'title', 'Titre de l’annonce', ad.title, { required: true });
+  control(search, 'title', 'Titre de l’annonce', ad.title, {
+    required: true,
+    placeholder: 'Ex. Milieu de terrain recherche un club en R2 autour de Colmar'
+  });
   control(search, 'description', 'Présentez votre recherche', ad.description, {
     required: true,
     type: 'textarea',
-    max: 5000
+    max: 5000,
+    placeholder:
+      'Expliquez le club que vous recherchez, votre façon de jouer et ce que vous aimeriez apporter à l’équipe.'
   });
   selection(
     search,
@@ -96,7 +110,7 @@ export function mountPlayerFields(container, catalog, ad = {}) {
     'Postes que vous pouvez jouer',
     catalog.positions,
     ad.positions || [],
-    2,
+    null,
     true
   );
   control(search, 'division_code', 'Niveau recherché', ad.division_code, {
@@ -128,23 +142,22 @@ export function mountPlayerFields(container, catalog, ad = {}) {
   career.append(
     node(
       'p',
-      'Sans club ou débutant ? Indiquez simplement « Aucun club », « Aucun ancien club » ou « Débutant », selon votre situation.',
+      'Sans club actuellement ou sans ancien club ? Vous pouvez simplement écrire « Aucun ».',
       'publish-field-help'
     )
   );
   control(career, 'player_details.current_club', 'Club actuel', details.current_club, {
-    required: true
+    required: true,
+    placeholder: 'FC Exemple'
   });
   control(career, 'player_details.past_clubs', 'Anciens clubs', details.past_clubs, {
     required: true,
     type: 'textarea',
-    max: 2000
+    max: 2000,
+    placeholder: 'FC Exemple / AS Win'
   });
-  control(career, 'player_details.experience', 'Expérience', details.experience, {
-    required: true,
-    type: 'textarea',
-    max: 2000
-  });
+  const photo = document.getElementById('player-ad-photo-template');
+  if (photo) container.append(photo.content.cloneNode(true));
   const optional = section('Informations facultatives');
   control(optional, 'player_details.age', 'Âge', details.age, {
     type: 'number',
@@ -204,7 +217,6 @@ export function mountPlayerFields(container, catalog, ad = {}) {
       preferred_foot_code: p.preferred_foot,
       'player_details.current_club': p.current_club,
       'player_details.past_clubs': p.past_clubs,
-      'player_details.experience': p.experience,
       'player_details.height_cm': p.height_cm,
       'player_details.sport_season': p.sport_season
     };
@@ -229,8 +241,7 @@ export function mountPlayerFields(container, catalog, ad = {}) {
     ]) {
       const box = controls[key];
       if (box.querySelector('input:checked')) continue;
-      const selected =
-        key === 'positions' ? (p.positions || []).slice(0, 2) : own.qualities || [];
+      const selected = key === 'positions' ? p.positions || [] : own.qualities || [];
       for (const check of box.querySelectorAll('input'))
         check.checked = selected.includes(check.value);
     }
@@ -259,7 +270,7 @@ export function mountPlayerFields(container, catalog, ad = {}) {
       'preferred_foot_code'
     ])
       data[key] = controls[key].value.trim() || null;
-    for (const key of ['current_club', 'past_clubs', 'experience', 'sport_season'])
+    for (const key of ['current_club', 'past_clubs', 'sport_season'])
       data.player_details[key] = controls['player_details.' + key].value.trim() || null;
     for (const key of ['age', 'height_cm'])
       data.player_details[key] =
@@ -283,8 +294,7 @@ export function mountPlayerFields(container, catalog, ad = {}) {
         'mobility_code',
         'availability_code',
         'player_details.current_club',
-        'player_details.past_clubs',
-        'player_details.experience'
+        'player_details.past_clubs'
       ])
         if (!controls[key].value.trim()) result[key] = 'Ce champ est obligatoire.';
       for (const key of ['positions', 'project_types'])
@@ -325,7 +335,6 @@ export function playerDetailsView(ad) {
   add('Projets recherchés', ad.project_types?.map((v) => label('project_types', v)).join(', '));
   add('Club actuel', data.current_club);
   add('Anciens clubs', data.past_clubs);
-  add('Expérience', data.experience);
   add('Âge', data.age ? data.age + ' ans' : null);
   add('Taille', data.height_cm ? data.height_cm + ' cm' : null);
   add('Pied fort', ad.preferred_foot);

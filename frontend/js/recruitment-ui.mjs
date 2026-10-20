@@ -151,7 +151,7 @@ export function input(name, title, value = '', type = 'text', max = 150) {
 }
 export function choices(name, title, values, selected = [], max = 3) {
   const field = node('fieldset', null, 'm-choices');
-  field.append(node('legend', `${title} · ${max} maximum`));
+  field.append(node('legend', max == null ? title : `${title} · ${max} maximum`));
   const hint = node('p', '', 'm-small');
   hint.setAttribute('aria-live', 'polite');
   for (const row of values) {
@@ -162,7 +162,7 @@ export function choices(name, title, values, selected = [], max = 3) {
     check.value = row.code;
     check.checked = selected.includes(row.code);
     check.addEventListener('change', () => {
-      if (field.querySelectorAll('input:checked').length > max) {
+      if (max != null && field.querySelectorAll('input:checked').length > max) {
         check.checked = false;
         hint.textContent = `Maximum ${max} choix.`;
       } else hint.textContent = '';

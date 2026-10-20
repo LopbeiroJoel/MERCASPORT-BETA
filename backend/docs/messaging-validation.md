@@ -19,3 +19,8 @@ Les essais locaux ne garantissent pas une disponibilité illimitée ni les quota
 - Recette navigateur isolée : publication joueur, proposition explicite du CV, sauvegarde de 20 qualités, modification et lecture par un club ; formulaire club conservé ; largeurs 390, 900 et 1440 px.
 - Migration additive `20261020-player-ad-fields-up.sql`, répétition et retour arrière testés sur PostgreSQL natif jetable. Retour arrière refusé dès que les nouveaux champs sont utilisés.
 - Sauvegarde privée Neon restaurée en base isolée avant migration ; comparaison des colonnes historiques sur les comptes, profils, clubs, équipes, annonces et candidatures.
+
+
+## Ajustements du formulaire joueur
+
+Validation API et SQL : sélection des 14 postes possible, expérience non obligatoire, 48 qualités disponibles et 5 choix par catégorie. Recette navigateur : placeholders sans valeur préremplie, expérience absente, section photo visible mais désactivée, publication puis modification réussies, affichage sans débordement en 390/900/1440 px. Le contrôle JSON reste utilisable avec un search_path vide pendant pg_restore.

@@ -80,10 +80,10 @@ async function validatePlayerAd(client, input, old, status) {
       const value = Object.hasOwn(input, key) ? input[key] : old?.[key];
       if (typeof value !== 'string' || !value.trim()) errors[key] = 'Ce champ est obligatoire.';
     }
-    for (const key of ['current_club', 'past_clubs', 'experience'])
+    for (const key of ['current_club', 'past_clubs'])
       if (!details[key])
         errors['player_details.' + key] =
-          'Ce champ est obligatoire. Indiquez « Aucun » ou « Débutant » si cela correspond à votre parcours.';
+          'Ce champ est obligatoire. Indiquez « Aucun » si vous n’avez pas de club.';
     const positions = Object.hasOwn(input, 'positions')
       ? input.positions
       : old

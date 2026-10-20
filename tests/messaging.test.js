@@ -11,7 +11,8 @@ const pool = createTestPool({
   afterMigrations: [
     'migrations/20261019-messaging-up.sql',
     'migrations/20261019-messaging-reports.sql',
-    'migrations/20261020-player-ad-fields-up.sql'
+    'migrations/20261020-player-ad-fields-up.sql',
+    'migrations/20261020-player-ad-options.sql'
   ]
 });
 const secret = '0123456789abcdef'.repeat(4),
@@ -94,7 +95,7 @@ test('migration additive, catalogues SQL et ancien formulaire conservés', async
   assert.equal(result.status, 200);
   assert.equal(result.data.positions.length, 14);
   assert.equal(result.data.divisions.length, 14);
-  assert.equal(result.data.qualities.length, 20);
+  assert.equal(result.data.qualities.length, 48);
   assert.equal((await call('/ads', null)).data.length, 28);
   const old = await call('/ads', club, 'POST', {
     positions: ['STRIKER'],

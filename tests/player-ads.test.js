@@ -11,7 +11,8 @@ const pool = createTestPool({
   afterMigrations: [
     'migrations/20261019-messaging-up.sql',
     'migrations/20261019-messaging-reports.sql',
-    'migrations/20261020-player-ad-fields-up.sql'
+    'migrations/20261020-player-ad-fields-up.sql',
+    'migrations/20261020-player-ad-options.sql'
   ]
 });
 const secret = '3210fedcba987654'.repeat(4),
@@ -63,8 +64,7 @@ const valid = () => ({
   project_types: ['LEISURE'],
   player_details: {
     current_club: 'Aucun club',
-    past_clubs: 'Aucun ancien club',
-    experience: 'Débutant'
+    past_clubs: 'Aucun ancien club'
   }
 });
 before(async () => {
@@ -97,8 +97,7 @@ test('chaque champ obligatoire bloque la publication, sans créer une annonce', 
     'availability_code',
     'project_types',
     'player_details.current_club',
-    'player_details.past_clubs',
-    'player_details.experience'
+    'player_details.past_clubs'
   ]) {
     const input = valid();
     if (key.startsWith('player_details.')) delete input.player_details[key.split('.')[1]];
@@ -114,7 +113,7 @@ test('minimum complet accepté, informations facultatives absentes et parcours d
   const result = await call('/ads', player, 'POST', valid());
   assert.equal(result.status, 201, JSON.stringify(result));
   ad = result.data.id;
-  assert.equal(result.data.player_details.experience, 'Débutant');
+  assert.equal(result.data.player_details.experience, null);
   assert.equal(result.data.preferred_foot, null);
   assert.equal(result.data.qualities.length, 0);
   assert.equal(
@@ -194,19 +193,22 @@ test('types, bornes et clés des données facultatives contrôlés', async () =>
   assert.equal(good.data.player_details.sport_stats.appearances, 0);
   assert.equal(good.data.preferred_foot, 'Gauche');
 });
-test('20 qualités possibles, 5 par catégorie ; limites postes et projets conservées', async () => {
-  const qualities = (await pool.query('SELECT code FROM sport_qualities')).rows.map(
-    (r) => r.code
-  );
+test('48 qualités au choix, 5 par catégorie ; tous les postes et 3 projets maximum', async () => {
+  const qualities = (
+    await pool.query(
+      'SELECT code FROM (SELECT code,row_number() OVER (PARTITION BY category ORDER BY code) n FROM sport_qualities) q WHERE n<=5'
+    )
+  ).rows.map((r) => r.code);
   assert.equal(qualities.length, 20);
+  assert.equal((await pool.query('SELECT count(*)::int n FROM sport_qualities')).rows[0].n, 48);
   assert.equal((await call('/ads/' + ad, player, 'PATCH', { qualities })).status, 200);
   assert.equal(
     (
       await call('/ads/' + ad, player, 'PATCH', {
-        positions: ['STRIKER', 'LEFT_BACK', 'RIGHT_BACK']
+        positions: (await pool.query('SELECT code FROM positions')).rows.map((r) => r.code)
       })
     ).status,
-    400
+    200
   );
   assert.equal(
     (
@@ -305,7 +307,26 @@ test('annonces club inchangées, migration préserve les anciennes annonces', as
 
 test('retour arrière refusé dès qu’une annonce utilise les nouveaux champs', async () => {
   const fs = require('node:fs');
-  await assert.rejects(() => pool.exec(fs.readFileSync(require('node:path').join(__dirname, '../database/migrations/20261020-player-ad-fields-down.sql'), 'utf8')), /Retour arriere refuse/);
+  await assert.rejects(
+    () =>
+      pool.exec(
+        fs.readFileSync(
+          require('node:path').join(
+            __dirname,
+            '../database/migrations/20261020-player-ad-fields-down.sql'
+          ),
+          'utf8'
+        )
+      ),
+    /Retour arriere refuse/
+  );
   await pool.query('ROLLBACK');
   assert.equal((await call('/ads/' + ad + '?view=offers', club)).status, 200);
+});
+
+test('validation JSON utilisable pendant une restauration avec search_path vide', async () => {
+  await transaction(pool, player.id, async c => {
+    await c.query("SELECT set_config('search_path','',true)");
+    assert.equal((await c.query("SELECT public.player_ad_details_valid('{}') ok")).rows[0].ok, true);
+  });
 });
