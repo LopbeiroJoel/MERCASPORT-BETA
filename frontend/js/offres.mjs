@@ -1,3 +1,4 @@
+import { playerDetailsView } from './player-ad-fields.mjs';
 import {
   api,
   options,
@@ -167,10 +168,12 @@ async function open(id) {
   line('Missions', current.missions);
   line('Informations complémentaires', current.additional_info);
   line('Description', current.description);
-  line(
-    'Qualités',
-    current.qualities.map((q) => label('qualities', q))
-  );
+  if (current.announcement_type === 'PLAYER_SEARCH') content.append(playerDetailsView(current));
+  else
+    line(
+      'Qualités',
+      current.qualities.map((q) => label('qualities', q))
+    );
   applyForm.reset();
   status.textContent = '';
   const actions = document.getElementById('offer-actions');

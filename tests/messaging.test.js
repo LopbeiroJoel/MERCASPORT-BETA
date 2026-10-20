@@ -10,7 +10,8 @@ const pool = createTestPool({
   migrations: ['profile.sql', 'profile-fields.sql'],
   afterMigrations: [
     'migrations/20261019-messaging-up.sql',
-    'migrations/20261019-messaging-reports.sql'
+    'migrations/20261019-messaging-reports.sql',
+    'migrations/20261020-player-ad-fields-up.sql'
   ]
 });
 const secret = '0123456789abcdef'.repeat(4),
@@ -219,13 +220,26 @@ test('messages texte : appartenance, historique, non-lus, lecture et nonce idemp
     404
   );
 });
-test('annonces joueur et club : tous les détails facultatifs, filtres SQL et droits du propriétaire', async () => {
+test('annonces : recherche joueur complète et détails club facultatifs, filtres SQL et droits du propriétaire', async () => {
   const p = await call('/ads', player, 'POST', {
     announcement_type: 'PLAYER_SEARCH',
-    status: 'PUBLISHED'
+    status: 'PUBLISHED',
+    title: 'Recherche un club',
+    description: 'Débutant motivé pour reprendre le football.',
+    positions: ['STRIKER'],
+    division_code: 'D8',
+    city: 'Colmar',
+    mobility_code: '10_KM',
+    availability_code: 'NOW',
+    project_types: ['LEISURE'],
+    player_details: {
+      current_club: 'Aucun club',
+      past_clubs: 'Aucun ancien club',
+      experience: 'Débutant'
+    }
   });
   assert.equal(p.status, 201, JSON.stringify(p));
-  assert.equal(p.data.positions.length, 0);
+  assert.equal(p.data.positions.length, 1);
   const c = await call('/ads', club, 'POST', {
     announcement_type: 'CLUB_SEARCH',
     club_id: club.clubId,

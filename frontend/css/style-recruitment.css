@@ -6,7 +6,7 @@
   background: var(--m-bg);
   color: #f0f7f1;
   min-height: 100vh;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
 }
 .m-main {
   max-width: 1240px;
@@ -516,3 +516,5 @@ dialog .m-actions {
 #chat-feedback:empty {
   display: none;
 }
+
+.recruitment-page :is(h1, h2, h3) { font-family: var(--font-body); }

@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory(prefix='mercasport-messaging-') as scratch:
         env.pop(key, None)
     env.update(PGHOST='127.0.0.1', PGPORT='15439', PGDATABASE='postgres', PGUSER='mercasport_test', MESSAGING_ISOLATED_TEST='1')
     try:
-        for name in ['schema.sql','seed.sql','registration.sql','player-positions.sql','admin.sql','profile.sql','profile-fields.sql','positions.sql','divisions.sql','ads-recruitment.sql','ads-applications.sql','migrations/20261019-messaging-up.sql','migrations/20261019-messaging-up.sql','migrations/20261019-messaging-reports.sql','migrations/20261019-messaging-down.sql','migrations/20261019-messaging-up.sql','migrations/20261019-messaging-reports.sql']:
+        for name in ['schema.sql','seed.sql','registration.sql','player-positions.sql','admin.sql','profile.sql','profile-fields.sql','positions.sql','divisions.sql','ads-recruitment.sql','ads-applications.sql','migrations/20261019-messaging-up.sql','migrations/20261019-messaging-up.sql','migrations/20261019-messaging-reports.sql','migrations/20261020-player-ad-fields-up.sql','migrations/20261020-player-ad-fields-up.sql','migrations/20261020-player-ad-fields-down.sql','migrations/20261019-messaging-down.sql','migrations/20261019-messaging-up.sql','migrations/20261019-messaging-reports.sql','migrations/20261020-player-ad-fields-up.sql']:
             with (repo/'database'/name).open() as source:
                 result=subprocess.run([str(pg/'psql'), '-X', '-v', 'ON_ERROR_STOP=1'], env=env, stdin=source, text=True, capture_output=True, **hidden)
             if result.returncode:

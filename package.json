@@ -23,7 +23,8 @@
     "test:messaging": "node --test tests/messaging.test.js",
     "test:messaging:live": "python3 tests/messaging-live.py",
     "messaging:cleanup": "node --env-file-if-exists=.env scripts/messaging-cleanup.js",
-    "check:messaging": "node scripts/check-messaging.js"
+    "check:messaging": "node scripts/check-messaging.js",
+    "test:player-ads": "node --test tests/player-ads.test.js"
   },
   "dependencies": {
     "express": "^5.2.1"

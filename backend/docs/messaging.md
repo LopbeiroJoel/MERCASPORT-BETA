@@ -6,7 +6,7 @@ L’audit du dépôt et des métadonnées Neon a confirmé Express 5, PostgreSQL
 
 Le préfixe `mercasport_` du cahier des charges n’est pas repris : doubler `ads`, `applications` ou les CV aurait créé deux sources de vérité. Les nouvelles tables reprennent les conventions existantes. Les références utilisent leurs codes comme clés primaires plutôt que des identifiants numériques inutiles.
 
-Les anciennes annonces gardent leurs données et leurs limites. `recruitment_version=2` identifie le nouveau contrat facultatif. Les anciennes candidatures anonymes sont conservées ; elles ne sont jamais rattachées automatiquement à un compte par rapprochement d’e-mail.
+Les anciennes annonces gardent leurs données et leurs limites. `recruitment_version=2` identifie le premier contrat facultatif. Depuis le 20 octobre, les annonces joueurs créées ou modifiées utilisent la version 3 avec les champs obligatoires ci-dessous. Les anciennes annonces restent conservées sans changement automatique. Les anciennes candidatures anonymes sont conservées ; elles ne sont jamais rattachées automatiquement à un compte par rapprochement d’e-mail.
 
 ## Parcours
 
@@ -72,7 +72,7 @@ Références supplémentaires : `sports`, `availability_options`, `mobility_opti
 - Clé étrangère composée `(sender_participant_id, conversation_id)` ; trigger SQL vérifiant l’acteur, les comptes actifs et les blocages.
 - Texte non vide, 4 000 caractères maximum ; UUID client unique par participant pour les reprises d’envoi sans doublon.
 - Verrous de lignes et verrous consultatifs transactionnels pour la création de conversation et de candidature ; aucune écriture partielle en cas d’échec.
-- Triggers différés sur les sélections, avec verrou du parent : annonce joueur 2 postes, club 3 postes, 5 qualités, 3 projets ou conditions ; CV 1 poste principal + 3 secondaires et 5 qualités par catégorie.
+- Triggers différés sur les sélections, avec verrou du parent : annonce joueur 2 postes, club 3 postes ; joueur 5 qualités par catégorie (20 au total), club 5 qualités au total ; 3 projets ou conditions ; CV 1 poste principal + 3 secondaires et 5 qualités par catégorie.
 - Les anciennes fiches de plus de quatre postes ne sont pas tronquées. La nouvelle limite s’applique lors de leur modification dans le nouveau formulaire.
 - Historique des candidatures enregistré par un trigger pour chaque changement ; l’acteur vient de la transaction serveur.
 - Index pour les listes, les destinataires, les non-lus et les historiques. Pagination par curseur : 30 éléments par réponse, jamais tout l’historique d’un coup.
@@ -116,7 +116,42 @@ Les URL utilisent les noms de ressources existants. Toutes les écritures exigen
 | GET / POST `/admin/club-memberships` | Admin : consulter/accorder/révoquer `{user_id, club_id, is_active}` |
 | GET `/messaging/events` | Flux SSE authentifié, compte actif ; événements ciblés sans contenu de message |
 
-Exemple nouvelle annonce : `{"announcement_type":"CLUB_SEARCH","club_id":3,"status":"PUBLISHED"}`. Tous les détails sont facultatifs. Champs possibles : `title`, `description`, `city`, `sport_code`, `availability_code`, `mobility_code`, `category_code`, `recruitment_type_code`, `division_code`, `preferred_foot_code`, `positions`, `primary_position`, `qualities`, `project_types`, `conditions`, `status`.
+Exemple nouvelle annonce : `{"announcement_type":"CLUB_SEARCH","club_id":3,"status":"PUBLISHED"}`. Les détails de cette annonce **club** restent facultatifs. Champs possibles : `title`, `description`, `city`, `sport_code`, `availability_code`, `mobility_code`, `category_code`, `recruitment_type_code`, `division_code`, `preferred_foot_code`, `positions`, `primary_position`, `qualities`, `project_types`, `conditions`, `status`.
+
+
+### Annonce joueur : champs obligatoires à la publication
+
+Sur `publier.html`, un compte PLAYER utilise `POST /ads`. Son propriétaire peut la modifier avec `PATCH /ads/:id` depuis Mes annonces. Le serveur utilise l’identité de session, jamais un identifiant de joueur envoyé par le navigateur.
+
+Pour `announcement_type: "PLAYER_SEARCH"` et `status: "PUBLISHED"`, sont obligatoires : `title`, `description`, `positions` (1 à 2 codes du catalogue), `division_code`, `city`, `mobility_code`, `availability_code`, `project_types` (1 à 3 codes), et `player_details.current_club`, `player_details.past_clubs`, `player_details.experience`. Un joueur sans parcours peut écrire « Aucun club », « Aucun ancien club », « Débutant ». Ces informations ne sont jamais inventées automatiquement.
+
+Facultatifs : `preferred_foot_code` (`RIGHT`, `LEFT`, `BOTH`), `player_details.age` (entier 5–100), `player_details.height_cm` (entier 80–250), `player_details.sport_season` (`2026/2027`), `player_details.sport_stats` (objet contenant `appearances`, `goals`, `assists`, entiers 0–99999), `qualities` (5 codes maximum **par catégorie**, 20 au total). Les valeurs facultatives peuvent être absentes ou nulles ; les tableaux peuvent être vides. Les champs d’un PATCH absents gardent leur valeur.
+
+Les choix viennent de `GET /recruitment/options`. Exemple minimal :
+
+```json
+{
+  "announcement_type": "PLAYER_SEARCH",
+  "status": "PUBLISHED",
+  "title": "Joueur recherche un club",
+  "description": "Je souhaite reprendre le football dans une équipe conviviale.",
+  "positions": ["STRIKER"],
+  "division_code": "D8",
+  "city": "Colmar",
+  "mobility_code": "25_KM",
+  "availability_code": "NOW",
+  "project_types": ["LEISURE"],
+  "player_details": {
+    "current_club": "Aucun club",
+    "past_clubs": "Aucun ancien club",
+    "experience": "Débutant"
+  }
+}
+```
+
+Un brouillon `DRAFT` peut être incomplet ; sa publication et son renouvellement exigent les champs obligatoires. Une erreur de champ obligatoire renvoie `400` avec `code: "VALIDATION_ERROR"` et `fields`, par exemple `{"player_details.experience":"Ce champ est obligatoire…"}`. Les références inconnues, doublons et dépassements sont aussi refusés.
+
+`ads.player_details` contient un instantané public validé, pas un second CV. Le bouton « Proposer les informations de mon CV » lit seulement le CV du joueur connecté et remplit les champs vides. Il faut vérifier ces valeurs avant publication ; changer l’annonce ne change pas le CV. Les coordonnées privées et la date de naissance complète ne sont pas copiées. Les détails validés de l’annonce sont visibles dans Offres pour les clubs et dans Mes annonces pour son auteur.
 
 Statuts annonce : DRAFT, PUBLISHED, SUSPENDED, EXPIRED, CLOSED, ARCHIVED. DELETED reste accepté dans le catalogue pour lire l’historique existant, mais pas pour créer une nouvelle annonce. L’expiration est calculée à la lecture ; aucun cron n’est nécessaire.
 
@@ -159,17 +194,17 @@ Politique technique proposée : messages et audit 365 jours, notifications lues 
 ## Déploiement et retour arrière
 
 1. Sauvegarder la base avec `pg_dump` dans un dossier privé hors Git ; vérifier que l’archive peut être lue et que la restauration a été testée sur une base isolée.
-2. Sur une base existante déjà à jour, appliquer `database/migrations/20261019-messaging-up.sql` puis `database/migrations/20261019-messaging-reports.sql`. Le fichier ouvre et valide sa propre transaction et attend au maximum 5 secondes pour un verrou. Ne pas rejouer `schema.sql`, `seed.sql` ou toutes les anciennes migrations sur Neon.
+2. Sur une base existante déjà à jour, appliquer `database/migrations/20261019-messaging-up.sql` puis `database/migrations/20261019-messaging-reports.sql`, puis `database/migrations/20261020-player-ad-fields-up.sql`. Sur une base ayant déjà les deux premières, exécuter seulement la dernière. Le fichier ouvre et valide sa propre transaction et attend au maximum 5 secondes pour un verrou. Ne pas rejouer `schema.sql`, `seed.sql` ou toutes les anciennes migrations sur Neon.
 3. Comparer les nombres et données des comptes, clubs, fiches, annonces et candidatures avant/après. La migration crée les références et les membres propriétaires, sans inventer de comptes.
 4. Garder DATABASE_URL, AUTH_SECRET, APP_ORIGIN dans les variables privées existantes ; APP_ORIGIN doit être l’origine HTTPS exacte du site. MESSAGING_DATABASE_URL est facultative. Ne jamais publier ces valeurs.
 5. `npm ci`, `npm run build` puis déployer. Le build copie seulement `frontend/` vers `public/` ; il ne migre jamais la base.
 6. Vérifier les anciens parcours, les catalogues, un échange joueur/club avec deux navigateurs, l’archivage, le partage CV, une candidature et un accès tiers refusé.
 
-Le fichier `20261019-messaging-down.sql` restaure les anciennes fonctions et contraintes et enlève le module **uniquement si aucune nouvelle donnée métier ne risque d’être perdue**. Après usage réel, il refuse volontairement le retour arrière destructeur : conserver les données et préparer une migration corrective, ou restaurer une sauvegarde dans une base séparée. Ne jamais contourner cette garde pour un simple souci de CSS.
+Le fichier `20261020-player-ad-fields-down.sql` annule le dernier ajout uniquement si aucune annonce version 3 ou donnée `player_details` n’existe. Pour un retour complet sur une base de test vide, exécuter ce fichier avant le retour du module. Le fichier `20261019-messaging-down.sql` restaure les anciennes fonctions et contraintes et enlève le module **uniquement si aucune nouvelle donnée métier ne risque d’être perdue**. Après usage réel, il refuse volontairement le retour arrière destructeur : conserver les données et préparer une migration corrective, ou restaurer une sauvegarde dans une base séparée. Ne jamais contourner cette garde pour un simple souci de CSS.
 
 ## Vérification reproductible
 
-`npm run test:messaging` : API et contraintes PostgreSQL embarquées jetables, aucune connexion Neon. `npm run test:messaging:live` : vrai PostgreSQL natif jetable, migration répétée, retour arrière, réception SSE entre deux instances et envois concurrents. Linux : outils PostgreSQL dans PATH ; Windows : définir PG_BIN sur les binaires PostgreSQL puis lancer le script Python. Ne charger aucun .env de production pour ces tests.
+`npm run test:player-ads` : champs obligatoires, brouillons, limites, confidentialité du CV et garde SQL. `npm run test:messaging` : API et contraintes PostgreSQL embarquées jetables, aucune connexion Neon. `npm run test:messaging:live` : vrai PostgreSQL natif jetable, migration répétée, retour arrière, réception SSE entre deux instances et envois concurrents. Linux : outils PostgreSQL dans PATH ; Windows : définir PG_BIN sur les binaires PostgreSQL puis lancer le script Python. Ne charger aucun .env de production pour ces tests.
 
 Les tests historiques restent séparés et doivent être lancés avec `--test-concurrency=1` sur une machine peu dotée en mémoire. La recette navigateur utilise uniquement les comptes synthétiques du serveur de test. Aucun mot de passe de démonstration ni donnée de production n’est nécessaire.
 

@@ -11,3 +11,11 @@
 - Connexion directe Neon avec TLS et LISTEN/NOTIFY vérifiée sans créer de compte, de candidature ou de message de démonstration en production.
 
 Les essais locaux ne garantissent pas une disponibilité illimitée ni les quotas de l’hébergeur. Le mode manuel reste disponible si le flux SSE est indisponible. La sauvegarde, ses empreintes et les identifiants de connexion restent hors du dépôt.
+
+
+## Champs des annonces joueurs — 20 octobre 2026
+
+- `npm run test:player-ads` : champs obligatoires, parcours débutant, facultatifs vides ou invalides, brouillons, publication/renouvellement, limites de sélection et garde SQL.
+- Recette navigateur isolée : publication joueur, proposition explicite du CV, sauvegarde de 20 qualités, modification et lecture par un club ; formulaire club conservé ; largeurs 390, 900 et 1440 px.
+- Migration additive `20261020-player-ad-fields-up.sql`, répétition et retour arrière testés sur PostgreSQL natif jetable. Retour arrière refusé dès que les nouveaux champs sont utilisés.
+- Sauvegarde privée Neon restaurée en base isolée avant migration ; comparaison des colonnes historiques sur les comptes, profils, clubs, équipes, annonces et candidatures.

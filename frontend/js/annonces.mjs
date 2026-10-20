@@ -1,3 +1,4 @@
+import { mountPlayerFields, playerDetailsView } from './player-ad-fields.mjs';
 import {
   $,
   api,
@@ -21,11 +22,15 @@ let me,
   cursor,
   editing,
   formType = 'PLAYER_SEARCH',
-  catalog;
+  catalog,
+  playerEditor;
 const list = $('#market-list'),
   form = $('#ad-form');
 async function load(append = false) {
-  const query = new URLSearchParams({ view: 'market', ...(own ? { owned: '1' } : { type: mode }) });
+  const query = new URLSearchParams({
+    view: 'market',
+    ...(own ? { owned: '1' } : { type: mode })
+  });
   if (append && cursor) query.set('before', cursor);
   for (const [key, value] of new FormData($('#filter-form'))) if (value) query.set(key, value);
   const data = await api('/ads?' + query);
@@ -118,12 +123,14 @@ async function detail(id) {
         node('dt', name),
         node(
           'dd',
-          Array.isArray(value) ? value.map((v) => label(group, v)).join(', ') : label(group, value)
+          Array.isArray(value)
+            ? value.map((v) => label(group, v)).join(', ')
+            : label(group, value)
         )
       );
     }
   }
-  target.append(dl);
+  target.append(ad.announcement_type === 'PLAYER_SEARCH' ? playerDetailsView(ad) : dl);
   const actions = node('div', null, 'm-actions');
   actions.append(
     button('Voir le profil', async () => {
@@ -181,7 +188,8 @@ async function editor(ad) {
   editing = ad || null;
   $('#ad-editor-title').textContent = ad ? 'Modifier mon annonce' : 'Créer mon annonce';
   $('#editor-fields').replaceChildren();
-  formType = ad?.announcement_type || (me.user.role === 'PLAYER' ? 'PLAYER_SEARCH' : 'CLUB_SEARCH');
+  formType =
+    ad?.announcement_type || (me.user.role === 'PLAYER' ? 'PLAYER_SEARCH' : 'CLUB_SEARCH');
   const type = $('#ad-type');
   type.replaceChildren();
   if (me.user.role === 'PLAYER') {
@@ -203,6 +211,20 @@ async function fields(ad = {}) {
   formType = $('#ad-type').value;
   const box = $('#editor-fields');
   box.replaceChildren();
+  form.noValidate = formType === 'PLAYER_SEARCH';
+  if (formType === 'PLAYER_SEARCH') {
+    playerEditor = mountPlayerFields(box, catalog, ad);
+    box.append(
+      select(
+        'status',
+        'État de l’annonce',
+        catalog.announcement_statuses.filter((s) => s.code !== 'DELETED'),
+        ad.status || 'DRAFT',
+        false
+      )
+    );
+    return;
+  }
   if (formType === 'CLUB_SEARCH')
     box.append(
       select(
@@ -234,10 +256,7 @@ async function fields(ad = {}) {
     ['availability_code', 'Disponibilité', 'availability']
   ])
     grid.append(select(key, title, catalog[group], ad[key]));
-  if (formType === 'PLAYER_SEARCH')
-    grid.append(select('mobility_code', 'Mobilité', catalog.mobility, ad.mobility_code));
-  else {
-    grid.append(
+  grid.append(
       select('category_code', 'Catégorie', catalog.categories, ad.category_code),
       select(
         'recruitment_type_code',
@@ -252,58 +271,14 @@ async function fields(ad = {}) {
         catalog.feet.find((f) => f.label === ad.preferred_foot)?.code
       )
     );
-  }
   box.append(
     grid,
-    choices(
-      'positions',
-      formType === 'PLAYER_SEARCH' ? 'Postes (le premier est le principal)' : 'Postes recherchés',
-      catalog.positions,
-      ad.positions || [],
-      formType === 'PLAYER_SEARCH' ? 2 : 3
-    ),
+    choices('positions', 'Postes recherchés', catalog.positions, ad.positions || [], 3),
     choices('qualities', 'Qualités', catalog.qualities, ad.qualities || [], 5)
   );
-  if (formType === 'PLAYER_SEARCH') {
-    box.append(
-      select(
-        'primary_position',
-        'Poste principal (parmi les postes cochés)',
-        catalog.positions,
-        ad.primary_position
-      ),
-      choices('project_types', 'Projet recherché', catalog.project_types, ad.project_types || [], 3)
-    );
-    if (!editing)
-      box.append(
-        button('Proposer les informations de mon CV', async () => {
-          const own = await api('/sport-profile/me');
-          if (!own.profile) {
-            notice('Aucune fiche sportive. Tous les champs restent facultatifs.');
-            return;
-          }
-          if (
-            !confirm(
-              'Préremplir les champs sportifs ? Vérifiez et décochez les informations que vous ne souhaitez pas publier. Aucune donnée de contact ne sera copiée.'
-            )
-          )
-            return;
-          await fields({
-            ...own.profile,
-            city: own.profile.sport_city,
-            division_code: catalog.divisions.some((d) => d.code === own.profile.level)
-              ? own.profile.level
-              : null,
-            qualities: own.qualities.slice(0, 5),
-            positions: own.profile.positions.slice(0, 2),
-            primary_position: own.profile.positions[0]
-          });
-        })
-      );
-  } else
-    box.append(
-      choices('conditions', 'Conditions sportives', catalog.conditions, ad.conditions || [], 3)
-    );
+  box.append(
+    choices('conditions', 'Conditions sportives', catalog.conditions, ad.conditions || [], 3)
+  );
   box.append(
     select(
       'status',
@@ -317,6 +292,26 @@ async function fields(ad = {}) {
 async function save(event) {
   event.preventDefault();
   await run($('#save-ad'), async () => {
+    if (formType === 'PLAYER_SEARCH') {
+      const status = form.elements.status.value;
+      const errors = playerEditor.validate(status === 'PUBLISHED');
+      playerEditor.showErrors(errors);
+      if (Object.keys(errors).length) throw new Error('Vérifiez les champs indiqués.');
+      try {
+        await api(editing ? '/ads/' + editing.id : '/ads', editing ? 'PATCH' : 'POST', {
+          announcement_type: formType,
+          status,
+          ...playerEditor.read()
+        });
+      } catch (error) {
+        playerEditor.showErrors(error.fields);
+        throw error;
+      }
+      $('#ad-editor').close();
+      notice('Annonce enregistrée.');
+      await load();
+      return;
+    }
     const body = Object.fromEntries(new FormData(form));
     delete body.announcement_type;
     body.announcement_type = formType;

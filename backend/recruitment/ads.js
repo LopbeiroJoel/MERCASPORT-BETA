@@ -1,5 +1,7 @@
 const { fail, id, body, text, manages, audit } = require('../messaging/core');
 
+const { validatePlayerAd } = require('./player-ad');
+
 const catalogs = {
   sports: 'sports',
   availability: 'availability_options',
@@ -16,7 +18,9 @@ async function options(client) {
   const result = {};
   for (const [key, table] of Object.entries(catalogs))
     result[key] = (
-      await client.query(`SELECT code,label FROM ${table} WHERE is_active ORDER BY sort_order,code`)
+      await client.query(
+        `SELECT code,label FROM ${table} WHERE is_active ORDER BY sort_order,code`
+      )
     ).rows;
   result.positions = (
     await client.query('SELECT code,label FROM positions ORDER BY sort_order')
@@ -32,7 +36,7 @@ async function options(client) {
   ).rows;
   return result;
 }
-const columns = `a.id,a.author_id,a.club_id,a.title,a.description,a.city,a.announcement_type,a.sport_code,a.availability_code,a.mobility_code,a.category_code,a.recruitment_type_code,a.primary_position,coalesce(a.division_code,(SELECT t.division FROM teams t WHERE t.id=a.team_id)) AS division_code,a.preferred_foot,a.created_at,a.updated_at,a.expires_at,a.short_description,a.location,a.contract,a.work_time,a.salary,a.requirements,a.missions,a.additional_info,
+const columns = `a.id,a.author_id,a.club_id,a.title,a.description,a.city,a.announcement_type,a.sport_code,a.availability_code,a.mobility_code,a.category_code,a.recruitment_type_code,a.primary_position,coalesce(a.division_code,(SELECT t.division FROM teams t WHERE t.id=a.team_id)) AS division_code,a.preferred_foot,a.created_at,a.updated_at,a.expires_at,a.player_details,a.short_description,a.location,a.contract,a.work_time,a.salary,a.requirements,a.missions,a.additional_info,
  CASE WHEN a.status='PUBLISHED' AND a.expires_at<=now() THEN 'EXPIRED' ELSE a.status END AS status,
  coalesce(c.name,u.username) AS author_name,u.photo_url AS avatar,
  ARRAY(SELECT position_code FROM ad_positions WHERE ad_id=a.id ORDER BY position_code=a.primary_position DESC,position_code) AS positions,
@@ -76,7 +80,10 @@ async function list(client, query, identity) {
   ).rows;
   // Le nombre de candidatures est réservé au propriétaire/représentant.
   if (!owned) for (const row of rows) delete row.application_count;
-  return { items: rows.slice(0, 30), next: rows.length > 30 ? rows[29].id : null };
+  return {
+    items: rows.slice(0, 30),
+    next: rows.length > 30 ? rows[29].id : null
+  };
 }
 async function detail(client, adId, identity) {
   const row = (
@@ -107,7 +114,8 @@ const fields = [
   'qualities',
   'project_types',
   'conditions',
-  'status'
+  'status',
+  'player_details'
 ];
 async function save(client, identity, input, adId) {
   body(input, fields);
@@ -115,7 +123,10 @@ async function save(client, identity, input, adId) {
   if (adId) {
     old = (await client.query('SELECT * FROM ads WHERE id=$1 FOR UPDATE', [id(adId)])).rows[0];
     if (!old) fail(404, 'AD_NOT_FOUND');
-    if (old.author_id !== identity.userId && !(await manages(client, identity.userId, old.club_id)))
+    if (
+      old.author_id !== identity.userId &&
+      !(await manages(client, identity.userId, old.club_id))
+    )
       fail(403, 'AD_OWNER_REQUIRED');
     if (old.status === 'DELETED') fail(409, 'AD_REMOVED');
   }
@@ -129,9 +140,15 @@ async function save(client, identity, input, adId) {
     type === 'CLUB_SEARCH' ? old?.club_id || (input.club_id ? id(input.club_id) : null) : null;
   if (type === 'CLUB_SEARCH' && (!clubId || !(await manages(client, identity.userId, clubId))))
     fail(403, 'CLUB_ACCESS_DENIED');
-  if (old && input.club_id && id(input.club_id) !== old.club_id) fail(403, 'CLUB_ACCESS_DENIED');
+  if (old && input.club_id && id(input.club_id) !== old.club_id)
+    fail(403, 'CLUB_ACCESS_DENIED');
   if (type === 'PLAYER_SEARCH' && (identity.role !== 'PLAYER' || input.club_id))
     fail(403, 'PLAYER_REQUIRED');
+  const status = input.status || old?.status || 'DRAFT';
+  const playerDetails =
+    type === 'PLAYER_SEARCH' ? await validatePlayerAd(client, input, old, status) : null;
+  if (type === 'CLUB_SEARCH' && Object.hasOwn(input, 'player_details'))
+    fail(400, 'INVALID_FIELD');
   const data = {};
   for (const key of ['title', 'description', 'city'])
     if (Object.hasOwn(input, key))
@@ -168,7 +185,7 @@ async function save(client, identity, input, adId) {
   }
   const arrays = {
     positions: ['positions', 'code', type === 'CLUB_SEARCH' ? 3 : 2],
-    qualities: ['sport_qualities', 'code', 5],
+    qualities: ['sport_qualities', 'code', type === 'PLAYER_SEARCH' ? 20 : 5],
     project_types: ['project_types', 'code', 3],
     conditions: ['recruitment_conditions', 'code', 3]
   };
@@ -197,14 +214,28 @@ async function save(client, identity, input, adId) {
       )
         fail(400, 'INVALID_OPTION');
     }
-  const status = input.status || old?.status || 'DRAFT';
+
+  if (Array.isArray(input.qualities)) {
+    const categories = (
+      await client.query(
+        'SELECT category,count(*)::int AS n FROM sport_qualities WHERE code=ANY($1::text[]) GROUP BY category',
+        [input.qualities]
+      )
+    ).rows;
+    if (categories.some((row) => row.n > 5))
+      throw Object.assign(new Error('Choisir au maximum 5 qualités par catégorie.'), {
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        fields: { qualities: 'Choisir au maximum 5 qualités par catégorie.' }
+      });
+  }
   if (!['DRAFT', 'PUBLISHED', 'SUSPENDED', 'EXPIRED', 'CLOSED', 'ARCHIVED'].includes(status))
     fail(400, 'INVALID_STATUS');
   if (!old || (!data.title && Object.hasOwn(data, 'title'))) {
     const name = clubId
       ? (await client.query('SELECT name FROM clubs WHERE id=$1', [clubId])).rows[0].name
-      : (await client.query('SELECT username FROM users WHERE id=$1', [identity.userId])).rows[0]
-          .username;
+      : (await client.query('SELECT username FROM users WHERE id=$1', [identity.userId]))
+          .rows[0].username;
     data.title =
       data.title ||
       `${name}${type === 'CLUB_SEARCH' ? ' recrute' : ' recherche un club'}`.slice(0, 150);
@@ -228,7 +259,8 @@ async function save(client, identity, input, adId) {
     ).rows[0];
   } else result = { id: old.id };
   data.status = status;
-  data.recruitment_version = 2;
+  data.recruitment_version = type === 'PLAYER_SEARCH' ? 3 : 2;
+  if (playerDetails) data.player_details = JSON.stringify(playerDetails);
   if (Object.hasOwn(input, 'primary_position'))
     data.primary_position = text(input.primary_position, 50, true);
   const selected =
@@ -241,8 +273,11 @@ async function save(client, identity, input, adId) {
   if (Object.hasOwn(input, 'positions')) {
     data.primary_position = data.primary_position || selected[0] || null;
     data.position = selected.length
-      ? (await client.query('SELECT label FROM positions WHERE code=$1', [data.primary_position]))
-          .rows[0].label
+      ? (
+          await client.query('SELECT label FROM positions WHERE code=$1', [
+            data.primary_position
+          ])
+        ).rows[0].label
       : 'Non précisé';
   }
   const keys = Object.keys(data);
@@ -269,11 +304,14 @@ async function save(client, identity, input, adId) {
   return detail(client, result.id, identity);
 }
 async function renew(client, identity, adId) {
-  const ad = (await client.query('SELECT * FROM ads WHERE id=$1 FOR UPDATE', [id(adId)])).rows[0];
+  const ad = (await client.query('SELECT * FROM ads WHERE id=$1 FOR UPDATE', [id(adId)]))
+    .rows[0];
   if (!ad) fail(404, 'AD_NOT_FOUND');
   if (ad.author_id !== identity.userId && !(await manages(client, identity.userId, ad.club_id)))
     fail(403, 'AD_OWNER_REQUIRED');
   if (ad.status === 'DELETED') fail(409, 'AD_REMOVED');
+  if (ad.announcement_type === 'PLAYER_SEARCH')
+    await validatePlayerAd(client, {}, ad, 'PUBLISHED');
   await client.query(
     "UPDATE ads SET status='PUBLISHED',published_at=now(),expires_at=now()+interval '30 days',updated_at=clock_timestamp() WHERE id=$1",
     [ad.id]

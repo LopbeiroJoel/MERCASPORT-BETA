@@ -27,6 +27,7 @@ export async function api(path, method = 'GET', data) {
     );
     error.status = response.status;
     error.code = result?.code;
+    error.fields = result?.fields || {};
     throw error;
   }
   return result;
@@ -49,7 +50,7 @@ export function button(label, action, className) {
   return el;
 }
 export function notice(message, error = false) {
-  const target = $('#module-status') || $('#apply-message') || $('#offers-count');
+  const target = $('#publish-status') || $('#module-status') || $('#apply-message') || $('#offers-count');
   if (!target) return;
   target.textContent = message;
   target.classList.toggle('error', error);

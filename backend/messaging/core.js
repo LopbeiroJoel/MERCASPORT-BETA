@@ -143,7 +143,7 @@ function errors(error, req, res, next) {
   if (error.type === 'entity.parse.failed') return res.status(400).json({ code: 'INVALID_JSON' });
   if (error.type === 'entity.too.large') return res.status(413).json({ code: 'BODY_TOO_LARGE' });
   if (error.status)
-    return res.status(error.status).json({ code: error.code, message: error.message });
+    return res.status(error.status).json({ code: error.code, message: error.message, ...(error.fields?{fields:error.fields}:{}) });
   if (error.code === '23505') return res.status(409).json({ code: 'RESOURCE_CONFLICT' });
   if (['23503', '23514', '23502', '22001', '22P02', '22007', 'P0001'].includes(error.code))
     return res.status(400).json({ code: 'INVALID_DATA' });
